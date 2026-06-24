@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace LinkUpPro.Infrastructure.Identity.Entities
 {
-    internal class Class1
+    public class AppUser
     {
+        public required string Name { get; set; }
+        public required string LastName { get; set; }
+        public required string ProfilePhoto { get; set; }
     }
 }

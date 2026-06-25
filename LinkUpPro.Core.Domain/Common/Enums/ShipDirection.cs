@@ -1,6 +1,6 @@
 namespace LinkUpPro.Core.Domain.Common.Enums
 {
-    public enum Direction
+    public enum ShipDirection
     {
         Up = 1,
         Down = 2,

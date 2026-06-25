@@ -9,7 +9,7 @@ namespace LinkUpPro.Core.Domain.Entities
         public ContentType ContentType { get; set; }
         public string? MediaUrl { get; set; }
         public PrivacyMode PrivacyMode { get; set; } = PrivacyMode.FriendsOnly;
-        public bool AllowComments { get; set; } = true;
+        public CommentStatus CommentStatus { get; set; } = CommentStatus.Allowed;
         public required string AuthorId { get; set; }
 
         // Navigation 

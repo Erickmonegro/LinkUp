@@ -10,10 +10,10 @@ namespace LinkUpPro.Core.Domain.Entities
         public int ShipSize { get; set; } // e.g. 2, 3, 4, 5
         public int StartX { get; set; }
         public int StartY { get; set; }
-        public Direction Direction { get; set; }
+        public ShipDirection Direction { get; set; }
         public bool IsSunk { get; set; }
 
         // Navigation 
-        public BattleshipMatch? Match { get; set; }
+        public Battleship? BattleshipMatch { get; set; }
     }
 }

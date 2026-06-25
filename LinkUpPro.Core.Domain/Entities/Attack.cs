@@ -11,6 +11,6 @@ namespace LinkUpPro.Core.Domain.Entities
         public bool IsHit { get; set; }
 
         // Navigation 
-        public BattleshipMatch? Match { get; set; }
+        public Battleship? BattleshipMatch { get; set; }
     }
 }

@@ -5,7 +5,7 @@ namespace LinkUpPro.Core.Domain.Entities
 {
     public class ShipPosition : BasicEntity<int>
     {
-        public int MatchId { get; set; }
+        public int BattleshipMatchId { get; set; }
         public required string UserId { get; set; }
         public int ShipSize { get; set; } // e.g. 2, 3, 4, 5
         public int StartX { get; set; }
@@ -14,6 +14,6 @@ namespace LinkUpPro.Core.Domain.Entities
         public bool IsSunk { get; set; }
 
         // Navigation 
-        public Battleship? BattleshipMatch { get; set; }
+        public BattleshipMatch? BattleshipMatch { get; set; }
     }
 }

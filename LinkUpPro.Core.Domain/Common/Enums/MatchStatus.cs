@@ -2,7 +2,8 @@ namespace LinkUpPro.Core.Domain.Common.Enums
 {
     public enum MatchStatus
     {
-        InProgress = 1,
-        Finished = 2
+        Pending = 1,
+        InProgress = 2,
+        Finished = 3
     }
 }

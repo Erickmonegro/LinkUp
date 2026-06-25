@@ -3,7 +3,7 @@ using LinkUpPro.Core.Domain.Common.Enums;
 
 namespace LinkUpPro.Core.Domain.Entities
 {
-    public class BattleshipMatch : BasicEntity<int>
+    public class Battleship : BasicEntity<int>
     {
         public required string Player1Id { get; set; }
         public required string Player2Id { get; set; }

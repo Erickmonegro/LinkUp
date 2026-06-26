@@ -4,6 +4,7 @@ namespace LinkUpPro.Core.Domain.Common.Enums
     {
         Comment = 1,
         Reply = 2,
-        Reaction = 3
+        Reaction = 3,
+        ChangeReactions = 4
     }
 }

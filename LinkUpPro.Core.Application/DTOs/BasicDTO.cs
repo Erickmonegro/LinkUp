@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace LinkUpPro.Core.Application.DTOs
 {
-    internal class BasicDTO
+    public class BasicDTO<TKey>
     {
+        
+        public required TKey Id { get; set; }
+
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+
+        public DateTime Updated { get; set; } = DateTime.UtcNow;
     }
 }

@@ -10,5 +10,6 @@ namespace LinkUpPro.Core.Domain.Entities
         public FriendRequestStatus Status { get; set; } = FriendRequestStatus.Pending;
         public DateTime? RespondedAt { get; set; }
         public bool IsHiddenForSender { get; set; }
+        public bool IsHiddenForReceiver { get; set; }
     }
 }

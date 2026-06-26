@@ -1,4 +1,4 @@
-﻿using LinkUpPro.Core.Domain.Entities;
+using LinkUpPro.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -14,9 +14,16 @@ namespace LinkUpPro.Infrastructure.Persistence.EntityConfigurations
         public void Configure(EntityTypeBuilder<ShipPosition> builder)
         {
             #region Basic configuration
+            builder.HasKey(s => s.Id);
+            builder.ToTable("ShipPositions");
             #endregion
 
             #region Property configurations
+            builder.Property(s => s.UserId).IsRequired();
+            builder.Property(s => s.BattleshipMatchId).IsRequired();
+            builder.Property(s => s.ShipSize).IsRequired();
+            builder.Property(s => s.StartX).IsRequired();
+            builder.Property(s => s.StartY).IsRequired();
             #endregion
 
             #region relationships

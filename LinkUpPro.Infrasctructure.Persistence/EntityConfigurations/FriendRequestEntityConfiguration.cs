@@ -1,11 +1,6 @@
-﻿using LinkUpPro.Core.Domain.Entities;
+using LinkUpPro.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LinkUpPro.Infrastructure.Persistence.EntityConfigurations
 {
@@ -14,9 +9,13 @@ namespace LinkUpPro.Infrastructure.Persistence.EntityConfigurations
         public void Configure(EntityTypeBuilder<FriendRequest> builder)
         {
             #region Basic configuration
+            builder.HasKey(fr => fr.Id);
+            builder.ToTable("FriendRequests");
             #endregion
 
             #region Property configurations
+            builder.Property(fr => fr.SenderId).IsRequired();
+            builder.Property(fr => fr.ReceiverId).IsRequired();
             #endregion
 
             #region relationships

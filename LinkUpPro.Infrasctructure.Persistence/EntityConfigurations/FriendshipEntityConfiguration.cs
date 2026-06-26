@@ -1,11 +1,6 @@
-﻿using LinkUpPro.Core.Domain.Entities;
+using LinkUpPro.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LinkUpPro.Infrastructure.Persistence.EntityConfigurations
 {
@@ -14,9 +9,15 @@ namespace LinkUpPro.Infrastructure.Persistence.EntityConfigurations
         public void Configure(EntityTypeBuilder<Friendship> builder)
         {
             #region Basic configuration
+            builder.HasKey(f => f.Id);
+            builder.ToTable("Friendships");
             #endregion
 
             #region Property configurations
+            builder.Property(f => f.UserId1).IsRequired();
+            builder.Property(f => f.UserId2).IsRequired();
+            // Prevent duplicate friendships between the same two users
+            builder.HasIndex(f => new { f.UserId1, f.UserId2 }).IsUnique();
             #endregion
 
             #region relationships

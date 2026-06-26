@@ -36,5 +36,49 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<List<Post>> GetFriendsPostsAsync(List<string> friendIds, string? textFilter = null, int? contentTypeFilter = null, DateTime? dateFrom = null, DateTime? dateTo = null, int? editionStatusFilter = null)
+        {
+            var query = repo.Set<Post>().AsQueryable();
+
+            query = query.Where(p => friendIds.Contains(p.AuthorId));
+
+            if (!string.IsNullOrWhiteSpace(textFilter))
+            {
+                query = query.Where(p => p.TextContent.Contains(textFilter));
+            }
+
+            if (contentTypeFilter.HasValue)
+            {
+                query = query.Where(p => (int)p.ContentType == contentTypeFilter.Value);
+            }
+
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt >= dateFrom.Value);
+            }
+
+            if (dateTo.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt <= dateTo.Value);
+            }
+
+            if (editionStatusFilter.HasValue)
+            {
+                query = query.Where(p => (int)p.EditionStatus == editionStatusFilter.Value);
+            }
+
+            return await query
+                .Include(p => p.Comments)
+                .Include(p => p.Reactions)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetFriendsPostsCountAsync(List<string> friendIds)
+        {
+            return await repo.Set<Post>()
+                .CountAsync(p => friendIds.Contains(p.AuthorId));
+        }
     }
 }

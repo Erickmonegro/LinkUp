@@ -6,5 +6,7 @@ namespace LinkUpPro.Core.Domain.Interfaces
     {
         Task<List<Post>> GetFeedAsync(string userId);
         Task<List<Post>> GetUserPostsAsync(string userId);
+        Task<List<Post>> GetFriendsPostsAsync(List<string> friendIds, string? textFilter = null, int? contentTypeFilter = null, DateTime? dateFrom = null, DateTime? dateTo = null, int? editionStatusFilter = null);
+        Task<int> GetFriendsPostsCountAsync(List<string> friendIds);
     }
 }

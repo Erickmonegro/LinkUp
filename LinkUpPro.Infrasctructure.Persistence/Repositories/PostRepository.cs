@@ -21,6 +21,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         public async Task<List<Post>> GetFeedAsync(string userId)
         {
             return await repo.Set<Post>()
+                .Where(p => p.IsActive)
                 .Include(p => p.Comments)
                 .Include(p => p.Reactions)
                 .OrderByDescending(p => p.CreatedAt)
@@ -30,7 +31,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         public async Task<List<Post>> GetUserPostsAsync(string userId)
         {
             return await repo.Set<Post>()
-                .Where(p => p.AuthorId == userId)
+                .Where(p => p.AuthorId == userId && p.IsActive)
                 .Include(p => p.Comments)
                 .Include(p => p.Reactions)
                 .OrderByDescending(p => p.CreatedAt)
@@ -41,7 +42,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         {
             var query = repo.Set<Post>().AsQueryable();
 
-            query = query.Where(p => friendIds.Contains(p.AuthorId));
+            query = query.Where(p => friendIds.Contains(p.AuthorId) && p.IsActive);
 
             if (!string.IsNullOrWhiteSpace(textFilter))
             {
@@ -78,7 +79,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         public async Task<int> GetFriendsPostsCountAsync(List<string> friendIds)
         {
             return await repo.Set<Post>()
-                .CountAsync(p => friendIds.Contains(p.AuthorId));
+                .CountAsync(p => friendIds.Contains(p.AuthorId) && p.IsActive);
         }
     }
 }

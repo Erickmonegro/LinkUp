@@ -9,7 +9,7 @@ namespace LinkUpPro.Infrastructure.Persistence
 {
     public static class ServiceRegistration
     {
-        public static void ServiceRegistrationIOC(this IServiceCollection services, IConfiguration config)
+        public static void AddPersistenceLayerIoc(this IServiceCollection services, IConfiguration config)
         {
             #region Contexts
             if (bool.Parse(config["UseInMemoryDatabase"] ?? "false"))
@@ -23,7 +23,6 @@ namespace LinkUpPro.Infrastructure.Persistence
                 services.AddDbContext<LinkUpAppContext>(
                   (serviceProvider, opt) =>
                   {
-                      opt.EnableSensitiveDataLogging();
                       opt.UseSqlServer(connectionString,
                       m => m.MigrationsAssembly(typeof(LinkUpAppContext).Assembly.FullName));
                   },

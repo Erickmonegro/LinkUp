@@ -21,6 +21,9 @@ namespace LinkUpPro.Core.Application
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IFriendRequestService, FriendRequestService>();
             services.AddScoped<IReactionService, ReactionService>();
+            services.AddScoped<IShipPositionService, ShipPositionService>();
+            services.AddScoped<IAttackService, AttackService>();
+            services.AddScoped<IBattleshipMatchService, BattleshipMatchService>();
             #endregion
         }
     }

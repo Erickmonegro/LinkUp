@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Confirmar Cuenta";
+    ViewData["HideNav"] = true;
+}
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
+            @if (ViewBag.IsSuccess == true)
+            {
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-3">¡Cuenta Activada!</h2>
+                <p class="text-gray-600 mb-6">@ViewBag.Message</p>
+            }
+            else
+            {
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Enlace No Válido</h2>
+                <p class="text-gray-600 mb-6">@ViewBag.Message</p>
+            }
+            <a asp-action="Login" asp-controller="User" class="inline-block bg-brand-blue text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-800 transition-colors shadow-md">
+                <i class="fas fa-sign-in-alt mr-2"></i>Ir a Iniciar Sesión
+            </a>
+        </div>
+    </div>
+</div>

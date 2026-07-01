@@ -1,0 +1,206 @@
+@model LinkUpPro.Core.Application.ViewModels.FriendRequest.FriendRequestListViewModel
+@{
+    ViewData["Title"] = "Solicitudes de Amistad";
+}
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fas fa-check-circle text-green-500"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            <i class="fas fa-exclamation-circle mr-1"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-envelope-open-text text-brand-blue"></i> Solicitudes de Amistad
+            </h1>
+            <a asp-action="New" class="bg-brand-blue text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-sm text-sm">
+                <i class="fas fa-user-plus mr-1"></i> Enviar Nueva Solicitud
+            </a>
+        </div>
+
+        <!-- Tabs -->
+        <div class="border-b border-gray-200">
+            <nav class="flex gap-6" aria-label="Tabs">
+                <button onclick="showTab('received')" id="tab-received" class="border-brand-blue text-brand-blue border-b-2 py-4 px-1 font-bold text-sm flex items-center gap-1.5 focus:outline-none">
+                    Recibidas
+                    @if (Model.PendingCount > 0)
+                    {
+                        <span class="bg-red-500 text-white rounded-full text-[10px] px-1.5 py-0.5 font-bold">
+                            @Model.PendingCount
+                        </span>
+                    }
+                </button>
+                <button onclick="showTab('sent')" id="tab-sent" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-4 px-1 font-bold text-sm focus:outline-none">
+                    Enviadas
+                </button>
+            </nav>
+        </div>
+
+        <!-- 1. Received Requests Tab -->
+        <div id="content-received" class="space-y-4">
+            @if (Model.ReceivedRequests == null || !Model.ReceivedRequests.Any())
+            {
+                <p class="text-gray-500 text-center py-8">No tienes solicitudes de amistad pendientes de respuesta.</p>
+            }
+            else
+            {
+                <div class="divide-y divide-gray-100">
+                    @foreach (var req in Model.ReceivedRequests)
+                    {
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-4">
+                            <div class="flex items-center gap-3">
+                                @if (!string.IsNullOrEmpty(req.SenderProfilePhoto))
+                                {
+                                    <img src="@req.SenderProfilePhoto" alt="" class="w-12 h-12 rounded-full object-cover border border-gray-200" />
+                                }
+                                else
+                                {
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border border-gray-200">
+                                        <i class="fas fa-user text-xl"></i>
+                                    </div>
+                                }
+                                <div>
+                                    <h4 class="font-bold text-gray-900">@req.SenderName</h4>
+                                    <p class="text-xs text-gray-400">@@@req.SenderId.Substring(0, Math.Min(req.SenderId.Length, 8))</p>
+                                    <p class="text-xs text-gray-500 mt-1">Enviada: @req.CreatedAt.ToLocalTime().ToString("g")</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <form asp-action="Accept" method="post" onsubmit="return confirm('¿Aceptar solicitud de amistad?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@req.Id" />
+                                    <button type="submit" class="bg-brand-blue text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-1">
+                                        <i class="fas fa-check"></i> Aceptar
+                                    </button>
+                                </form>
+
+                                <form asp-action="Reject" method="post" onsubmit="return confirm('¿Rechazar solicitud de amistad?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@req.Id" />
+                                    <button type="submit" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors flex items-center gap-1">
+                                        <i class="fas fa-times"></i> Rechazar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- 2. Sent Requests Tab -->
+        <div id="content-sent" class="space-y-4 hidden">
+            @if (Model.SentRequests == null || !Model.SentRequests.Any())
+            {
+                <p class="text-gray-500 text-center py-8">No has enviado ninguna solicitud aún.</p>
+            }
+            else
+            {
+                <div class="divide-y divide-gray-100">
+                    @foreach (var req in Model.SentRequests)
+                    {
+                        var isPending = req.Status == "Pending";
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-4">
+                            <div class="flex items-center gap-3">
+                                @if (!string.IsNullOrEmpty(req.ReceiverProfilePhoto))
+                                {
+                                    <img src="@req.ReceiverProfilePhoto" alt="" class="w-12 h-12 rounded-full object-cover border border-gray-200" />
+                                }
+                                else
+                                {
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border border-gray-200">
+                                        <i class="fas fa-user text-xl"></i>
+                                    </div>
+                                }
+                                <div>
+                                    <h4 class="font-bold text-gray-900">@req.ReceiverName</h4>
+                                    <p class="text-xs text-gray-400">@@@req.ReceiverId.Substring(0, Math.Min(req.ReceiverId.Length, 8))</p>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Estado: 
+                                        @if (isPending)
+                                        {
+                                            <span class="text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full font-bold">Pendiente</span>
+                                        }
+                                        else if (req.Status == "Accepted")
+                                        {
+                                            <span class="text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-bold">Aceptada</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-bold">Rechazada</span>
+                                        }
+                                    </p>
+                                    @if (req.RespondedAt.HasValue)
+                                    {
+                                        <p class="text-[10px] text-gray-400 mt-0.5">Respuesta: @req.RespondedAt.Value.ToLocalTime().ToString("g")</p>
+                                    }
+                                </div>
+                            </div>
+
+                            <div>
+                                @if (isPending)
+                                {
+                                    <form asp-action="Cancel" method="post" onsubmit="return confirm('¿Cancelar solicitud pendiente?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@req.Id" />
+                                        <button type="submit" class="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
+                                            Cancelar Solicitud
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Hide" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@req.Id" />
+                                        <button type="submit" class="text-gray-400 hover:text-gray-600 p-2 rounded text-xs font-bold" title="Ocultar del historial">
+                                            <i class="fas fa-eye-slash"></i> Ocultar
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showTab(tabName) {
+            const receivedTab = document.getElementById('tab-received');
+            const sentTab = document.getElementById('tab-sent');
+            const receivedContent = document.getElementById('content-received');
+            const sentContent = document.getElementById('content-sent');
+
+            if (tabName === 'received') {
+                receivedTab.className = "border-brand-blue text-brand-blue border-b-2 py-4 px-1 font-bold text-sm flex items-center gap-1.5 focus:outline-none";
+                sentTab.className = "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-4 px-1 font-bold text-sm focus:outline-none";
+                receivedContent.classList.remove('hidden');
+                sentContent.classList.add('hidden');
+            } else {
+                sentTab.className = "border-brand-blue text-brand-blue border-b-2 py-4 px-1 font-bold text-sm flex items-center gap-1.5 focus:outline-none";
+                receivedTab.className = "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-4 px-1 font-bold text-sm focus:outline-none";
+                sentContent.classList.remove('hidden');
+                receivedContent.classList.add('hidden');
+            }
+        }
+    </script>
+}

@@ -1,50 +1,117 @@
 using AutoMapper;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LinkUpPro.Core.Application.Services
 {
-    public class GenericService<T, TDto> : IGenericService<TDto>
-        where T : class
+    public class GenericService<TEntity, TDto> : IGenericService<TDto>
+        where TEntity : class
         where TDto : class
     {
-        private readonly IGenericRepository<T> _repository;
+        private readonly IGenericRepository<TEntity> _repository;
         private readonly IMapper _mapper;
 
-        public GenericService(IGenericRepository<T> repository, IMapper mapper)
+        public GenericService(IGenericRepository<TEntity> repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
         }
         public virtual async Task<TDto?> AddAsync(TDto dto)
         {
-            var entity = _mapper.Map<T>(dto);
-            var result = await _repository.AddAsync(entity);
-            return result != null ? _mapper.Map<TDto>(result) : null;
+            try
+            {
+                TEntity T = _mapper.Map<TEntity>(dto);
+                TEntity? returnEntity = await _repository.AddAsync(T);
+                if(returnEntity == null)
+                {
+                    return null;
+                }
+                return _mapper.Map<TDto>(returnEntity);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public virtual async Task<bool> DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(id);
-            return true;
+            try
+            {
+                await _repository.DeleteAsync(id);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public virtual async Task<List<TDto>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var listEntities = await _repository.GetAllListAsync();
+                var listEntityDtos = _mapper.Map<List<TDto>>(listEntities);
+
+                return listEntityDtos;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
+
+        public virtual async Task<List<TDto>> GetAllWithIncludeAsync(List<string> properties)
+        {
+            try
+            {
+                var listEntities = await _repository.GetAllListWithInclude(properties);
+                return _mapper.Map<List<TDto>>(listEntities);
+            }
+            catch (Exception)
+            {
+                return [];
+            }
         }
 
         public virtual async Task<TDto?> GetByIdAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            return entity != null ? _mapper.Map<TDto>(entity) : null;
+            try
+            {
+                var entity = await _repository.GetByIdAsync(id);
+                if (entity == null)
+                {
+                    return null;
+                }
+
+                TDto dto = _mapper.Map<TDto>(entity);
+                return dto;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public virtual async Task<TDto?> UpdateAsync(TDto dto, int id)
         {
-            var entity = _mapper.Map<T>(dto);
-            var result = await _repository.UpdateAsync(id, entity);
-            return result != null ? _mapper.Map<TDto>(result) : null;
+            try
+            {
+                TEntity entity = _mapper.Map<TEntity>(dto);
+                TEntity? returnEntity = await _repository.UpdateAsync(id, entity);
+                if (returnEntity == null)
+                {
+                    return null;
+                }
+
+                return _mapper.Map<TDto>(returnEntity);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }

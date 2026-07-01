@@ -5,6 +5,7 @@ using LinkUpPro.Core.Application.DTOs.UserDTO;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Domain.Entities;
 using LinkUpPro.Core.Domain.Interfaces;
+using LinkUpPro.Core.Domain.Common.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,9 @@ namespace LinkUpPro.Core.Application.Services
             if (friendship.UserId1 != userId && friendship.UserId2 != userId)
                 return false;
 
-            await _repository.DeleteAsync(friendshipId);
+            // Logical deletion per PDF requirements: "cambiando el estado de la relación a eliminada."
+            friendship.Status = FriendshipStatus.Deleted;
+            await _repository.UpdateAsync(friendshipId, friendship);
             return true;
         }
 
@@ -57,7 +60,26 @@ namespace LinkUpPro.Core.Application.Services
             }
 
             var posts = await _postRepository.GetFriendsPostsAsync(friendIds, textFilter, contentTypeFilter, dateFrom, dateTo, editionStatusFilter);
-            return _mapper.Map<List<PostDTO>>(posts);
+            var dtos = _mapper.Map<List<PostDTO>>(posts);
+            
+            // Populate author info for posts of friends
+            var users = new Dictionary<string, UserDTO>();
+            foreach (var fId in friendIds)
+            {
+                var user = await _userService.GetUserById(fId);
+                if (user != null) users[fId] = user;
+            }
+
+            foreach (var post in dtos)
+            {
+                if (users.TryGetValue(post.AuthorId, out var user))
+                {
+                    post.AuthorName = $"{user.FirstName} {user.LastName}";
+                    post.AuthorPhotoUrl = user.PhotoUrl;
+                }
+            }
+
+            return dtos;
         }
 
         public async Task<int> GetFriendPostsCountAsync(string userId)
@@ -79,10 +101,31 @@ namespace LinkUpPro.Core.Application.Services
         {
             var allFriendships = await _repository.GetAllListAsync();
             var userFriendships = allFriendships
-                .Where(f => f.UserId1 == userId || f.UserId2 == userId)
+                .Where(f => (f.UserId1 == userId || f.UserId2 == userId) && f.Status == FriendshipStatus.Active)
                 .ToList();
                 
-            return _mapper.Map<List<FriendshipDTO>>(userFriendships);
+            var dtos = _mapper.Map<List<FriendshipDTO>>(userFriendships);
+
+            foreach (var dto in dtos)
+            {
+                dto.FriendId = dto.UserId1 == userId ? dto.UserId2 : dto.UserId1;
+                
+                var friendUser = await _userService.GetUserById(dto.FriendId);
+                if (friendUser != null)
+                {
+                    dto.FriendName = $"{friendUser.FirstName} {friendUser.LastName}";
+                    dto.FriendPhotoUrl = friendUser.PhotoUrl;
+                }
+                else
+                {
+                    dto.FriendName = "Usuario Inactivo";
+                }
+                
+                dto.MutualFriendsCount = await _repository.GetMutualFriendsCountAsync(userId, dto.FriendId);
+            }
+            
+            // Sort alphabetically by friend name as required by PDF
+            return dtos.OrderBy(f => f.FriendName).ToList();
         }
     }
 }

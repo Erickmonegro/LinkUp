@@ -1,0 +1,45 @@
+﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@model CreateMatchViewModel
+
+@{
+    ViewData["Title"] = "Crear Partida";
+}
+
+<h2>Crear Partida</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label asp-for="Player2Id" class="form-label"></label>
+        <input asp-for="Player2Id" class="form-control" />
+        <span asp-validation-for="Player2Id" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Crear partida
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+
+</form>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

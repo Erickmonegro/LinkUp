@@ -1,0 +1,54 @@
+﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@model GameBoardViewModel
+
+@{
+    ViewData["Title"] = "Batalla Naval";
+}
+
+<h2>Batalla Naval</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="card mb-3">
+
+    <div class="card-header">
+        Información de la partida
+    </div>
+
+    <div class="card-body">
+
+        <p>
+            <strong>Estado:</strong>
+            @Model.Match.Status
+        </p>
+
+        <p>
+            <strong>Turno:</strong>
+            @Model.Match.CurrentTurnUserId
+        </p>
+
+        <p>
+            <strong>Jugador 1:</strong>
+            @Model.Match.Player1Id
+        </p>
+
+        <p>
+            <strong>Jugador 2:</strong>
+            @Model.Match.Player2Id
+        </p>
+
+    </div>
+
+</div>

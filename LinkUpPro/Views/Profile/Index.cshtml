@@ -1,0 +1,220 @@
+@model LinkUpPro.Core.Application.ViewModels.User.UpdateUserViewModel
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="max-w-2xl mx-auto space-y-6">
+
+    <!-- Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fas fa-check-circle text-green-500"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <i class="fas fa-user-circle text-brand-blue"></i> Configuración de Mi Perfil
+        </h1>
+
+        <div asp-validation-summary="All" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+
+        <form asp-controller="Profile" asp-action="Index" method="post" enctype="multipart/form-data" class="space-y-6">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Profile Picture Display & Edit -->
+            <div class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-gray-100">
+                <div class="relative">
+                    @if (!string.IsNullOrEmpty(Model.PhotoUrl))
+                    {
+                        <img id="avatarPreview" src="@Model.PhotoUrl" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-brand-blue/20 shadow-md" />
+                    }
+                    else
+                    {
+                        <div id="avatarPlaceholder" class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-2 border-brand-blue/20 shadow-md text-3xl">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    }
+                </div>
+                
+                <div class="flex-grow space-y-2 text-center sm:text-left">
+                    <label asp-for="ProfileImageFile" class="block text-sm font-bold text-gray-700"></label>
+                    <input asp-for="ProfileImageFile" type="file" accept=".jpg,.jpeg,.png,.webp" onchange="previewFile()"
+                        class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-blue file:text-white hover:file:bg-blue-800 file:cursor-pointer" />
+                    <p class="text-xs text-gray-400">Formatos permitidos: .jpg, .jpeg, .png, .webp. Máximo 5 MB. Deje vacío para conservar la foto actual.</p>
+                </div>
+            </div>
+
+            <!-- Read-Only Fields (Email & UserName) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div>
+                    <label asp-for="UserName" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1"></label>
+                    <input asp-for="UserName" disabled class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed outline-none text-sm" />
+                    <p class="text-[10px] text-gray-400 mt-1">El nombre de usuario no es editable.</p>
+                </div>
+                <div>
+                    <label asp-for="Email" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1"></label>
+                    <input asp-for="Email" disabled class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed outline-none text-sm" />
+                    <p class="text-[10px] text-gray-400 mt-1">El correo electrónico no es editable.</p>
+                </div>
+            </div>
+
+            <!-- Editable Fields (FirstName, LastName, PhoneNumber) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <input asp-for="FirstName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
+                    <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1"></span>
+                </div>
+                <div>
+                    <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <input asp-for="LastName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
+                    <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1"></span>
+                </div>
+                <div class="sm:col-span-2">
+                    <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <input asp-for="PhoneNumber" required placeholder="809-555-1234" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
+                    <span asp-validation-for="PhoneNumber" class="text-red-500 text-xs mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Optional Password Change Section -->
+            <div class="pt-6 border-t border-gray-100 space-y-4">
+                <h3 class="text-md font-bold text-gray-950 flex items-center gap-1.5">
+                    <i class="fas fa-key text-gray-400"></i> Cambiar Contraseña (Opcional)
+                </h3>
+                <p class="text-xs text-gray-500">Deje estos campos vacíos si no desea cambiar su contraseña.</p>
+
+                <div class="space-y-4">
+                    <!-- Current Password -->
+                    <div>
+                        <label asp-for="CurrentPassword" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
+                            <input asp-for="CurrentPassword" id="currentPasswordField" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
+                            <button type="button" onclick="togglePassword('currentPasswordField', 'toggleIcon1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i id="toggleIcon1" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="CurrentPassword" class="text-red-500 text-xs mt-1"></span>
+                    </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <label asp-for="Password" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
+                            <input asp-for="Password" id="passwordField" oninput="checkStrength(this.value)" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
+                            <button type="button" onclick="togglePassword('passwordField', 'toggleIcon2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i id="toggleIcon2" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-red-500 text-xs mt-1"></span>
+                        
+                        <!-- Strength indicator -->
+                        <div id="strengthBar" class="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden" style="display:none;">
+                            <div id="strengthFill" class="h-full rounded-full transition-all duration-300" style="width:0%"></div>
+                        </div>
+                        <p id="strengthText" class="text-xs mt-1" style="display:none;"></p>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
+                            <input asp-for="ConfirmPassword" id="confirmPasswordField" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
+                            <button type="button" onclick="togglePassword('confirmPasswordField', 'toggleIcon3')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i id="toggleIcon3" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-red-500 text-xs mt-1"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex gap-3 pt-6 border-t border-gray-100">
+                <a asp-controller="Home" asp-action="Index" class="flex-1 text-center py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit" class="flex-1 bg-brand-blue text-white py-2.5 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-md">
+                    Guardar Cambios
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword(fieldId, iconId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(iconId);
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function checkStrength(password) {
+            const bar = document.getElementById('strengthBar');
+            const fill = document.getElementById('strengthFill');
+            const text = document.getElementById('strengthText');
+
+            if (!password) { bar.style.display = 'none'; text.style.display = 'none'; return; }
+            bar.style.display = 'block'; text.style.display = 'block';
+
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            if (score <= 2) {
+                fill.style.width = '33%'; fill.className = 'h-full rounded-full transition-all duration-300 bg-red-500';
+                text.textContent = 'Débil'; text.className = 'text-xs mt-1 text-red-500 font-medium';
+            } else if (score <= 4) {
+                fill.style.width = '66%'; fill.className = 'h-full rounded-full transition-all duration-300 bg-yellow-500';
+                text.textContent = 'Media'; text.className = 'text-xs mt-1 text-yellow-500 font-medium';
+            } else {
+                fill.style.width = '100%'; fill.className = 'h-full rounded-full transition-all duration-300 bg-green-500';
+                text.textContent = 'Fuerte'; text.className = 'text-xs mt-1 text-green-500 font-medium';
+            }
+        }
+
+        function previewFile() {
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            const file = document.querySelector('input[type=file]').files[0];
+            const reader = new FileReader();
+
+            reader.addEventListener("load", function () {
+                if (preview) {
+                    preview.src = reader.result;
+                } else if (placeholder) {
+                    // Switch placeholder with new preview image tag
+                    const newImg = document.createElement('img');
+                    newImg.id = 'avatarPreview';
+                    newImg.src = reader.result;
+                    newImg.className = 'w-24 h-24 rounded-full object-cover border-2 border-brand-blue/20 shadow-md';
+                    placeholder.parentNode.replaceChild(newImg, placeholder);
+                }
+            }, false);
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+}

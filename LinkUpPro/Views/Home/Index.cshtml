@@ -1,3 +1,4 @@
+@model LinkUpPro.Core.Application.ViewModels.User.LoginViewModel
 @{
     ViewData["Title"] = "Iniciar Sesión";
     ViewData["HideNav"] = true; 
@@ -107,29 +108,53 @@
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">¡Bienvenido de vuelta!</h2>
                 <p class="text-gray-500 text-base mb-8">Inicia sesión para continuar</p>
 
-                <form asp-action="Login" method="post">
+                <!-- Status messages -->
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4 text-sm">
+                        <i class="fas fa-check-circle mr-1"></i> @TempData["SuccessMessage"]
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+                        <i class="fas fa-exclamation-circle mr-1"></i> @TempData["ErrorMessage"]
+                    </div>
+                }
+
+                <!-- Validation errors -->
+                <div asp-validation-summary="All" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+
+                <form asp-controller="User" asp-action="Login" method="post">
+                    @Html.AntiForgeryToken()
+
                     <div class="mb-5">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Nombre de usuario</label>
+                        <label asp-for="UserName" class="block text-sm font-bold text-gray-700 mb-2"></label>
                         <div class="relative flex items-center">
                             <i class="far fa-user absolute left-4 text-gray-400 text-lg"></i>
-                            <input type="text" name="Username" class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-base rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-brand-blue block pl-12 p-4 transition-all outline-none" placeholder="Ingresa tu nombre de usuario" required>
+                            <input asp-for="UserName" class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-base rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-brand-blue block pl-12 p-4 transition-all outline-none" placeholder="Ingresa tu nombre de usuario" required>
                         </div>
+                        <span asp-validation-for="UserName" class="text-red-500 text-xs mt-1 block"></span>
                     </div>
 
                     <div class="mb-5">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Contraseña</label>
+                        <label asp-for="Password" class="block text-sm font-bold text-gray-700 mb-2"></label>
                         <div class="relative flex items-center">
                             <i class="fas fa-lock absolute left-4 text-gray-400 text-lg"></i>
-                            <input type="password" name="Password" class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-base rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-brand-blue block pl-12 pr-12 p-4 transition-all outline-none" placeholder="Ingresa tu contraseña" required>
-                            <i class="far fa-eye absolute right-4 text-gray-400 cursor-pointer hover:text-gray-600 text-lg"></i>
+                            <input asp-for="Password" id="passwordField" class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-base rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-brand-blue block pl-12 pr-12 p-4 transition-all outline-none" placeholder="Ingresa tu contraseña" required>
+                            <button type="button" onclick="togglePassword('passwordField', 'toggleIcon')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
+                                <i id="toggleIcon" class="far fa-eye text-lg"></i>
+                            </button>
                         </div>
+                        <span asp-validation-for="Password" class="text-red-500 text-xs mt-1 block"></span>
                     </div>
 
                     <div class="flex items-center mb-8">
                         <div class="flex items-center h-5">
-                            <input id="remember" type="checkbox" value="" class="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-brand-blue text-brand-blue cursor-pointer">
+                            <input asp-for="RememberMe" type="checkbox" class="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-brand-blue text-brand-blue cursor-pointer">
                         </div>
-                        <label for="remember" class="ml-3 text-sm font-medium text-gray-600 cursor-pointer">Mantener sesión iniciada</label>
+                        <label asp-for="RememberMe" class="ml-3 text-sm font-medium text-gray-600 cursor-pointer"></label>
                     </div>
 
                     <button type="submit" class="w-full text-white bg-brand-blue hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-xl text-lg px-5 py-4 text-center shadow-lg shadow-blue-500/30 transition-all">
@@ -143,18 +168,22 @@
                     <div class="flex-grow border-t border-gray-200"></div>
                 </div>
 
-                <button type="button" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-base px-5 py-4 text-center hover:bg-gray-50 transition-all mb-8 shadow-sm">
+                <a asp-controller="User" asp-action="GoogleLogin" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-base px-5 py-4 text-center hover:bg-gray-50 transition-all mb-8 shadow-sm cursor-pointer">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" class="w-6 h-6">
                     Iniciar sesión con Google
-                </button>
+                </a>
 
                 <div class="flex flex-col gap-2">
-                    <a href="#" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm border-b border-gray-100 transition-colors">
+                    <a asp-controller="User" asp-action="Register" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm border-b border-gray-100 transition-colors">
                         <span><i class="fas fa-user-plus w-6 text-center mr-2 text-gray-400"></i> Crear una cuenta</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </a>
-                    <a href="#" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm transition-colors">
+                    <a asp-controller="User" asp-action="ForgotPassword" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm border-b border-gray-100 transition-colors">
                         <span><i class="fas fa-unlock-alt w-6 text-center mr-2 text-gray-400"></i> ¿Olvidaste tu contraseña?</span>
+                        <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                    </a>
+                    <a asp-controller="User" asp-action="ResendActivation" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm transition-colors">
+                        <span><i class="fas fa-envelope-open-text w-6 text-center mr-2 text-gray-400"></i> Reenviar activación</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </a>
                 </div>
@@ -163,3 +192,21 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function togglePassword(fieldId, iconId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(iconId);
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+}

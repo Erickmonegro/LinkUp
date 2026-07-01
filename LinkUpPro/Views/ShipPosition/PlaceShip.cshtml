@@ -1,0 +1,88 @@
+﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@using LinkUpPro.Core.Domain.Common.Enums
+@model ShipPositionViewModel
+
+@{
+    ViewData["Title"] = "Colocar Barco";
+}
+
+<h2>Colocar Barco</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<form asp-action="PlaceShip" method="post">
+
+    <input asp-for="BattleshipMatchId" type="hidden" />
+
+    <input asp-for="UserId" type="hidden" />
+
+    <div class="mb-3">
+        <label asp-for="ShipSize" class="form-label"></label>
+
+        <select asp-for="ShipSize" class="form-select">
+            <option value="">Seleccione...</option>
+            <option value="2">2 casillas</option>
+            <option value="3">3 casillas</option>
+            <option value="4">4 casillas</option>
+            <option value="5">5 casillas</option>
+        </select>
+
+        <span asp-validation-for="ShipSize" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="StartX" class="form-label"></label>
+
+        <input asp-for="StartX" class="form-control" />
+
+        <span asp-validation-for="StartX" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="StartY" class="form-label"></label>
+
+        <input asp-for="StartY" class="form-control" />
+
+        <span asp-validation-for="StartY" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Direction" class="form-label"></label>
+
+        <select asp-for="Direction"
+                asp-items="Html.GetEnumSelectList<ShipDirection>()"
+                class="form-select">
+        </select>
+
+        <span asp-validation-for="Direction" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Guardar Barco
+    </button>
+
+    <a asp-controller="BattleshipMatch"
+       asp-action="Details"
+       asp-route-id="@Model.BattleshipMatchId"
+       class="btn btn-secondary">
+        Volver
+    </a>
+
+</form>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

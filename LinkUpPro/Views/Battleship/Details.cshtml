@@ -1,159 +1,196 @@
-﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@using LinkUpPro.Core.Application.ViewModels.Battleship
 @using LinkUpPro.Core.Domain.Common.Enums
 @model BattleshipMatchViewModel
 
 @{
     ViewData["Title"] = "Detalles de la Partida";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 
-<h2>Detalles de la Partida</h2>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["Success"]
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex items-center justify-between border-b border-gray-200 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue text-2xl shadow-sm">
+                <i class="fas fa-ship"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-gray-900 tracking-tight">Sala de Batalla #@Model.Id</h2>
+                <p class="text-sm text-gray-500">Consulta el estado y gestiona tus flotas de combate</p>
+            </div>
+        </div>
+        <div>
+            @if (Model.Status == MatchStatus.Pending)
+            {
+                <span class="px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Fase de Preparación
+                </span>
+            }
+            else if (Model.Status == MatchStatus.InProgress)
+            {
+                <span class="px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> En Combate
+                </span>
+            }
+            else
+            {
+                <span class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fas fa-flag-checkered text-gray-600"></i> Partida Finalizada
+                </span>
+            }
+        </div>
     </div>
-}
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["Error"]
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium">
+            <i class="fas fa-check-circle text-green-500 text-lg"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium">
+            <i class="fas fa-info-circle text-blue-500 text-lg"></i>
+            <span>@TempData["Info"]</span>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <!-- Players Card -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Jugador 1 (Retador)</p>
+            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-user-shield text-blue-500"></i>
+                @(Model.Player1Name ?? Model.Player1Id)
+            </h3>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full bg-red-500"></div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Jugador 2 (Desafiado)</p>
+            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-crosshairs text-red-500"></i>
+                @(Model.Player2Name ?? Model.Player2Id)
+            </h3>
+        </div>
     </div>
-}
 
-<div class="card">
-    <div class="card-header">
-        <h4>Información de la partida</h4>
+    <!-- Match Information Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 flex items-center justify-between">
+            <span class="flex items-center gap-2"><i class="fas fa-info-circle text-brand-blue"></i> Estado del Enfrentamiento</span>
+            <span class="text-xs font-medium text-gray-500">ID Partida: #@Model.Id</span>
+        </div>
+
+        <div class="p-6">
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <dt class="text-xs font-bold text-gray-400 uppercase tracking-wider">Turno Actual</dt>
+                    <dd class="text-sm font-bold text-gray-800 mt-0.5 flex items-center gap-1.5">
+                        @if (Model.Status == MatchStatus.InProgress)
+                        {
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+                        }
+                        @(Model.CurrentTurnUserName ?? Model.CurrentTurnUserId)
+                    </dd>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <dt class="text-xs font-bold text-gray-400 uppercase tracking-wider">Ganador de la Batalla</dt>
+                    <dd class="text-sm font-bold text-gray-800 mt-0.5">
+                        @if (!string.IsNullOrEmpty(Model.WinnerName))
+                        {
+                            <span class="text-amber-600 font-black flex items-center gap-1"><i class="fas fa-trophy"></i> @Model.WinnerName</span>
+                        }
+                        else
+                        {
+                            <span class="text-gray-400">En disputa / Pendiente</span>
+                        }
+                    </dd>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <dt class="text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha de Asignación de Turno</dt>
+                    <dd class="text-sm font-medium text-gray-700 mt-0.5">@Model.TurnAssignedAt.ToString("g")</dd>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <dt class="text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha de Finalización</dt>
+                    <dd class="text-sm font-medium text-gray-700 mt-0.5">@(Model.EndDate?.ToString("g") ?? "No finalizada")</dd>
+                </div>
+            </dl>
+        </div>
     </div>
 
-    <div class="card-body">
+    <!-- Actions Toolbar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap gap-3">
+            @if (Model.Status == MatchStatus.Pending)
+            {
+                <a asp-controller="ShipPosition"
+                   asp-action="PlaceShip"
+                   asp-route-matchId="@Model.Id"
+                   class="bg-brand-blue text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt"></i> Colocar Barcos
+                </a>
 
-        <dl class="row">
+                <a asp-controller="ShipPosition"
+                   asp-action="MyShips"
+                   asp-route-matchId="@Model.Id"
+                   asp-route-playerId="@currentUserId"
+                   class="bg-sky-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-sky-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                    <i class="fas fa-eye"></i> Ver Mis Barcos
+                </a>
 
-            <dt class="col-sm-3">
-                Id
-            </dt>
+                <form asp-controller="ShipPosition"
+                      asp-action="Ready"
+                      method="post"
+                      class="inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="matchId" value="@Model.Id" />
+                    <button type="submit" class="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <i class="fas fa-play"></i> ¡Estoy Listo! (Iniciar Partida)
+                    </button>
+                </form>
+            }
 
-            <dd class="col-sm-9">
-                @Model.Id
-            </dd>
+            @if (Model.Status == MatchStatus.InProgress)
+            {
+                <a asp-controller="Attack"
+                   asp-action="Play"
+                   asp-route-matchId="@Model.Id"
+                   class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 animate-bounce">
+                    <i class="fas fa-gamepad text-lg"></i> Entrar al Tablero de Juego
+                </a>
 
-            <dt class="col-sm-3">
-                Jugador 1
-            </dt>
+                <form asp-action="Surrender"
+                      method="post"
+                      class="inline"
+                      onsubmit="return confirm('¿Estás seguro de que deseas rendirte? Perderás automáticamente la partida.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="playerId" value="@currentUserId" />
+                    <button type="submit" class="bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-600 transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                        <i class="fas fa-flag"></i> Rendirse
+                    </button>
+                </form>
+            }
+        </div>
 
-            <dd class="col-sm-9">
-                @Model.Player1Id
-            </dd>
-
-            <dt class="col-sm-3">
-                Jugador 2
-            </dt>
-
-            <dd class="col-sm-9">
-                @Model.Player2Id
-            </dd>
-
-            <dt class="col-sm-3">
-                Estado
-            </dt>
-
-            <dd class="col-sm-9">
-                @Model.Status
-            </dd>
-
-            <dt class="col-sm-3">
-                Turno actual
-            </dt>
-
-            <dd class="col-sm-9">
-                @Model.CurrentTurnUserId
-            </dd>
-
-            <dt class="col-sm-3">
-                Ganador
-            </dt>
-
-            <dd class="col-sm-9">
-                @(Model.WinnerId ?? "Sin ganador")
-            </dd>
-
-            <dt class="col-sm-3">
-                Fecha de finalización
-            </dt>
-
-            <dd class="col-sm-9">
-                @(Model.EndDate?.ToString("g") ?? "Pendiente")
-            </dd>
-
-        </dl>
-
+        <div>
+            <a asp-action="Index" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Volver al Listado
+            </a>
+        </div>
     </div>
 </div>
-
-<br />
-
-<div>
-
-    @if (Model.Status == MatchStatus.Pending)
-    {
-        <a asp-controller="ShipPosition"
-           asp-action="PlaceShip"
-           asp-route-matchId="@Model.Id"
-           class="btn btn-primary">
-            Colocar barcos
-        </a>
-
-        <form asp-controller="ShipPosition"
-              asp-action="StartGame"
-              method="post"
-              class="d-inline">
-
-            <input type="hidden"
-                   name="matchId"
-                   value="@Model.Id" />
-
-            <button type="submit"
-                    class="btn btn-success">
-                Iniciar partida
-            </button>
-
-        </form>
-    }
-
-    @if (Model.Status == MatchStatus.InProgress)
-    {
-        <a asp-controller="Attack"
-           asp-action="Play"
-           asp-route-matchId="@Model.Id"
-           class="btn btn-success">
-            Jugar
-        </a>
-
-        <form asp-action="Surrender"
-              method="post"
-              class="d-inline">
-
-            <input type="hidden"
-                   name="id"
-                   value="@Model.Id" />
-
-            <input type="hidden"
-                   name="playerId"
-                   value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
-
-            <button type="submit"
-                    class="btn btn-danger">
-                Rendirse
-            </button>
-
-        </form>
-    }
-
-    <a asp-action="Index"
-       class="btn btn-secondary">
-        Volver
-    </a>
-
-</div>}

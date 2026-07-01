@@ -1,77 +1,174 @@
-﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@using LinkUpPro.Core.Application.ViewModels.Battleship
+@using LinkUpPro.Core.Domain.Common.Enums
 @model IEnumerable<BattleshipMatchViewModel>
 
 @{
-    ViewData["Title"] = "Mis Partidas";
+    ViewData["Title"] = "Centro de Mando - Battleship";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 
-<h2>Mis Partidas</h2>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["Success"]
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue text-2xl shadow-sm">
+                <i class="fas fa-water"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-gray-900 tracking-tight">Centro de Mando - Battleship</h2>
+                <p class="text-sm text-gray-500">Administra tus batallas navales y desafía a tus amigos</p>
+            </div>
+        </div>
+        <div>
+            <a asp-action="Create" class="bg-brand-blue text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-800 transition-all shadow-md hover:shadow-lg inline-flex items-center gap-2">
+                <i class="fas fa-plus-circle"></i> Nuevo Desafío
+            </a>
+        </div>
     </div>
-}
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["Error"]
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm">
+            <i class="fas fa-check-circle text-green-500 text-lg"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm">
+            <i class="fas fa-info-circle text-blue-500 text-lg"></i>
+            <span>@TempData["Info"]</span>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <!-- Matches Table / Cards -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider font-bold">
+                        <th class="py-4 px-6">Partida ID</th>
+                        <th class="py-4 px-6">Enfrentamiento</th>
+                        <th class="py-4 px-6">Estado</th>
+                        <th class="py-4 px-6">Turno Actual</th>
+                        <th class="py-4 px-6">Ganador</th>
+                        <th class="py-4 px-6 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm font-medium">
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            var isMyTurn = item.CurrentTurnUserId == currentUserId && item.Status == MatchStatus.InProgress;
+                            <tr class="hover:bg-blue-50/30 transition-colors @(isMyTurn ? "bg-amber-50/40" : "")">
+                                <td class="py-4 px-6 font-bold text-gray-900">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 text-xs">
+                                        #@item.Id
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-800">@(item.Player1Name ?? item.Player1Id)</span>
+                                        <span class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded font-black">VS</span>
+                                        <span class="font-bold text-gray-800">@(item.Player2Name ?? item.Player2Id)</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if (item.Status == MatchStatus.Pending)
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Preparación
+                                        </span>
+                                    }
+                                    else if (item.Status == MatchStatus.InProgress)
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span> En Curso
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                                            <i class="fas fa-check text-gray-500"></i> Finalizada
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if (item.Status == MatchStatus.InProgress)
+                                    {
+                                        @if (isMyTurn)
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 text-amber-600 font-extrabold animate-pulse">
+                                                <i class="fas fa-star"></i> ¡Tu Turno!
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-600">@(item.CurrentTurnUserName ?? item.CurrentTurnUserId)</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400">-</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if (!string.IsNullOrEmpty(item.WinnerName))
+                                    {
+                                        <span class="text-amber-600 font-bold inline-flex items-center gap-1">
+                                            <i class="fas fa-trophy"></i> @item.WinnerName
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400">-</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        @if (item.Status == MatchStatus.InProgress && isMyTurn)
+                                        {
+                                            <a asp-controller="Attack" asp-action="Play" asp-route-matchId="@item.Id" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-colors inline-flex items-center gap-1 shadow-sm">
+                                                <i class="fas fa-crosshairs"></i> Atacar
+                                            </a>
+                                        }
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="px-3 py-1.5 bg-brand-blue/10 text-brand-blue rounded-lg text-xs font-bold hover:bg-brand-blue hover:text-white transition-all inline-flex items-center gap-1">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="py-12 text-center">
+                                <div class="max-w-xs mx-auto text-center space-y-3">
+                                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-gray-400 text-2xl">
+                                        <i class="fas fa-water"></i>
+                                    </div>
+                                    <h4 class="font-bold text-gray-700">No hay partidas registradas</h4>
+                                    <p class="text-xs text-gray-500">¡Aún no has jugado ninguna partida de Battleship! Reta a un amigo para comenzar.</p>
+                                    <a asp-action="Create" class="inline-block mt-2 px-4 py-2 bg-brand-blue text-white rounded-xl text-xs font-bold hover:bg-blue-800 transition-colors shadow-sm">
+                                        <i class="fas fa-plus"></i> Crear Nueva Partida
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-}
-
-<p>
-    <a asp-action="Create" class="btn btn-primary">
-        Nueva Partida
-    </a>
-</p>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Jugador 1</th>
-            <th>Jugador 2</th>
-            <th>Estado</th>
-            <th>Turno</th>
-            <th>Ganador</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        @if (Model.Any())
-        {
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Player1Id</td>
-                    <td>@item.Player2Id</td>
-                    <td>@item.Status</td>
-                    <td>@item.CurrentTurnUserId</td>
-                    <td>@(item.WinnerId ?? "-")</td>
-
-                    <td>
-
-                        <a asp-action="Details"
-                           asp-route-id="@item.Id"
-                           class="btn btn-info btn-sm">
-                            Ver
-                        </a>
-
-                    </td>
-                </tr>
-            }
-        }
-        else
-        {
-            <tr>
-                <td colspan="6" class="text-center">
-                    No existen partidas.
-                </td>
-            </tr>
-        }
-
-    </tbody>
-</table>
+</div>

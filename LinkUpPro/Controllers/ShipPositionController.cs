@@ -2,11 +2,14 @@ using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.Battleship;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.Battleship;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace LinkUpPro.Controllers
 {
+    [Authorize]
     public class ShipPositionController : Controller
     {
         private readonly ILogger<ShipPositionController> _logger;
@@ -24,11 +27,52 @@ namespace LinkUpPro.Controllers
         }
 
         [HttpGet]
-        public IActionResult PlaceShip(int matchId)
+        public async Task<IActionResult> PlaceShip(int matchId, int? shipSize)
         {
-            ViewBag.MatchId = matchId;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return View();
+            if (userId == null)
+                return RedirectToAction("Login", "User");
+
+            var existingShips = await shipService.GetByPlayerAsync(matchId, userId);
+
+            if (existingShips.Count >= 5)
+            {
+                TempData["Info"] = "Ya has colocado todos tus barcos en el tablero.";
+                return RedirectToAction(nameof(MyShips), new { matchId, playerId = userId });
+            }
+
+            var occupiedCells = new HashSet<string>();
+            foreach (var ship in existingShips)
+            {
+                for (int i = 0; i < ship.ShipSize; i++)
+                {
+                    int x = ship.StartX;
+                    int y = ship.StartY;
+                    if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Up) y -= i;
+                    else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Down) y += i;
+                    else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Left) x -= i;
+                    else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Right) x += i;
+                    occupiedCells.Add($"{x},{y}");
+                }
+            }
+
+            ViewBag.ExistingShips = existingShips;
+            ViewBag.OccupiedCells = occupiedCells;
+            ViewBag.Count2 = existingShips.Count(s => s.ShipSize == 2);
+            ViewBag.Count3 = existingShips.Count(s => s.ShipSize == 3);
+            ViewBag.Count4 = existingShips.Count(s => s.ShipSize == 4);
+            ViewBag.Count5 = existingShips.Count(s => s.ShipSize == 5);
+
+            var vm = new ShipPositionViewModel
+            {
+                Id = 0,
+                BattleshipMatchId = matchId,
+                UserId = userId,
+                ShipSize = shipSize ?? 0
+            };
+
+            return View(vm);
         }
 
         [HttpPost]
@@ -37,7 +81,26 @@ namespace LinkUpPro.Controllers
             try
             {
                 if (!ModelState.IsValid)
+                {
+                    var existingShips = await shipService.GetByPlayerAsync(vm.BattleshipMatchId, vm.UserId);
+                    var occupiedCells = new HashSet<string>();
+                    foreach (var ship in existingShips)
+                    {
+                        for (int i = 0; i < ship.ShipSize; i++)
+                        {
+                            int x = ship.StartX;
+                            int y = ship.StartY;
+                            if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Up) y -= i;
+                            else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Down) y += i;
+                            else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Left) x -= i;
+                            else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Right) x += i;
+                            occupiedCells.Add($"{x},{y}");
+                        }
+                    }
+                    ViewBag.ExistingShips = existingShips;
+                    ViewBag.OccupiedCells = occupiedCells;
                     return View(vm);
+                }
 
                 var dto = mapper.Map<ShipPositionDTO>(vm);
 
@@ -46,19 +109,49 @@ namespace LinkUpPro.Controllers
                     vm.UserId,
                     dto);
 
-                TempData["Success"] = "Barco colocado correctamente.";
+                var updatedShips = await shipService.GetByPlayerAsync(vm.BattleshipMatchId, vm.UserId);
 
-                return RedirectToAction(nameof(MyShips),
-                    new
-                    {
-                        matchId = vm.BattleshipMatchId,
-                        playerId = vm.UserId
-                    });
+                if (updatedShips.Count >= 5)
+                {
+                    TempData["Success"] = "¡Felicidades! Has colocado todos los barcos de tu flota correctamente.";
+                    return RedirectToAction(nameof(MyShips),
+                        new
+                        {
+                            matchId = vm.BattleshipMatchId,
+                            playerId = vm.UserId
+                        });
+                }
+                else
+                {
+                    TempData["Success"] = "Barco colocado correctamente. Selecciona tu siguiente barco.";
+                    return RedirectToAction(nameof(PlaceShip),
+                        new
+                        {
+                            matchId = vm.BattleshipMatchId
+                        });
+                }
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
 
+                var existingShips = await shipService.GetByPlayerAsync(vm.BattleshipMatchId, vm.UserId);
+                var occupiedCells = new HashSet<string>();
+                foreach (var ship in existingShips)
+                {
+                    for (int i = 0; i < ship.ShipSize; i++)
+                    {
+                        int x = ship.StartX;
+                        int y = ship.StartY;
+                        if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Up) y -= i;
+                        else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Down) y += i;
+                        else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Left) x -= i;
+                        else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Right) x += i;
+                        occupiedCells.Add($"{x},{y}");
+                    }
+                }
+                ViewBag.ExistingShips = existingShips;
+                ViewBag.OccupiedCells = occupiedCells;
                 return View(vm);
             }
         }
@@ -71,6 +164,9 @@ namespace LinkUpPro.Controllers
                     matchId,
                     playerId);
 
+                ViewBag.MatchId = matchId;
+                ViewBag.PlayerId = playerId;
+
                 var vm = mapper.Map<List<ShipPositionViewModel>>(ships);
 
                 return View(vm);
@@ -79,7 +175,7 @@ namespace LinkUpPro.Controllers
             {
                 TempData["Error"] = ex.Message;
 
-                return RedirectToAction("Index", "BattleshipMatch");
+                return RedirectToAction("Index", "Battleship");
             }
         }
 
@@ -98,7 +194,7 @@ namespace LinkUpPro.Controllers
                 TempData["Error"] = ex.Message;
 
                 return RedirectToAction("Details",
-                    "BattleshipMatch",
+                    "Battleship",
                     new { id = matchId });
             }
         }
@@ -147,7 +243,7 @@ namespace LinkUpPro.Controllers
                 if (match == null)
                 {
                     TempData["Error"] = "La partida no existe.";
-                    return RedirectToAction("Index", "BattleshipMatch");
+                    return RedirectToAction("Index", "Battleship");
                 }
 
                 bool player1Ready = await shipService.AreShipsPlacedAsync(matchId, match.Player1Id);
@@ -157,7 +253,7 @@ namespace LinkUpPro.Controllers
                 {
                     TempData["Info"] = "Ambos jugadores deben colocar todos sus barcos.";
 
-                    return RedirectToAction("Details", "BattleshipMatch", new { id = matchId });
+                    return RedirectToAction("Details", "Battleship", new { id = matchId });
                 }
 
                 await _matchService.StartMatchAsync(matchId);
@@ -170,7 +266,7 @@ namespace LinkUpPro.Controllers
             {
                 TempData["Error"] = ex.Message;
 
-                return RedirectToAction("Details", "BattleshipMatch", new { id = matchId });
+                return RedirectToAction("Details", "Battleship", new { id = matchId });
             }
         }
     }

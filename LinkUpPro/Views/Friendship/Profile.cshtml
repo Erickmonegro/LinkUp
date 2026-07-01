@@ -136,6 +136,7 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="postId" value="@post.Id" />
                                 <input type="hidden" name="isLike" value="true" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
                                 <button type="submit" class="flex items-center gap-1.5 hover:text-brand-blue transition-colors @(hasLike ? "text-brand-blue font-bold" : "")">
                                     <i class="@(hasLike ? "fas" : "far") fa-thumbs-up"></i>
                                     <span>@post.ReactionsCount</span>
@@ -146,6 +147,7 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="postId" value="@post.Id" />
                                 <input type="hidden" name="isLike" value="false" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
                                 <button type="submit" class="flex items-center gap-1.5 hover:text-red-500 transition-colors @(hasDislike ? "text-red-500 font-bold" : "")">
                                     <i class="@(hasDislike ? "fas" : "far") fa-thumbs-down"></i>
                                 </button>

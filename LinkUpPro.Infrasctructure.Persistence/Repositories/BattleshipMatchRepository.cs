@@ -41,8 +41,9 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         public async Task<List<BattleshipMatch>> GetMatchHistoryForUserAsync(string userId)
         {
             return await repo.Set<BattleshipMatch>()
-                .Where(m => m.Status == MatchStatus.Finished && (m.Player1Id == userId || m.Player2Id == userId))
-                .OrderByDescending(m => m.EndDate)
+                .Where(m => m.Player1Id == userId || m.Player2Id == userId)
+                .OrderBy(m => m.Status == MatchStatus.Finished ? 2 : (m.Status == MatchStatus.Pending ? 1 : 0))
+                .ThenByDescending(m => m.Id)
                 .ToListAsync();
         }
     }

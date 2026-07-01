@@ -30,7 +30,7 @@ namespace LinkUpPro.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Toggle(int postId, bool isLike)
+        public async Task<IActionResult> Toggle(int postId, bool isLike, string? returnUrl)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "User");
@@ -74,6 +74,9 @@ namespace LinkUpPro.Controllers
 
                 await _notificationService.AddAsync(notification);
             }
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
 
             return RedirectToAction("Index", "Home");
         }

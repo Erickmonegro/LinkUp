@@ -4,6 +4,22 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UseBlazorWebAssembly>false</UseBlazorWebAssembly>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.17">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LinkUpPro.Core.Application\LinkUpPro.Core.Application.csproj" />
+    <ProjectReference Include="..\LinkUpPro.Infrasctructure.Persistence\LinkUpPro.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\LinkUpPro.Infrastructure.Identity\LinkUpPro.Infrastructure.Identity.csproj" />
+    <ProjectReference Include="..\LinkUpPro.Infrastructure.Shared\LinkUpPro.Infrastructure.Shared.csproj" />
+  </ItemGroup>
 
 </Project>

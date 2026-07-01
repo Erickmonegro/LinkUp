@@ -12,6 +12,7 @@ namespace LinkUpPro.Core.Domain.Entities
         public int StartY { get; set; }
         public ShipDirection Direction { get; set; }
         public bool IsSunk { get; set; }
+        public int Hits { get; set; }
 
         // Navigation 
         public BattleshipMatch? BattleshipMatch { get; set; }

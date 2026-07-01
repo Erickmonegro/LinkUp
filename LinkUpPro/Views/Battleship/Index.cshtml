@@ -1,0 +1,77 @@
+﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@model IEnumerable<BattleshipMatchViewModel>
+
+@{
+    ViewData["Title"] = "Mis Partidas";
+}
+
+<h2>Mis Partidas</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">
+        Nueva Partida
+    </a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Jugador 1</th>
+            <th>Jugador 2</th>
+            <th>Estado</th>
+            <th>Turno</th>
+            <th>Ganador</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @if (Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Player1Id</td>
+                    <td>@item.Player2Id</td>
+                    <td>@item.Status</td>
+                    <td>@item.CurrentTurnUserId</td>
+                    <td>@(item.WinnerId ?? "-")</td>
+
+                    <td>
+
+                        <a asp-action="Details"
+                           asp-route-id="@item.Id"
+                           class="btn btn-info btn-sm">
+                            Ver
+                        </a>
+
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6" class="text-center">
+                    No existen partidas.
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>

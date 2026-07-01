@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Acceso Denegado";
+    ViewData["HideNav"] = true;
+}
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
+            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-ban text-yellow-600 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Acceso Denegado</h2>
+            <p class="text-gray-600 mb-6">No posee permisos para acceder a esta sección.</p>
+            <a asp-action="Index" asp-controller="Home" class="inline-block bg-brand-blue text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-800 transition-colors shadow-md">
+                <i class="fas fa-home mr-2"></i>Ir al Inicio
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,159 @@
+﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@using LinkUpPro.Core.Domain.Common.Enums
+@model BattleshipMatchViewModel
+
+@{
+    ViewData["Title"] = "Detalles de la Partida";
+}
+
+<h2>Detalles de la Partida</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4>Información de la partida</h4>
+    </div>
+
+    <div class="card-body">
+
+        <dl class="row">
+
+            <dt class="col-sm-3">
+                Id
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.Id
+            </dd>
+
+            <dt class="col-sm-3">
+                Jugador 1
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.Player1Id
+            </dd>
+
+            <dt class="col-sm-3">
+                Jugador 2
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.Player2Id
+            </dd>
+
+            <dt class="col-sm-3">
+                Estado
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.Status
+            </dd>
+
+            <dt class="col-sm-3">
+                Turno actual
+            </dt>
+
+            <dd class="col-sm-9">
+                @Model.CurrentTurnUserId
+            </dd>
+
+            <dt class="col-sm-3">
+                Ganador
+            </dt>
+
+            <dd class="col-sm-9">
+                @(Model.WinnerId ?? "Sin ganador")
+            </dd>
+
+            <dt class="col-sm-3">
+                Fecha de finalización
+            </dt>
+
+            <dd class="col-sm-9">
+                @(Model.EndDate?.ToString("g") ?? "Pendiente")
+            </dd>
+
+        </dl>
+
+    </div>
+</div>
+
+<br />
+
+<div>
+
+    @if (Model.Status == MatchStatus.Pending)
+    {
+        <a asp-controller="ShipPosition"
+           asp-action="PlaceShip"
+           asp-route-matchId="@Model.Id"
+           class="btn btn-primary">
+            Colocar barcos
+        </a>
+
+        <form asp-controller="ShipPosition"
+              asp-action="StartGame"
+              method="post"
+              class="d-inline">
+
+            <input type="hidden"
+                   name="matchId"
+                   value="@Model.Id" />
+
+            <button type="submit"
+                    class="btn btn-success">
+                Iniciar partida
+            </button>
+
+        </form>
+    }
+
+    @if (Model.Status == MatchStatus.InProgress)
+    {
+        <a asp-controller="Attack"
+           asp-action="Play"
+           asp-route-matchId="@Model.Id"
+           class="btn btn-success">
+            Jugar
+        </a>
+
+        <form asp-action="Surrender"
+              method="post"
+              class="d-inline">
+
+            <input type="hidden"
+                   name="id"
+                   value="@Model.Id" />
+
+            <input type="hidden"
+                   name="playerId"
+                   value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
+
+            <button type="submit"
+                    class="btn btn-danger">
+                Rendirse
+            </button>
+
+        </form>
+    }
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Volver
+    </a>
+
+</div>}

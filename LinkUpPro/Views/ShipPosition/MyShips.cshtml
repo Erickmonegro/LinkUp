@@ -1,0 +1,86 @@
+﻿@using LinkUpPro.Core.Application.ViewModels.Battleship
+@model IEnumerable<ShipPositionViewModel>
+
+@{
+    ViewData["Title"] = "Mis Barcos";
+}
+
+<h2>Mis Barcos</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<table class="table table-bordered table-striped">
+
+    <thead>
+
+        <tr>
+
+            <th>Tamaño</th>
+
+            <th>Posición X</th>
+
+            <th>Posición Y</th>
+
+            <th>Dirección</th>
+
+            <th>Hundido</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        @if (Model.Any())
+        {
+            @foreach (var ship in Model)
+            {
+                <tr>
+
+                    <td>@ship.ShipSize</td>
+
+                    <td>@ship.StartX</td>
+
+                    <td>@ship.StartY</td>
+
+                    <td>@ship.Direction</td>
+
+                    <td>
+                        @(ship.IsSunk ? "Sí" : "No")
+                    </td>
+
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+
+                <td colspan="5" class="text-center">
+                    No has colocado barcos.
+                </td>
+
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+
+<a asp-controller="BattleshipMatch"
+   asp-action="Index"
+   class="btn btn-secondary">
+    Volver
+</a>

@@ -1,3 +1,24 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using LinkUpPro.Infrastructure.Identity.Entities
+@inject LinkUpPro.Core.Application.Interfaces.IFriendRequestService FriendRequestService
+@inject LinkUpPro.Core.Application.Interfaces.INotificationService NotificationService
+@inject UserManager<AppUser> UserManager
+
+@{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    int pendingRequestsCount = 0;
+    int unreadNotificationsCount = 0;
+    AppUser? currentUser = null;
+
+    if (userId != null)
+    {
+        pendingRequestsCount = await FriendRequestService.GetPendingCountAsync(userId);
+        unreadNotificationsCount = await NotificationService.GetUnreadCountAsync(userId);
+        currentUser = await UserManager.FindByIdAsync(userId);
+    }
+}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,17 +31,17 @@
 
     <script>
         tailwind.config = {
-        theme: {
-        extend: {
-        colors: {
-        'brand-blue': '#060396',
-        'bg-soft': '#e8edf3' /* Gris azulado suave */
-        },
-        fontFamily: {
-        sans: ['Segoe UI', 'Roboto', 'Helvetica Neue', 'sans-serif'],
-        }
-        }
-        }
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-blue': '#060396',
+                        'bg-soft': '#e8edf3'
+                    },
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Roboto', 'Helvetica Neue', 'sans-serif'],
+                    }
+                }
+            }
         }
     </script>
 </head>
@@ -37,9 +58,59 @@
                             LinkUp <span class="text-brand-blue">Pro</span>
                         </a>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a asp-controller="Home" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-3 py-2 rounded-md transition-colors">Inicio</a>
-                        <a asp-controller="Home" asp-action="Privacy" class="text-gray-600 hover:text-brand-blue font-medium px-3 py-2 rounded-md transition-colors">Privacidad</a>
+                    <div class="flex items-center space-x-2 md:space-x-4">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <a asp-controller="Home" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">Home</a>
+                            
+                            <a asp-controller="Friendship" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">Amigos</a>
+                            
+                            <a asp-controller="FriendRequest" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors relative text-sm md:text-base">
+                                Solicitudes
+                                @if (pendingRequestsCount > 0)
+                                {
+                                    <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+                                        @pendingRequestsCount
+                                    </span>
+                                }
+                            </a>
+                            
+                            <a asp-controller="Notification" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors relative text-sm md:text-base">
+                                Notificaciones
+                                @if (unreadNotificationsCount > 0)
+                                {
+                                    <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+                                        @unreadNotificationsCount
+                                    </span>
+                                }
+                            </a>
+                            
+                            <a asp-controller="Battleship" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">Battleship</a>
+                            
+                            <a asp-controller="Profile" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base flex items-center gap-1.5">
+                                @if (currentUser != null && !string.IsNullOrEmpty(currentUser.ProfilePhoto))
+                                {
+                                    <img src="@currentUser.ProfilePhoto" alt="Foto" class="w-6 h-6 rounded-full object-cover border border-gray-300" />
+                                }
+                                else
+                                {
+                                    <i class="fas fa-user-circle"></i>
+                                }
+                                <span class="hidden sm:inline">Mi Perfil</span>
+                            </a>
+                            
+                            <form asp-controller="User" asp-action="Logout" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="text-red-600 hover:text-red-800 font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">
+                                    <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Salir</span>
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="User" asp-action="Login" class="text-gray-600 hover:text-brand-blue font-medium px-3 py-2 rounded-md transition-colors">Iniciar Sesión</a>
+                            <a asp-controller="User" asp-action="Register" class="bg-brand-blue text-white font-medium px-4 py-2 rounded-md transition-colors hover:bg-blue-800">Registrarse</a>
+                        }
                     </div>
                 </div>
             </nav>

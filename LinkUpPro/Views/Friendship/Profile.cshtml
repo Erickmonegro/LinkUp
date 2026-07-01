@@ -1,0 +1,306 @@
+@using LinkUpPro.Core.Domain.Common.Enums
+@using System.Security.Claims
+@model LinkUpPro.Core.Application.ViewModels.Friendship.FriendProfileViewModel
+@{
+    ViewData["Title"] = $"Perfil de {@Model.FullName}";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var posts = ViewBag.Posts as List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO> ?? new List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO>();
+}
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Back to Friends -->
+    <div class="flex justify-start">
+        <a asp-controller="Friendship" asp-action="Index" class="text-gray-600 hover:text-brand-blue transition-colors font-medium flex items-center gap-1.5">
+            <i class="fas fa-arrow-left"></i> Volver a Amigos
+        </a>
+    </div>
+
+    <!-- Friend Card Header -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row items-center gap-6">
+        @if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+        {
+            <img src="@Model.ProfilePhoto" alt="Profile" class="w-24 h-24 rounded-full object-cover border-2 border-brand-blue/20 shadow-md" />
+        }
+        else
+        {
+            <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-2 border-brand-blue/20 shadow-md text-3xl">
+                <i class="fas fa-user"></i>
+            </div>
+        }
+        
+        <div class="flex-grow text-center md:text-left space-y-2">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 leading-tight">@Model.FullName</h1>
+                <p class="text-sm text-gray-500">@@@Model.UserName</p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-medium text-gray-600">
+                <span class="flex items-center gap-1"><i class="fas fa-envelope text-gray-400"></i> @Model.Email</span>
+                <span class="flex items-center gap-1"><i class="fas fa-phone text-gray-400"></i> @Model.Phone</span>
+            </div>
+
+            <div class="flex flex-wrap justify-center md:justify-start gap-3 pt-1">
+                <span class="bg-blue-50 text-brand-blue text-xs font-bold px-2.5 py-1 rounded-lg">
+                    @Model.TotalFriends amigos en total
+                </span>
+                <span class="bg-indigo-50 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-lg">
+                    @Model.MutualFriendsCount amigos en común
+                </span>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <form asp-controller="Friendship" asp-action="Delete" method="post" onsubmit="return confirm('¿Está seguro de eliminar esta amistad?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="friendshipId" value="@ViewBag.FriendshipId" />
+                <button type="submit" class="w-full bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                    <i class="fas fa-user-minus"></i> Eliminar Amigo
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Friend Publications Feed -->
+    <div class="space-y-6">
+        <h2 class="text-lg font-bold text-gray-950 flex items-center gap-2">
+            <i class="fas fa-newspaper text-brand-blue"></i> Publicaciones de @Model.FullName
+        </h2>
+
+        @if (!posts.Any())
+        {
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+                <i class="far fa-folder-open text-gray-400 text-3xl mb-2"></i>
+                <p class="text-gray-500 font-medium">@Model.FullName no tiene publicaciones visibles aún.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var post in posts)
+            {
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                    <!-- Post Header -->
+                    <div class="flex items-center gap-3">
+                        @if (!string.IsNullOrEmpty(post.AuthorPhotoUrl))
+                        {
+                            <img src="@post.AuthorPhotoUrl" alt="" class="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                        }
+                        else
+                        {
+                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border border-gray-200">
+                                <i class="fas fa-user text-lg"></i>
+                            </div>
+                        }
+                        <div>
+                            <h4 class="font-bold text-gray-900 leading-tight">@post.AuthorName</h4>
+                            <div class="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                                <span>@post.Created.ToLocalTime().ToString("g")</span>
+                                @if (post.EditionStatus == EditionStatus.Edited)
+                                {
+                                    <span>•</span>
+                                    <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold">Editada</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Text Content -->
+                    <p class="text-gray-800 leading-relaxed whitespace-pre-line">@post.TextContent</p>
+
+                    <!-- Media -->
+                    @if (post.ContentType == ContentType.Image && !string.IsNullOrEmpty(post.MediaUrl))
+                    {
+                        <div class="rounded-xl overflow-hidden border border-gray-100 max-h-[450px]">
+                            <img src="@post.MediaUrl" alt="" class="w-full h-full object-cover" />
+                        </div>
+                    }
+                    else if (post.ContentType == ContentType.YouTubeVideo && !string.IsNullOrEmpty(post.MediaUrl))
+                    {
+                        <div class="aspect-video rounded-xl overflow-hidden border border-gray-100 bg-black">
+                            <iframe src="@post.MediaUrl" class="w-full h-full" frameborder="0" allowfullscreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                        </div>
+                    }
+
+                    <hr class="border-gray-100" />
+
+                    <!-- Reactions and Comments Toggle Bar -->
+                    <div class="flex items-center justify-between text-sm text-gray-500 font-medium">
+                        <div class="flex items-center gap-4">
+                            @{
+                                var userReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
+                                var hasLike = userReaction != null && userReaction.ReactionType == ReactionType.Like;
+                                var hasDislike = userReaction != null && userReaction.ReactionType == ReactionType.Dislike;
+                            }
+                            <form asp-controller="Reaction" asp-action="Toggle" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="isLike" value="true" />
+                                <button type="submit" class="flex items-center gap-1.5 hover:text-brand-blue transition-colors @(hasLike ? "text-brand-blue font-bold" : "")">
+                                    <i class="@(hasLike ? "fas" : "far") fa-thumbs-up"></i>
+                                    <span>@post.ReactionsCount</span>
+                                </button>
+                            </form>
+
+                            <form asp-controller="Reaction" asp-action="Toggle" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="isLike" value="false" />
+                                <button type="submit" class="flex items-center gap-1.5 hover:text-red-500 transition-colors @(hasDislike ? "text-red-500 font-bold" : "")">
+                                    <i class="@(hasDislike ? "fas" : "far") fa-thumbs-down"></i>
+                                </button>
+                            </form>
+
+                            @if (userReaction != null)
+                            {
+                                <span class="text-xs text-gray-400">
+                                    Tu reacción: @(userReaction.ReactionType == ReactionType.Like ? "Me gusta" : "No me gusta")
+                                </span>
+                            }
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <i class="far fa-message"></i>
+                            <span>@post.CommentsCount comentarios</span>
+                        </div>
+                    </div>
+
+                    <!-- Comment/Reply List (Reuses the nested display from Home/Index) -->
+                    <div class="pt-4 border-t border-gray-100 space-y-4">
+                        @if (post.Comments != null && post.Comments.Any())
+                        {
+                            <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                                @{
+                                    async Task RenderProfilePostCommentsAsync(IEnumerable<LinkUpPro.Core.Application.DTOs.CommentDTO.CommentDTO> comments, int depth = 0)
+                                    {
+                                        foreach (var comment in comments)
+                                        {
+                                            var isMyComment = comment.AuthorId == userId;
+                                            var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado.";
+                                            
+                                            <div class="bg-gray-50/70 p-3 rounded-xl border border-gray-100 relative @(depth > 0 ? "ml-8 border-l-2 border-brand-blue/20" : "")">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="flex items-center gap-2">
+                                                        @if (!isDeletedPlaceholder && !string.IsNullOrEmpty(comment.AuthorPhotoUrl))
+                                                        {
+                                                            <img src="@comment.AuthorPhotoUrl" alt="" class="w-6 h-6 rounded-full object-cover" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                                                <i class="fas fa-user text-xs"></i>
+                                                            </div>
+                                                        }
+                                                        <span class="font-bold text-xs text-gray-800">
+                                                            @(isDeletedPlaceholder ? "[Eliminado]" : comment.AuthorName)
+                                                        </span>
+                                                        <span class="text-[10px] text-gray-400">@comment.Created.ToLocalTime().ToString("g")</span>
+                                                    </div>
+
+                                                    @if (isMyComment && !isDeletedPlaceholder)
+                                                    {
+                                                        <div class="flex items-center gap-1">
+                                                            <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="text-gray-400 hover:text-brand-blue text-xs p-1">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro de eliminar este comentario?');" class="inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="text-gray-400 hover:text-red-500 text-xs p-1">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                <!-- Content -->
+                                                <div class="mt-2 text-sm text-gray-700">
+                                                    <p id="commentContent-@comment.Id">@comment.Content</p>
+                                                    
+                                                    <form id="commentEditForm-@comment.Id" asp-controller="Comment" asp-action="Edit" asp-route-id="@comment.Id" method="post" class="hidden mt-2 space-y-2">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="text" name="content" value="@comment.Content" required class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-blue outline-none" />
+                                                        <div class="flex justify-end gap-1.5">
+                                                            <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="px-2.5 py-1 text-[10px] font-bold bg-gray-200 text-gray-600 rounded">Cancelar</button>
+                                                            <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-brand-blue text-white rounded hover:bg-blue-800">Guardar</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                                <!-- Reply button -->
+                                                @if (post.CommentStatus == CommentStatus.Allowed && !isDeletedPlaceholder)
+                                                {
+                                                    <div class="mt-2 flex justify-start">
+                                                        <button type="button" onclick="toggleReplyForm(@comment.Id)" class="text-xs text-brand-blue hover:underline font-semibold flex items-center gap-1">
+                                                            <i class="fas fa-reply"></i> Responder
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Reply Form -->
+                                                    <form id="replyForm-@comment.Id" asp-controller="Comment" asp-action="Create" method="post" class="hidden mt-2 space-y-2">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="PostId" value="@post.Id" />
+                                                        <input type="hidden" name="ParentCommentId" value="@comment.Id" />
+                                                        <input type="text" name="Content" required maxlength="500" placeholder="Escribe una respuesta..."
+                                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-blue outline-none" />
+                                                        <div class="flex justify-end gap-1.5">
+                                                            <button type="button" onclick="toggleReplyForm(@comment.Id)" class="px-3 py-1 bg-gray-200 text-gray-600 rounded-md text-xs font-bold">Cancelar</button>
+                                                            <button type="submit" class="bg-brand-blue text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-blue-800">Enviar</button>
+                                                        </div>
+                                                    </form>
+                                                }
+                                            </div>
+
+                                            if (comment.Replies != null && comment.Replies.Any())
+                                            {
+                                                await RenderProfilePostCommentsAsync(comment.Replies, depth + 1);
+                                            }
+                                        }
+                                    }
+
+                                    await RenderProfilePostCommentsAsync(post.Comments);
+                                }
+                            </div>
+                        }
+
+                        <!-- Add comment -->
+                        @if (post.CommentStatus == CommentStatus.Allowed)
+                        {
+                            <form asp-controller="Comment" asp-action="Create" method="post" class="flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="PostId" value="@post.Id" />
+                                <input type="text" name="Content" required maxlength="500" placeholder="Escribe un comentario..."
+                                    class="flex-grow px-4 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" />
+                                <button type="submit" class="bg-brand-blue text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-800 transition-colors shadow-sm">
+                                    Comentar
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="bg-gray-50 border border-gray-200 text-gray-500 rounded-xl p-3 text-center text-xs font-medium">
+                                <i class="fas fa-comment-slash mr-1"></i> Los comentarios están desactivados para esta publicación.
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleReplyForm(commentId) {
+            const form = document.getElementById('replyForm-' + commentId);
+            form.classList.toggle('hidden');
+        }
+
+        function toggleCommentEditForm(commentId) {
+            const text = document.getElementById('commentContent-' + commentId);
+            const form = document.getElementById('commentEditForm-' + commentId);
+            text.classList.toggle('hidden');
+            form.classList.toggle('hidden');
+        }
+    </script>
+}

@@ -104,7 +104,7 @@
                             {
                                 var isMyTurn = item.CurrentTurnUserId == currentUserId && item.Status == MatchStatus.InProgress;
                                 var opponentName = item.Player1Id == currentUserId ? (item.Player2Name ?? item.Player2Id) : (item.Player1Name ?? item.Player1Id);
-                                var elapsedHours = Math.Max(0.1, Math.Round((DateTime.Now - item.CreatedAt).TotalHours, 1));
+                                var elapsedHours = Math.Max(0.1, Math.Round((DateTime.UtcNow - item.CreatedAt).TotalHours, 1));
                                 
                                 <tr class="hover:bg-blue-50/30 transition-colors @(isMyTurn ? "bg-amber-50/40" : "")">
                                     <td class="py-4 px-6">

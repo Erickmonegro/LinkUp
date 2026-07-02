@@ -24,6 +24,13 @@
             <span class="font-bold">@TempData["ErrorMessage"]</span>
         </div>
     }
+    @if (ViewBag.DateFrom != null && ViewBag.DateTo != null && DateTime.Parse(ViewBag.DateFrom.ToString()) > DateTime.Parse(ViewBag.DateTo.ToString()))
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm animate-fade-in mb-4">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span class="font-bold">La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).</span>
+        </div>
+    }
     
     @if (TempData["CreatePostError"] != null)
     {
@@ -445,7 +452,13 @@
 
                                                 <!-- Contenido del comentario -->
                                                 <div class="mt-2 text-xs sm:text-sm text-gray-800 font-normal pl-9">
-                                                    <p id="commentContent-@comment.Id" class="leading-relaxed">@comment.Content</p>
+                                                    <p id="commentContent-@comment.Id" class="leading-relaxed">
+                                                        @comment.Content
+                                                        @if (comment.IsEdited)
+                                                        {
+                                                            <span class="text-[11px] text-gray-400 font-normal italic ml-1">(editado)</span>
+                                                        }
+                                                    </p>
                                                     
                                                     <!-- Formulario inline para editar -->
                                                     <form id="commentEditForm-@comment.Id" asp-controller="Comment" asp-action="Edit" asp-route-id="@comment.Id" method="post" class="hidden mt-2 space-y-2">

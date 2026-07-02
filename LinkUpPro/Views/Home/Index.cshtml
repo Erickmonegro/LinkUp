@@ -126,7 +126,7 @@
                 <!-- Validation errors -->
                 <div asp-validation-summary="All" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
 
-                <form asp-controller="User" asp-action="Login" method="post">
+                <form asp-controller="Login" asp-action="Login" method="post">
                     @Html.AntiForgeryToken()
 
                     <div class="mb-5">
@@ -172,7 +172,7 @@
                         <span><i class="fas fa-user-plus w-6 text-center mr-2 text-gray-400"></i> Crear una cuenta</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </a>
-                    <a asp-controller="User" asp-action="ForgotPassword" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm border-b border-gray-100 transition-colors">
+                    <a asp-controller="Login" asp-action="ForgotPassword" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm border-b border-gray-100 transition-colors">
                         <span><i class="fas fa-unlock-alt w-6 text-center mr-2 text-gray-400"></i> ¿Olvidaste tu contraseña?</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </a>

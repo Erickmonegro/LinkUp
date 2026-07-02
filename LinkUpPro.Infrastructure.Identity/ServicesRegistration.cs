@@ -29,8 +29,6 @@ namespace LinkUpPro.Infrastructure.Identity
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
                 options.Lockout.AllowedForNewUsers = true;
 
-                // Password complexity per requirements:
-                // Mínimo 8 caracteres, al menos 1 mayúscula, al menos 1 carácter no alfanumérico.
                 options.Password.RequireDigit = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = true;
@@ -42,18 +40,17 @@ namespace LinkUpPro.Infrastructure.Identity
 
             services.ConfigureApplicationCookie(options =>
             {
-                options.LoginPath = "/User/Login";
-                options.AccessDeniedPath = "/User/AccessDenied";
+                options.LoginPath = "/Login/Login";
+                options.AccessDeniedPath = "/Login/AccessDenied";
+                options.LogoutPath = "/Login/Logout";
 
                 // Cookie security per requirements:
                 // HttpOnly impide lectura desde JavaScript.
                 // SecurePolicy en SameAsRequest/Always asegura envío únicamente mediante HTTPS en ambientes publicados.
-                // SameSite en Lax compatible con el flujo de autenticación.
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
 
-                // Session timeout default
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 options.SlidingExpiration = true;
 
@@ -64,10 +61,6 @@ namespace LinkUpPro.Infrastructure.Identity
                         var identity = context.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
                         if (context.Properties.IsPersistent)
                         {
-                            // Si selecciona "Mantener sesión iniciada":
-                            // - Duración máxima de 7 días.
-                            // - Conservada después de cerrar el navegador.
-                            // - Al cumplirse los 7 días, deberá iniciar sesión nuevamente (AllowRefresh = false para no extenderla infinitamente).
                             context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7);
                             context.Properties.AllowRefresh = false;
                             context.CookieOptions.Expires = DateTimeOffset.UtcNow.AddDays(7);
@@ -76,11 +69,8 @@ namespace LinkUpPro.Infrastructure.Identity
                         }
                         else
                         {
-                            // Si no selecciona la opción:
-                            // - Duración de 30 minutos de inactividad (SlidingExpiration extiende con actividad).
-                            // - Se cierra al cerrar el navegador (IsPersistent = false, cookie de sesión sin fecha de expiración en navegador).
-                            context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30);
-                            context.Properties.AllowRefresh = true;
+                            context.Properties.ExpiresUtc = null;
+                            context.Properties.AllowRefresh = false;
                             context.Properties.IsPersistent = false;
                             context.CookieOptions.Expires = null;
                             context.CookieOptions.MaxAge = null;

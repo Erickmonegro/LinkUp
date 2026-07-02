@@ -2,6 +2,7 @@ using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.UserDTO;
 using LinkUpPro.Core.Application.DTOs.User;
 using LinkUpPro.Core.Application.ViewModels.User;
+using LinkUpPro.Core.Application.ViewModels.Friendship;
 
 namespace LinkUpPro.Core.Application.Mappings.DtosAndViewModels
 {
@@ -47,6 +48,24 @@ namespace LinkUpPro.Core.Application.Mappings.DtosAndViewModels
             CreateMap<LoginDto, LoginViewModel>().ReverseMap();
             CreateMap<ForgotPasswordRequestDto, ForgotPasswordRequestViewModel>().ReverseMap();
             CreateMap<ResetPasswordRequestDto, ResetPasswordRequestViewModel>().ReverseMap();
+
+            CreateMap<UserDTO, FriendViewModel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
+                .ForMember(dest => dest.ProfilePhoto, opt => opt.MapFrom(src => src.PhotoUrl))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ReverseMap();
+
+            CreateMap<UserDTO, FriendProfileViewModel>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
+                .ForMember(dest => dest.ProfilePhoto, opt => opt.MapFrom(src => src.PhotoUrl))
+                .ForMember(dest => dest.CoverPhoto, opt => opt.MapFrom(src => src.CoverPhotoUrl))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ReverseMap();
         }
     }
 }

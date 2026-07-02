@@ -18,6 +18,7 @@ namespace LinkUpPro.Core.Application.Interfaces
         Task<UserDTO?> GetUserById(string Id);
         Task<RegisterResponseDto> RegisterUser(SaveUserDto saveDto, string origin);
         Task<UserResponseDto> ResetPasswordAsync(ResetPasswordRequestDto request);
+        Task<UserResponseDto> ResendActivationAsync(string userName, string origin);
         Task<UserResponseDto> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
         Task SignOutAsync();
     }

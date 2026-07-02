@@ -1,4 +1,4 @@
-﻿using LinkUpPro.Core.Application.Interfaces;
+using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Domain.Settings;
 using LinkUpPro.Infrastructure.Shared.Services;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +21,7 @@ namespace LinkUpPro.Infrastructure.Shared
 
             #region Services IOC
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IImageStorageService, ImageStorageService>();
             #endregion
         }
 

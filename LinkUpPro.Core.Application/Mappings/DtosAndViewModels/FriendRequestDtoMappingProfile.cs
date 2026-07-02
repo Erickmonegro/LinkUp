@@ -12,6 +12,7 @@ namespace LinkUpPro.Core.Application.Mappings.DtosAndViewModels
                 .ForMember(dest => dest.SenderProfilePhoto, opt => opt.MapFrom(src => src.SenderPhotoUrl))
                 .ForMember(dest => dest.ReceiverProfilePhoto, opt => opt.MapFrom(src => src.ReceiverPhotoUrl))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Created))
                 .ReverseMap();
         }
     }

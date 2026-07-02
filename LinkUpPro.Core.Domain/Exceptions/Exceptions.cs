@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinkUpPro.Core.Domain.Exceptions
 {
-    public class Class1
+    public class Exceptions
     {
     }
 }

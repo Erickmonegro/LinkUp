@@ -1,9 +1,11 @@
+using AutoMapper;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.FriendRequest;
 using LinkUpPro.Core.Application.ViewModels.Friendship;
 using LinkUpPro.Core.Domain.Common.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -16,57 +18,34 @@ namespace LinkUpPro.Controllers
         private readonly IFriendRequestService _friendRequestService;
         private readonly IUserService _userService;
         private readonly IFriendshipService _friendshipService;
+        private readonly IMapper _mapper;
 
         public FriendRequestController(
             IFriendRequestService friendRequestService,
             IUserService userService,
-            IFriendshipService friendshipService)
+            IFriendshipService friendshipService,
+            IMapper mapper)
         {
             _friendRequestService = friendRequestService;
             _userService = userService;
             _friendshipService = friendshipService;
+            _mapper = mapper;
         }
 
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var pendingReceived = await _friendRequestService.GetPendingReceivedAsync(userId);
             var sentRequests = await _friendRequestService.GetSentRequestsAsync(userId);
             var pendingCount = await _friendRequestService.GetPendingCountAsync(userId);
 
-            // Map received requests
-            var receivedVMs = pendingReceived.Select(r => new FriendRequestViewModel
-            {
-                Id = r.Id,
-                SenderId = r.SenderId,
-                SenderName = r.SenderName,
-                SenderProfilePhoto = r.SenderPhotoUrl,
-                ReceiverId = r.ReceiverId,
-                ReceiverName = r.ReceiverName,
-                ReceiverProfilePhoto = r.ReceiverPhotoUrl,
-                Status = r.Status.ToString(),
-                CreatedAt = r.Created,
-                RespondedAt = r.RespondedAt,
-                IsIncoming = true
-            }).ToList();
+            var receivedVMs = _mapper.Map<List<FriendRequestViewModel>>(pendingReceived);
+            receivedVMs.ForEach(r => r.IsIncoming = true);
 
-            // Map sent requests (both pending and accepted/rejected history if not hidden)
-            var sentVMs = sentRequests.Select(r => new FriendRequestViewModel
-            {
-                Id = r.Id,
-                SenderId = r.SenderId,
-                SenderName = r.SenderName,
-                SenderProfilePhoto = r.SenderPhotoUrl,
-                ReceiverId = r.ReceiverId,
-                ReceiverName = r.ReceiverName,
-                ReceiverProfilePhoto = r.ReceiverPhotoUrl,
-                Status = r.Status.ToString(),
-                CreatedAt = r.Created,
-                RespondedAt = r.RespondedAt,
-                IsIncoming = false
-            }).ToList();
+            var sentVMs = _mapper.Map<List<FriendRequestViewModel>>(sentRequests);
+            sentVMs.ForEach(r => r.IsIncoming = false);
 
             var vm = new FriendRequestListViewModel
             {
@@ -81,31 +60,17 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> New(string? searchTerm)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var currentFriends = await _friendshipService.GetFriendsAsync(userId);
             var friendIds = currentFriends.Select(f => f.FriendId).ToHashSet();
 
             var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, searchTerm ?? "");
 
-            var availableFriendVMs = availableUsers.Select(u => new FriendViewModel
-            {
-                Id = "", // Not friendship id, but we map user details
-                UserId = u.Id,
-                FullName = $"{u.FirstName} {u.LastName}",
-                ProfilePhoto = u.PhotoUrl,
-                UserName = u.UserName,
-                IsAlreadyFriend = friendIds.Contains(u.Id)
-            }).ToList();
+            var availableFriendVMs = _mapper.Map<List<FriendViewModel>>(availableUsers);
+            availableFriendVMs.ForEach(u => u.IsAlreadyFriend = friendIds.Contains(u.UserId));
 
-            var currentFriendVMs = currentFriends.Select(f => new FriendViewModel
-            {
-                Id = f.FriendId,
-                UserId = f.FriendId,
-                FullName = f.FriendName,
-                ProfilePhoto = f.FriendPhotoUrl,
-                MutualFriendsCount = f.MutualFriendsCount
-            }).ToList();
+            var currentFriendVMs = _mapper.Map<List<FriendViewModel>>(currentFriends);
 
             var vm = new SendRequestViewModel
             {
@@ -122,23 +87,16 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Send(SendRequestViewModel vm)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
-            if (string.IsNullOrEmpty(vm.SelectedUserId))
+            if (!ModelState.IsValid || string.IsNullOrEmpty(vm.SelectedUserId))
             {
-                ModelState.AddModelError("SelectedUserId", "Debe seleccionar un usuario para enviar la solicitud.");
                 var currentFriends = await _friendshipService.GetFriendsAsync(userId);
                 var friendIds = currentFriends.Select(f => f.FriendId).ToHashSet();
-                var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, vm.SearchTerm);
-                vm.AvailableUsers = availableUsers.Select(u => new FriendViewModel
-                {
-                    Id = "",
-                    UserId = u.Id,
-                    FullName = $"{u.FirstName} {u.LastName}",
-                    ProfilePhoto = u.PhotoUrl,
-                    UserName = u.UserName,
-                    IsAlreadyFriend = friendIds.Contains(u.Id)
-                }).ToList();
+                var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, vm.SearchTerm ?? "");
+                var availableFriendVMs = _mapper.Map<List<FriendViewModel>>(availableUsers);
+                availableFriendVMs.ForEach(u => u.IsAlreadyFriend = friendIds.Contains(u.UserId));
+                vm.AvailableUsers = availableFriendVMs;
                 return View("New", vm);
             }
 
@@ -161,7 +119,7 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Accept(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var result = await _friendRequestService.AcceptRequestAsync(userId, id);
 
@@ -182,7 +140,7 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Reject(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var result = await _friendRequestService.RejectRequestAsync(userId, id);
 
@@ -203,7 +161,7 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var result = await _friendRequestService.CancelRequestAsync(userId, id);
 
@@ -224,7 +182,7 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Hide(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var result = await _friendRequestService.HideRequestAsync(userId, id);
 

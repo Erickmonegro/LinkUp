@@ -3,6 +3,7 @@ using LinkUpPro.Infrastructure.Identity;
 using LinkUpPro.Infrastructure.Persistence;
 using LinkUpPro.Infrastructure.Shared;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -43,7 +44,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=User}/{action=Login}/{id?}")
+    pattern: "{controller=Login}/{action=Login}/{id?}")
     .WithStaticAssets();
 
 

@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using LinkUpPro.Core.Domain.Common.Enums;
+using LinkUpPro.Core.Application.Helpers.Validations;
 
 namespace LinkUpPro.Core.Application.ViewModels.Post
 {
-    public class SavePostViewModel : BasicViewModel<int>
+    public class SavePostViewModel : BasicViewModel<int>, IValidatableObject
     {
         [Required(ErrorMessage = "Debe ingresar el contenido de la publicación.")]
         [Display(Name = "Contenido")]
@@ -30,6 +31,49 @@ namespace LinkUpPro.Core.Application.ViewModels.Post
         public string? AuthorId { get; set; }
 
         [Display(Name = "Cargar Imagen")]
+        [ValidImageFile]
         public IFormFile? ImageFile { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (ContentType == ContentType.Image)
+            {
+                if ((Id == 0 || string.IsNullOrWhiteSpace(MediaUrl)) && (ImageFile == null || ImageFile.Length == 0))
+                {
+                    yield return new ValidationResult("Debe seleccionar una imagen para crear la publicación.", new[] { nameof(ImageFile) });
+                }
+            }
+            else if (ContentType == ContentType.YouTubeVideo)
+            {
+                var youtubeId = GetYouTubeVideoId(MediaUrl ?? "");
+                if (string.IsNullOrWhiteSpace(MediaUrl) || youtubeId == null)
+                {
+                    yield return new ValidationResult("Debe ingresar un enlace válido de YouTube.", new[] { nameof(MediaUrl) });
+                }
+                else
+                {
+                    MediaUrl = $"https://www.youtube.com/embed/{youtubeId}";
+                }
+            }
+        }
+
+        private static string? GetYouTubeVideoId(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
+
+            var host = uri.Host.ToLower();
+            if (!host.Contains("youtube.com") && !host.Contains("youtu.be")) return null;
+
+            if (host.Contains("youtu.be")) return uri.AbsolutePath.TrimStart('/');
+
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+            if (query.TryGetValue("v", out var videoId)) return videoId.FirstOrDefault();
+
+            var segments = uri.Segments;
+            if (segments.Length > 1 && (segments[1] == "embed/" || segments[1] == "v/")) return segments[^1];
+
+            return null;
+        }
     }
 }

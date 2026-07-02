@@ -11,6 +11,7 @@ namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
             CreateMap<Comment, CommentDTO>()
                 .ForMember(dest => dest.AuthorName, opt => opt.Ignore())
                 .ForMember(dest => dest.AuthorPhotoUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.IsEdited, opt => opt.MapFrom(src => src.UpdatedAt.HasValue && (src.UpdatedAt.Value - src.CreatedAt).TotalSeconds > 1))
                 .ForMember(dest => dest.Replies, opt => opt.MapFrom(src => src.Replies))
                 .ReverseMap()
                 .ForMember(dest => dest.Post, opt => opt.Ignore())

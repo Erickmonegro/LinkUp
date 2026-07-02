@@ -6,8 +6,6 @@ namespace LinkUpPro.Core.Application.DTOs.FriendshipDTO
     {
         public required string UserId1 { get; set; }
         public required string UserId2 { get; set; }
-
-        // Useful properties for the UI (relative to the user requesting the list)
         public required string FriendId { get; set; }
         public required string FriendName { get; set; }
         public string? FriendPhotoUrl { get; set; }

@@ -19,6 +19,8 @@ namespace LinkUpPro.Core.Application.DTOs.PostDTO
 
         public int CommentsCount { get; set; }
         public int ReactionsCount { get; set; }
+        public int LikesCount { get; set; }
+        public int DislikesCount { get; set; }
 
         public ICollection<CommentDTO.CommentDTO> Comments { get; set; } = new List<CommentDTO.CommentDTO>();
         public ICollection<ReactionDTO.ReactionDTO> Reactions { get; set; } = new List<ReactionDTO.ReactionDTO>();

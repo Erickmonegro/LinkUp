@@ -18,5 +18,7 @@ namespace LinkUpPro.Core.Application.ViewModels.Friendship
 
         [Display(Name = "Amigos en común")]
         public int? MutualFriendsCount { get; set; }
+
+        public bool IsAlreadyFriend { get; set; }
     }
 }

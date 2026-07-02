@@ -13,5 +13,7 @@ namespace LinkUpPro.Core.Application.ViewModels.FriendRequest
 
         [Required(ErrorMessage = "Debe seleccionar un usuario para enviar la solicitud.")]
         public string? SelectedUserId { get; set; }
+
+        public List<FriendViewModel> CurrentFriends { get; set; } = new List<FriendViewModel>();
     }
 }

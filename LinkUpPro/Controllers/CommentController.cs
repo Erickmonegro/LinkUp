@@ -177,10 +177,11 @@ namespace LinkUpPro.Controllers
             }
 
             // Check if it has replies
-            if (comment.Replies != null && comment.Replies.Any())
+            var hasReplies = (comment.Replies != null && comment.Replies.Any()) || await _commentService.HasRepliesAsync(id);
+            if (hasReplies)
             {
                 // Has replies: substitute content
-                comment.Content = "Este comentario fue eliminado.";
+                comment.Content = "comentario eliminado";
                 await _commentService.UpdateAsync(comment, id);
             }
             else

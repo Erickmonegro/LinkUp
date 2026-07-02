@@ -8,5 +8,6 @@ namespace LinkUpPro.Core.Application.Interfaces
     {
         Task<List<CommentDTO>> GetCommentsByPostAsync(int postId);
         Task<CommentDTO> ReplyToCommentAsync(int parentCommentId, CommentDTO reply);
+        Task<bool> HasRepliesAsync(int commentId);
     }
 }

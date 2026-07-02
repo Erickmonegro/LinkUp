@@ -42,9 +42,10 @@ namespace LinkUpPro.Controllers
             if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
             {
                 ModelState.AddModelError("", "La fecha inicial no puede ser posterior a la fecha final.");
+                TempData["ErrorMessage"] = "La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).";
             }
 
-            var posts = await _postService.GetUserPostsFilteredAsync(
+            var posts = await _postService.GetHomePostsFilteredAsync(
                 userId,
                 ModelState.IsValid ? textFilter : null,
                 ModelState.IsValid ? contentType : null,

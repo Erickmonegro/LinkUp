@@ -78,20 +78,33 @@ namespace LinkUpPro.Controllers
             notification.Status = NotificationStatus.Read;
             await _notificationService.UpdateAsync(notification, id);
 
-            // If it points to a post, redirect to post details or check if it exists
             if (notification.RelatedEntityId.HasValue)
             {
+                // Battle notifications → go to battleship details
+                if (notification.ActivityType == NotificationType.BattleChallenge ||
+                    notification.ActivityType == NotificationType.BattleAccepted ||
+                    notification.ActivityType == NotificationType.BattleRejected)
+                {
+                    return RedirectToAction("Details", "Battleship", new { id = notification.RelatedEntityId.Value });
+                }
+
+                // Post-related notifications → redirect to the correct feed and scroll to the post
                 var post = await _postService.GetByIdAsync(notification.RelatedEntityId.Value);
                 if (post != null && post.IsActive)
                 {
-                    // Redirect user to the post feed showing that post
+                    var anchor = $"#post-{post.Id}";
+
                     if (post.AuthorId == userId)
                     {
-                        return RedirectToAction("Index", "Home");
+                        // The post belongs to me → go to my profile
+                        var profileUrl = Url.Action("Index", "Profile") + anchor;
+                        return Redirect(profileUrl!);
                     }
                     else
                     {
-                        return RedirectToAction("Profile", "Friendship", new { id = post.AuthorId });
+                        // The post belongs to a friend → go to their profile
+                        var friendProfileUrl = Url.Action("Profile", "Friendship", new { id = post.AuthorId }) + anchor;
+                        return Redirect(friendProfileUrl!);
                     }
                 }
                 else

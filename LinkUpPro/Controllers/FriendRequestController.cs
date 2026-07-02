@@ -15,13 +15,16 @@ namespace LinkUpPro.Controllers
     {
         private readonly IFriendRequestService _friendRequestService;
         private readonly IUserService _userService;
+        private readonly IFriendshipService _friendshipService;
 
         public FriendRequestController(
             IFriendRequestService friendRequestService,
-            IUserService userService)
+            IUserService userService,
+            IFriendshipService friendshipService)
         {
             _friendRequestService = friendRequestService;
             _userService = userService;
+            _friendshipService = friendshipService;
         }
 
         public async Task<IActionResult> Index()
@@ -80,6 +83,9 @@ namespace LinkUpPro.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "User");
 
+            var currentFriends = await _friendshipService.GetFriendsAsync(userId);
+            var friendIds = currentFriends.Select(f => f.FriendId).ToHashSet();
+
             var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, searchTerm ?? "");
 
             var availableFriendVMs = availableUsers.Select(u => new FriendViewModel
@@ -88,13 +94,24 @@ namespace LinkUpPro.Controllers
                 UserId = u.Id,
                 FullName = $"{u.FirstName} {u.LastName}",
                 ProfilePhoto = u.PhotoUrl,
-                UserName = u.UserName
+                UserName = u.UserName,
+                IsAlreadyFriend = friendIds.Contains(u.Id)
+            }).ToList();
+
+            var currentFriendVMs = currentFriends.Select(f => new FriendViewModel
+            {
+                Id = f.FriendId,
+                UserId = f.FriendId,
+                FullName = f.FriendName,
+                ProfilePhoto = f.FriendPhotoUrl,
+                MutualFriendsCount = f.MutualFriendsCount
             }).ToList();
 
             var vm = new SendRequestViewModel
             {
                 SearchTerm = searchTerm ?? "",
-                AvailableUsers = availableFriendVMs
+                AvailableUsers = availableFriendVMs,
+                CurrentFriends = currentFriendVMs
             };
 
             return View(vm);
@@ -110,7 +127,8 @@ namespace LinkUpPro.Controllers
             if (string.IsNullOrEmpty(vm.SelectedUserId))
             {
                 ModelState.AddModelError("SelectedUserId", "Debe seleccionar un usuario para enviar la solicitud.");
-                // Reload list
+                var currentFriends = await _friendshipService.GetFriendsAsync(userId);
+                var friendIds = currentFriends.Select(f => f.FriendId).ToHashSet();
                 var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, vm.SearchTerm);
                 vm.AvailableUsers = availableUsers.Select(u => new FriendViewModel
                 {
@@ -118,7 +136,8 @@ namespace LinkUpPro.Controllers
                     UserId = u.Id,
                     FullName = $"{u.FirstName} {u.LastName}",
                     ProfilePhoto = u.PhotoUrl,
-                    UserName = u.UserName
+                    UserName = u.UserName,
+                    IsAlreadyFriend = friendIds.Contains(u.Id)
                 }).ToList();
                 return View("New", vm);
             }
@@ -211,11 +230,11 @@ namespace LinkUpPro.Controllers
 
             if (result)
             {
-                TempData["SuccessMessage"] = "Solicitud oculta del historial.";
+                TempData["SuccessMessage"] = "Solicitud eliminada del historial correctamente.";
             }
             else
             {
-                TempData["ErrorMessage"] = "No se pudo ocultar la solicitud.";
+                TempData["ErrorMessage"] = "No se pudo eliminar la solicitud del historial.";
             }
 
             return RedirectToAction("Index");

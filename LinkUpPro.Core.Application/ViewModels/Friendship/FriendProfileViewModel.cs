@@ -12,6 +12,7 @@ namespace LinkUpPro.Core.Application.ViewModels.Friendship
         public string FullName { get; set; } = string.Empty;
 
         public string? ProfilePhoto { get; set; }
+        public string? CoverPhoto { get; set; }
 
         [Required(ErrorMessage = "El nombre de usuario es requerido.")]
         [Display(Name = "Nombre de Usuario")]
@@ -33,5 +34,7 @@ namespace LinkUpPro.Core.Application.ViewModels.Friendship
         public int MutualFriendsCount { get; set; }
 
         public bool IsFriend { get; set; }
+
+        public List<FriendViewModel> MutualFriends { get; set; } = new List<FriendViewModel>();
     }
 }

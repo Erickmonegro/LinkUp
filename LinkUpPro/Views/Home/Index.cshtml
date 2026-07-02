@@ -150,11 +150,16 @@
                         <span asp-validation-for="Password" class="text-red-500 text-xs mt-1 block"></span>
                     </div>
 
-                    <div class="flex items-center mb-8">
-                        <div class="flex items-center h-5">
-                            <input asp-for="RememberMe" type="checkbox" class="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-brand-blue text-brand-blue cursor-pointer">
+                    <div class="mb-8">
+                        <div class="flex items-center">
+                            <div class="flex items-center h-5">
+                                <input asp-for="RememberMe" type="checkbox" class="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-brand-blue text-brand-blue cursor-pointer">
+                            </div>
+                            <label asp-for="RememberMe" class="ml-3 text-sm font-medium text-gray-600 cursor-pointer"></label>
                         </div>
-                        <label asp-for="RememberMe" class="ml-3 text-sm font-medium text-gray-600 cursor-pointer"></label>
+                        <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2 font-medium flex items-center gap-1.5">
+                            <i class="fas fa-shield-alt text-amber-600"></i> Esta opción solo se debe seleccionar únicamente si está utilizando un dispositivo personal.
+                        </p>
                     </div>
 
                     <button type="submit" class="w-full text-white bg-brand-blue hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-xl text-lg px-5 py-4 text-center shadow-lg shadow-blue-500/30 transition-all">

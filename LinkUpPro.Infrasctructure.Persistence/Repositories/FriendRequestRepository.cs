@@ -37,7 +37,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         public async Task<List<FriendRequest>> GetSentRequestsAsync(string userId)
         {
             return await repo.Set<FriendRequest>()
-                .Where(fr => fr.SenderId == userId)
+                .Where(fr => fr.SenderId == userId && !fr.IsHiddenForSender)
                 .ToListAsync();
         }
 

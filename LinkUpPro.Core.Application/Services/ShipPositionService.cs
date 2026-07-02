@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.Battleship;
 using LinkUpPro.Core.Application.Helpers;
 using LinkUpPro.Core.Application.Interfaces;
@@ -25,9 +25,9 @@ namespace LinkUpPro.Core.Application.Services
 
         public async Task<bool> AreShipsPlacedAsync(int matchId, string playerId)
         {
-            var ships = await repo.GetByMatchIdAsync(matchId);
+            var ships = await repo.GetByPlayerAsync(matchId, playerId);
 
-            return ships.Any();
+            return ships.Count >= 5;
         }
 
         public async Task<List<ShipPositionDTO>> GetByMatchAsync(int matchId)

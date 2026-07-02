@@ -39,5 +39,12 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
             var friends2 = await GetActiveFriendIdsAsync(userId2);
             return friends1.Intersect(friends2).Count();
         }
+
+        public async Task<List<string>> GetMutualFriendIdsAsync(string userId1, string userId2)
+        {
+            var friends1 = await GetActiveFriendIdsAsync(userId1);
+            var friends2 = await GetActiveFriendIdsAsync(userId2);
+            return friends1.Intersect(friends2).ToList();
+        }
     }
 }

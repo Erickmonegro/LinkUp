@@ -34,8 +34,8 @@
                     <label asp-for="ContentType" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"></label>
                     <select asp-for="ContentType" id="editContentType" onchange="toggleMediaFields()"
                         class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all">
-                        <option value="@ContentType.Image">Imagen</option>
-                        <option value="@ContentType.YouTubeVideo)">Video de YouTube</option>
+                        <option value="@((int)ContentType.Image)" selected="@(Model.ContentType == ContentType.Image)">Imagen</option>
+                        <option value="@((int)ContentType.YouTubeVideo)" selected="@(Model.ContentType == ContentType.YouTubeVideo)">Video de YouTube</option>
                     </select>
                     <span asp-validation-for="ContentType" class="text-red-500 text-xs mt-1 block"></span>
                 </div>
@@ -45,8 +45,8 @@
                     <label asp-for="PrivacyMode" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"></label>
                     <select asp-for="PrivacyMode"
                         class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all">
-                        <option value="@PrivacyMode.FriendsOnly">Solo Amigos</option>
-                        <option value="@PrivacyMode.OnlyMe">Solo Yo</option>
+                        <option value="@((int)PrivacyMode.FriendsOnly)" selected="@(Model.PrivacyMode == PrivacyMode.FriendsOnly)">Solo Amigos</option>
+                        <option value="@((int)PrivacyMode.OnlyMe)" selected="@(Model.PrivacyMode == PrivacyMode.OnlyMe)">Solo Yo</option>
                     </select>
                     <span asp-validation-for="PrivacyMode" class="text-red-500 text-xs mt-1 block"></span>
                 </div>
@@ -56,6 +56,7 @@
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="CommentStatus" value="@((int)CommentStatus.Allowed)" @(Model.CommentStatus == CommentStatus.Allowed ? "checked" : "")
                             class="w-4 h-4 text-brand-blue border-gray-300 rounded focus:ring-brand-blue" />
+                        <input type="hidden" name="CommentStatus" value="@((int)CommentStatus.NotAllowed)" />
                         <span class="text-sm font-medium text-gray-700">Permitir comentarios</span>
                     </label>
                 </div>
@@ -105,17 +106,13 @@
             const type = document.getElementById('editContentType').value;
             const imageGroup = document.getElementById('imageFieldGroup');
             const videoGroup = document.getElementById('videoFieldGroup');
-            const imageInput = document.getElementById('imageInput');
-            const videoInput = document.getElementById('videoUrlInput');
 
-            if (type == '@((int)ContentType.Image)' || type == 'Image') {
+            if (type == '@((int)ContentType.Image)' || type == 'Image' || type == '2') {
                 imageGroup.classList.remove('hidden');
                 videoGroup.classList.add('hidden');
-                videoInput.value = '';
             } else {
                 imageGroup.classList.add('hidden');
                 videoGroup.classList.remove('hidden');
-                imageInput.value = '';
             }
         }
 

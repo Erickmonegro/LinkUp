@@ -86,7 +86,7 @@
                                         <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@friend.UserId" class="font-bold text-sm text-gray-900 hover:text-brand-blue transition-colors hover:underline">
                                             @friend.FullName
                                         </a>
-                                        <p class="text-xs text-gray-400">@@@friend.UserName</p>
+                                        <p class="text-xs text-gray-400">&#64;@friend.UserName</p>
                                         <span class="text-[10px] bg-blue-50 text-brand-blue font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block">
                                             @friend.MutualFriendsCount amigos en común
                                         </span>
@@ -192,7 +192,7 @@
                 {
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
                         <i class="far fa-folder-open text-gray-400 text-4xl mb-3"></i>
-                        <p class="text-gray-500 font-medium">No se encontraron publicaciones de amigos.</p>
+                        <p class="text-gray-500 font-medium">@(!string.IsNullOrEmpty(ViewBag.TextFilter) || !string.IsNullOrEmpty(ViewBag.FriendIdFilter) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentTypeFilter != null && ViewBag.ContentTypeFilter != 1) || (ViewBag.EditionStatusFilter != null && ViewBag.EditionStatusFilter != 1) ? "No se encontraron publicaciones que coincidan con los criterios seleccionados." : "No se encontraron publicaciones de amigos.")</p>
                     </div>
                 }
                 else
@@ -204,7 +204,9 @@
                             <div class="flex items-center gap-3">
                                 @if (!string.IsNullOrEmpty(post.AuthorPhotoUrl))
                                 {
-                                    <img src="@post.AuthorPhotoUrl" alt="" class="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="flex-shrink-0">
+                                        <img src="@post.AuthorPhotoUrl" alt="" class="w-10 h-10 rounded-full object-cover border border-gray-200 hover:ring-2 hover:ring-brand-blue transition-all" />
+                                    </a>
                                 }
                                 else
                                 {
@@ -213,12 +215,8 @@
                                     </div>
                                 }
                                 <div>
-                                    <h4 class="font-bold text-gray-900 leading-tight">@post.AuthorName</h4>
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="font-bold text-gray-900 leading-tight hover:text-brand-blue transition-colors">@post.AuthorName</a>
                                     <div class="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                                        <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="hover:underline hover:text-brand-blue font-semibold">
-                                            @@@post.AuthorId.Substring(0, Math.Min(post.AuthorId.Length, 8))
-                                        </a>
-                                        <span>•</span>
                                         <span>@post.Created.ToLocalTime().ToString("g")</span>
                                         @if (post.EditionStatus == EditionStatus.Edited)
                                         {
@@ -264,7 +262,7 @@
                                         <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
                                         <button type="submit" class="flex items-center gap-1.5 hover:text-brand-blue transition-colors @(hasLike ? "text-brand-blue font-bold" : "")">
                                             <i class="@(hasLike ? "fas" : "far") fa-thumbs-up"></i>
-                                            <span>@post.ReactionsCount</span>
+                                            <span>@post.LikesCount</span>
                                         </button>
                                     </form>
 
@@ -275,6 +273,10 @@
                                         <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
                                         <button type="submit" class="flex items-center gap-1.5 hover:text-red-500 transition-colors @(hasDislike ? "text-red-500 font-bold" : "")">
                                             <i class="@(hasDislike ? "fas" : "far") fa-thumbs-down"></i>
+                                            @if (post.DislikesCount > 0)
+                                            {
+                                                <span class="text-[11px]">@post.DislikesCount</span>
+                                            }
                                         </button>
                                     </form>
                                     
@@ -304,14 +306,16 @@
                                                 foreach (var comment in commentsToRender)
                                                 {
                                                     var isMyComment = comment.AuthorId == userId;
-                                                    var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado.";
+                                                    var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado." || comment.Content == "comentario eliminado" || comment.Content == "Comentario eliminado";
                                                     
                                                     <div class="bg-gray-50/70 p-3 rounded-xl border border-gray-100 relative @(depth > 0 ? "ml-8 border-l-2 border-brand-blue/20" : "")">
                                                         <div class="flex justify-between items-start">
                                                             <div class="flex items-center gap-2">
                                                                 @if (!isDeletedPlaceholder && !string.IsNullOrEmpty(comment.AuthorPhotoUrl))
                                                                 {
-                                                                    <img src="@comment.AuthorPhotoUrl" alt="" class="w-6 h-6 rounded-full object-cover" />
+                                                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="flex-shrink-0">
+                                                                        <img src="@comment.AuthorPhotoUrl" alt="" class="w-6 h-6 rounded-full object-cover hover:ring-2 hover:ring-brand-blue transition-all" />
+                                                                    </a>
                                                                 }
                                                                 else
                                                                 {
@@ -319,10 +323,23 @@
                                                                         <i class="fas fa-user text-xs"></i>
                                                                     </div>
                                                                 }
-                                                                <span class="font-bold text-xs text-gray-800">
-                                                                    @(isDeletedPlaceholder ? "[Eliminado]" : comment.AuthorName)
+                                                                @if (!isDeletedPlaceholder)
+                                                                {
+                                                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="font-bold text-xs text-gray-800 hover:text-brand-blue transition-colors">
+                                                                        @comment.AuthorName
+                                                                    </a>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="font-bold text-xs text-gray-800">[Eliminado]</span>
+                                                                }
+                                                                <span class="text-[10px] text-gray-400">
+                                                                    @comment.Created.ToLocalTime().ToString("g")
+                                                                    @if (comment.IsEdited && !isDeletedPlaceholder)
+                                                                    {
+                                                                        <span class="bg-blue-50 text-brand-blue px-1.5 py-0.5 rounded text-[9px] font-extrabold border border-blue-100 ml-1">Editado</span>
+                                                                    }
                                                                 </span>
-                                                                <span class="text-[10px] text-gray-400">@comment.Created.ToLocalTime().ToString("g")</span>
                                                             </div>
 
                                                             @if (isMyComment && !isDeletedPlaceholder)

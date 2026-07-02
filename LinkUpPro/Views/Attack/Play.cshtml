@@ -12,6 +12,7 @@
 
     // Mis barcos
     var myShips = Model.Ships.Where(s => s.UserId == currentUserId).ToList();
+    var enemyShips = Model.Ships.Where(s => s.UserId != currentUserId).ToList();
     var myShipCells = new Dictionary<string, ShipPositionViewModel>();
     foreach (var ship in myShips)
     {
@@ -114,13 +115,18 @@
                     <i class="fas fa-radar text-red-500 text-xl animate-spin-slow"></i>
                     <h3 class="text-xl font-black text-gray-900 tracking-tight">Radar de Ataque (Enemigo)</h3>
                 </div>
-                <span class="text-xs font-bold px-3 py-1 bg-red-50 text-red-700 rounded-full">
-                    Haz clic en una celda para disparar
-                </span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-black px-3 py-1.5 bg-red-500/10 text-red-600 rounded-xl border border-red-200">
+                        <i class="fas fa-crosshairs mr-1"></i> Ataques: @myAttacks.Count
+                    </span>
+                    <span class="text-xs font-black px-3 py-1.5 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-200">
+                        <i class="fas fa-ship mr-1"></i> Flota enemiga en pie: @enemyShips.Count(s => !s.IsSunk) de @enemyShips.Count
+                    </span>
+                </div>
             </div>
 
             <div class="bg-slate-950 p-3 rounded-2xl shadow-inner border-4 border-slate-900 max-w-lg mx-auto">
-                <div class="grid grid-cols-12 gap-1.5 aspect-square">
+                <div class="grid grid-cols-12 gap-1.5 aspect-square font-mono">
                     @for (int row = 0; row < 12; row++)
                     {
                         for (int col = 0; col < 12; col++)
@@ -130,13 +136,13 @@
                             {
                                 if (attack.IsHit)
                                 {
-                                    <div class="bg-red-600 text-white rounded-lg flex items-center justify-center border border-red-500 shadow-lg animate-bounce title='¡IMPACTO! (@col, @row)'">
+                                    <div class="bg-red-600 text-white rounded-lg flex items-center justify-center border border-red-500 shadow-lg animate-bounce title='¡IMPACTO! en @((char)('A' + col))@(row + 1)'">
                                         <i class="fas fa-fire text-xs sm:text-sm md:text-base"></i>
                                     </div>
                                 }
                                 else
                                 {
-                                    <div class="bg-sky-900/60 text-sky-400 rounded-lg flex items-center justify-center border border-sky-800/50 title='Agua / Fallo (@col, @row)'">
+                                    <div class="bg-sky-900/60 text-sky-400 rounded-lg flex items-center justify-center border border-sky-800/50 title='Agua / Fallo en @((char)('A' + col))@(row + 1)'">
                                         <i class="fas fa-water text-xs sm:text-sm md:text-base opacity-70"></i>
                                     </div>
                                 }
@@ -151,7 +157,7 @@
                                         <input type="hidden" name="X" value="@col" />
                                         <input type="hidden" name="Y" value="@row" />
                                         <button type="submit" class="w-full h-full bg-slate-900 hover:bg-red-500/30 hover:border-red-500/80 border border-slate-800 rounded-lg transition-all flex items-center justify-center group cursor-pointer"
-                                                title="Disparar a (@col, @row)">
+                                                title="Disparar a @((char)('A' + col))@(row + 1)">
                                             <i class="fas fa-crosshairs text-red-500/0 group-hover:text-red-500/80 text-xs sm:text-sm md:text-base transition-all scale-75 group-hover:scale-100"></i>
                                         </button>
                                     </form>
@@ -191,42 +197,48 @@
                     <i class="fas fa-shield-alt text-brand-blue text-xl"></i>
                     <h3 class="text-xl font-black text-gray-900 tracking-tight">Mi Flota Naval (Defensa)</h3>
                 </div>
-                <span class="text-xs font-bold px-3 py-1 bg-blue-50 text-brand-blue rounded-full">
-                    Barcos hundidos: @myShips.Count(s => s.IsSunk) de @myShips.Count()
-                </span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-black px-3 py-1.5 bg-purple-500/10 text-purple-600 rounded-xl border border-purple-200">
+                        <i class="fas fa-bullseye mr-1"></i> Ataques recibidos: @enemyAttacks.Count
+                    </span>
+                    <span class="text-xs font-black px-3 py-1.5 bg-blue-500/10 text-brand-blue rounded-xl border border-blue-200">
+                        <i class="fas fa-shield-alt mr-1"></i> Mis barcos en pie: @myShips.Count(s => !s.IsSunk) de @myShips.Count
+                    </span>
+                </div>
             </div>
 
             <div class="bg-slate-950 p-3 rounded-2xl shadow-inner border-4 border-slate-900 max-w-lg mx-auto">
-                <div class="grid grid-cols-12 gap-1.5 aspect-square">
+                <div class="grid grid-cols-12 gap-1.5 aspect-square font-mono">
                     @for (int row = 0; row < 12; row++)
                     {
                         for (int col = 0; col < 12; col++)
                         {
                             string coordKey = $"{col},{row}";
-                            bool hasShip = myShipCells.TryGetValue(coordKey, out var ship);
-                            bool wasAttacked = enemyAttacks.TryGetValue(coordKey, out var enemyAttack);
-
-                            if (hasShip && wasAttacked)
+                            if (myShipCells.TryGetValue(coordKey, out var ship))
                             {
-                                <div class="bg-red-600 text-white rounded-lg flex items-center justify-center border border-red-500 shadow-lg animate-pulse title='¡Tú barco fue alcanzado en (@col, @row)!'">
-                                    <i class="fas fa-skull-crossbones text-xs sm:text-sm md:text-base"></i>
-                                </div>
+                                bool wasAttacked = enemyAttacks.ContainsKey(coordKey);
+                                if (wasAttacked)
+                                {
+                                    <div class="bg-red-600 text-white rounded-lg flex items-center justify-center border border-red-500 shadow-lg animate-pulse title='¡Tu barco fue alcanzado en @((char)('A' + col))@(row + 1)!'">
+                                        <i class="fas fa-skull-crossbones text-xs sm:text-sm md:text-base"></i>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="bg-brand-blue text-white rounded-lg flex items-center justify-center border border-blue-400 shadow-md title='Tu barco en @((char)('A' + col))@(row + 1)'">
+                                        <i class="fas fa-ship text-xs sm:text-sm md:text-base"></i>
+                                    </div>
+                                }
                             }
-                            else if (hasShip)
+                            else if (enemyAttacks.ContainsKey(coordKey))
                             {
-                                <div class="bg-brand-blue text-white rounded-lg flex items-center justify-center border border-blue-400 shadow-md title='Tu barco (@col, @row)'">
-                                    <i class="fas fa-ship text-xs sm:text-sm md:text-base"></i>
-                                </div>
-                            }
-                            else if (wasAttacked)
-                            {
-                                <div class="bg-sky-900/60 text-sky-400 rounded-lg flex items-center justify-center border border-sky-800/50 title='Disparo enemigo fallido en (@col, @row)'">
+                                <div class="bg-sky-900/60 text-sky-400 rounded-lg flex items-center justify-center border border-sky-800/50 title='Disparo enemigo fallido en @((char)('A' + col))@(row + 1)'">
                                     <i class="fas fa-water text-xs sm:text-sm md:text-base opacity-70"></i>
                                 </div>
                             }
                             else
                             {
-                                <div class="bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-700 title='Agua libre (@col, @row)'">
+                                <div class="bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-700 title='Agua libre en @((char)('A' + col))@(row + 1)'">
                                     <i class="fas fa-water text-xs sm:text-sm md:text-base opacity-20"></i>
                                 </div>
                             }

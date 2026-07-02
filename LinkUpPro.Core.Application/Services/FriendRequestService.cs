@@ -155,12 +155,21 @@ namespace LinkUpPro.Core.Application.Services
         public async Task<bool> HideRequestAsync(string userId, int requestId)
         {
             var request = await _repository.GetByIdAsync(requestId);
+            // 1. Que la solicitud exista
             if (request == null) return false;
 
-            if (request.SenderId == userId) request.IsHiddenForSender = true;
-            else if (request.ReceiverId == userId) request.IsHiddenForReceiver = true;
-            else return false;
+            // 2. Que el usuario autenticado sea el emisor
+            if (request.SenderId != userId) return false;
 
+            // 3. Que la solicitud esté Aceptada o Rechazada
+            if (request.Status != FriendRequestStatus.Accepted && request.Status != FriendRequestStatus.Rejected)
+                return false;
+
+            // 4. Que no haya sido ocultada anteriormente
+            if (request.IsHiddenForSender) return false;
+
+            // Al confirmar, el sistema debe cambiar únicamente el indicador que determina si la solicitud está visible para el emisor. El estado original debe conservarse.
+            request.IsHiddenForSender = true;
             await _repository.UpdateAsync(requestId, request);
             return true;
         }
@@ -182,8 +191,8 @@ namespace LinkUpPro.Core.Application.Services
             var allUsers = await _userService.GetAllUser(true);
             var friends = await _friendshipRepository.GetActiveFriendIdsAsync(userId);
             
-            // Exclude self and current active friends
-            var available = allUsers.Where(u => u.Id != userId && !friends.Contains(u.Id));
+            // Exclude self ONLY (allow existing friends to appear in search results so we can link to their profile)
+            var available = allUsers.Where(u => u.Id != userId);
             
             // Exclude users where there is a pending request in either direction
             var pendingRequests = await _repository.GetAllListAsync();
@@ -198,9 +207,9 @@ namespace LinkUpPro.Core.Application.Services
             {
                 searchTerm = searchTerm.Trim().ToLower();
                 available = available.Where(u => 
-                    u.FirstName.ToLower().Contains(searchTerm) || 
-                    u.LastName.ToLower().Contains(searchTerm) ||
-                    u.UserName.ToLower().Contains(searchTerm));
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)) || 
+                    (u.LastName != null && u.LastName.ToLower().Contains(searchTerm)) ||
+                    (u.UserName != null && u.UserName.ToLower().Contains(searchTerm)));
             }
             
             return available.ToList();

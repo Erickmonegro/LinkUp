@@ -28,8 +28,8 @@ namespace LinkUpPro.Core.Application.Mappings.DtosAndViewModels
                 .ForMember(dest => dest.ProfileImageFile, opt => opt.Ignore())
                 .ForMember(dest => dest.CoverImageFile, opt => opt.Ignore())
                 .ReverseMap()
-                .ForMember(dest => dest.PhotoUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.CoverPhotoUrl, opt => opt.Ignore());
+                .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl))
+                .ForMember(dest => dest.CoverPhotoUrl, opt => opt.MapFrom(src => src.CoverPhotoUrl));
 
             CreateMap<SaveUserDto, UpdateUserViewModel>()
                 .ForMember(dest => dest.Password, opt => opt.Ignore())
@@ -37,8 +37,8 @@ namespace LinkUpPro.Core.Application.Mappings.DtosAndViewModels
                 .ForMember(dest => dest.ProfileImageFile, opt => opt.Ignore())
                 .ForMember(dest => dest.CoverImageFile, opt => opt.Ignore())
                 .ReverseMap()
-                .ForMember(dest => dest.PhotoUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.CoverPhotoUrl, opt => opt.Ignore());
+                .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl))
+                .ForMember(dest => dest.CoverPhotoUrl, opt => opt.MapFrom(src => src.CoverPhotoUrl));
 
             CreateMap<SaveUserDto, RegisterUserViewModel>()
                 .ForMember(dest => dest.ProfileImageFile, opt => opt.Ignore())

@@ -89,8 +89,33 @@ namespace LinkUpPro.Controllers
                 return View("Edit", vm);
             }
 
-            vm.PhotoUrl = await _imageStorageService.UploadImageAsync(vm.ProfileImageFile, userId, "Users", true, currentUser.PhotoUrl);
-            vm.CoverPhotoUrl = await _imageStorageService.UploadImageAsync(vm.CoverImageFile, userId, "Covers", true, currentUser.CoverPhotoUrl);
+            
+            if (vm.ProfileImageFile != null && vm.ProfileImageFile.Length > 0)
+            {
+                vm.PhotoUrl = await _imageStorageService.UploadImageAsync(vm.ProfileImageFile, userId, "Users", true, currentUser.PhotoUrl);
+            }
+            else if (!string.IsNullOrWhiteSpace(vm.PhotoUrl) && (vm.PhotoUrl.StartsWith("http://") || vm.PhotoUrl.StartsWith("https://")))
+            {
+                
+            }
+            else
+            {
+                vm.PhotoUrl = currentUser.PhotoUrl;
+            }
+
+            
+            if (vm.CoverImageFile != null && vm.CoverImageFile.Length > 0)
+            {
+                vm.CoverPhotoUrl = await _imageStorageService.UploadImageAsync(vm.CoverImageFile, userId, "Covers", true, currentUser.CoverPhotoUrl);
+            }
+            else if (!string.IsNullOrWhiteSpace(vm.CoverPhotoUrl) && (vm.CoverPhotoUrl.StartsWith("http://") || vm.CoverPhotoUrl.StartsWith("https://")))
+            {
+                
+            }
+            else
+            {
+                vm.CoverPhotoUrl = currentUser.CoverPhotoUrl;
+            }
 
             bool isChangingPassword = !string.IsNullOrEmpty(vm.Password);
 
@@ -117,6 +142,8 @@ namespace LinkUpPro.Controllers
             saveDto.LastName = vm.LastName.Trim();
             saveDto.Password = "";
             saveDto.Role = currentUser.Role;
+            saveDto.PhotoUrl = vm.PhotoUrl;
+            saveDto.CoverPhotoUrl = vm.CoverPhotoUrl;
 
             var updateResponse = await _userService.EditUser(saveDto, origin, false);
 

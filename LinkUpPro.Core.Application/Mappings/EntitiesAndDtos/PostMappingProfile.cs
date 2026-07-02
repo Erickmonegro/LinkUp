@@ -10,6 +10,8 @@ namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
         public PostMappingProfile()
         {
             CreateMap<Post, PostDTO>()
+                .ForMember(dest => dest.Created, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.Updated, opt => opt.MapFrom(src => src.UpdatedAt ?? src.CreatedAt))
                 .ForMember(dest => dest.AuthorName, opt => opt.Ignore())
                 .ForMember(dest => dest.AuthorPhotoUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.CommentsCount, opt => opt.MapFrom(src => src.Comments != null ? src.Comments.Count : 0))
@@ -19,6 +21,8 @@ namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments != null ? src.Comments.Where(c => c.ParentCommentId == null || c.ParentCommentId == 0).ToList() : null))
                 .ForMember(dest => dest.Reactions, opt => opt.MapFrom(src => src.Reactions))
                 .ReverseMap()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Created))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.Updated))
                 .ForMember(dest => dest.Comments, opt => opt.Ignore())
                 .ForMember(dest => dest.Reactions, opt => opt.Ignore());
         }

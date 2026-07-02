@@ -74,6 +74,12 @@
                 </div>
             }
 
+            <a asp-action="Play"
+               asp-route-matchId="@Model.Match?.Id"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i> Refrescar pantalla
+            </a>
+
             <a asp-controller="Battleship" asp-action="Details" asp-route-id="@Model.Match?.Id"
                class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-3 rounded-2xl font-bold text-sm transition-all border border-slate-700 flex items-center gap-2">
                 <i class="fas fa-eye"></i> Sala

@@ -1,6 +1,7 @@
 using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.FriendshipDTO;
 using LinkUpPro.Core.Application.DTOs.PostDTO;
+using LinkUpPro.Core.Application.DTOs.CommentDTO;
 using LinkUpPro.Core.Application.DTOs.UserDTO;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Domain.Entities;
@@ -77,6 +78,11 @@ namespace LinkUpPro.Core.Application.Services
                     post.AuthorName = $"{user.FirstName} {user.LastName}";
                     post.AuthorPhotoUrl = user.PhotoUrl;
                 }
+
+                if (post.Comments != null && post.Comments.Count > 0)
+                {
+                    await PopulateCommentAuthorsAsync(post.Comments.ToList());
+                }
             }
 
             return dtos;
@@ -142,5 +148,57 @@ namespace LinkUpPro.Core.Application.Services
             }
             return result.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
         }
+
+        #region Private Helpers for Comments
+        private async Task PopulateCommentAuthorsAsync(List<CommentDTO> commentDtos)
+        {
+            if (commentDtos == null || commentDtos.Count == 0) return;
+
+            var authorIds = new List<string>();
+            GetCommentAuthorIds(commentDtos, authorIds);
+            authorIds = authorIds.Distinct().ToList();
+
+            var users = new Dictionary<string, UserDTO>();
+            foreach (var authorId in authorIds)
+            {
+                var user = await _userService.GetUserById(authorId);
+                if (user != null)
+                {
+                    users[authorId] = user;
+                }
+            }
+
+            DecorateComments(commentDtos, users);
+        }
+
+        private void GetCommentAuthorIds(ICollection<CommentDTO> comments, List<string> ids)
+        {
+            foreach (var comment in comments)
+            {
+                ids.Add(comment.AuthorId);
+                if (comment.Replies != null && comment.Replies.Count > 0)
+                {
+                    GetCommentAuthorIds(comment.Replies, ids);
+                }
+            }
+        }
+
+        private void DecorateComments(ICollection<CommentDTO> comments, Dictionary<string, UserDTO> users)
+        {
+            foreach (var comment in comments)
+            {
+                if (users.TryGetValue(comment.AuthorId, out var user))
+                {
+                    comment.AuthorName = $"{user.FirstName} {user.LastName}";
+                    comment.AuthorPhotoUrl = user.PhotoUrl;
+                }
+
+                if (comment.Replies != null && comment.Replies.Count > 0)
+                {
+                    DecorateComments(comment.Replies, users);
+                }
+            }
+        }
+        #endregion
     }
 }

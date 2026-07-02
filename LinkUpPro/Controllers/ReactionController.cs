@@ -73,8 +73,22 @@ namespace LinkUpPro.Controllers
                 await _notificationService.AddAsync(notification);
             }
 
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
+            var redirectUrl = returnUrl;
+            if (string.IsNullOrEmpty(redirectUrl))
+            {
+                redirectUrl = Request.Headers["Referer"].ToString();
+            }
+
+            if (!string.IsNullOrEmpty(redirectUrl))
+            {
+                var fragmentIdx = redirectUrl.IndexOf('#');
+                if (fragmentIdx >= 0)
+                {
+                    redirectUrl = redirectUrl.Substring(0, fragmentIdx);
+                }
+                redirectUrl += $"#post-{postId}";
+                return Redirect(redirectUrl);
+            }
 
             return RedirectToAction("Index", "Home");
         }

@@ -1,220 +1,479 @@
+@using LinkUpPro.Core.Domain.Common.Enums
+@using System.Security.Claims
 @model LinkUpPro.Core.Application.ViewModels.User.UpdateUserViewModel
 @{
-    ViewData["Title"] = "Mi Perfil";
+    ViewData["Title"] = "Mi Muro de Perfil";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var friendsCount = ViewBag.FriendsCount ?? 0;
+    var posts = ViewBag.Posts as List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO> ?? new List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO>();
 }
 
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="w-full space-y-8 animate-fade-in pb-12">
 
-    <!-- Messages -->
+    <!-- Alertas Flash -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
-            <i class="fas fa-check-circle text-green-500"></i>
-            <span>@TempData["SuccessMessage"]</span>
+        <div class="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-3xl text-sm flex items-center gap-3 shadow-md animate-fade-in">
+            <i class="fas fa-check-circle text-green-500 text-xl"></i>
+            <span class="font-bold">@TempData["SuccessMessage"]</span>
         </div>
     }
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <i class="fas fa-user-circle text-brand-blue"></i> Configuración de Mi Perfil
-        </h1>
+    <!-- 1. CABECERA GIGANTE DEL MURO DE PERFIL (Estilo Facebook Desktop / Twitter X) -->
+    <div class="bg-white rounded-3xl shadow-md border border-gray-200/80 overflow-hidden relative">
+        
+        <!-- Banner Gráfica Amplia -->
+        <div class="h-64 sm:h-72 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 relative overflow-hidden">
+            <div class="absolute -right-16 -bottom-16 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-16 -top-16 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="absolute top-6 left-6 z-10">
+                <a asp-controller="Home" asp-action="Index" class="bg-black/40 hover:bg-black/60 backdrop-blur-md text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-full border border-white/20 transition-all flex items-center gap-2 shadow-lg">
+                    <i class="fas fa-arrow-left"></i> Volver al Feed Principal
+                </a>
+            </div>
+            
+            <span class="absolute top-6 right-6 bg-black/40 backdrop-blur-md text-white text-xs sm:text-sm font-black uppercase tracking-widest px-4 py-2 rounded-full border border-white/20 flex items-center gap-2 shadow-lg z-10">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping"></span> Mi Cuenta Pro
+            </span>
+        </div>
 
-        <div asp-validation-summary="All" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
-
-        <form asp-controller="Profile" asp-action="Index" method="post" enctype="multipart/form-data" class="space-y-6">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="Id" />
-
-            <!-- Profile Picture Display & Edit -->
-            <div class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-gray-100">
-                <div class="relative">
+        <!-- Foto de Perfil & Datos en Disposición Amplia -->
+        <div class="px-8 sm:px-12 pb-8 pt-0 relative flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+            
+            <div class="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-8 -mt-20 sm:-mt-24 relative z-10">
+                <div class="relative group mx-auto sm:mx-0 flex-shrink-0">
                     @if (!string.IsNullOrEmpty(Model.PhotoUrl))
                     {
-                        <img id="avatarPreview" src="@Model.PhotoUrl" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-brand-blue/20 shadow-md" />
+                        <img src="@Model.PhotoUrl" alt="Avatar" class="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl object-cover border-[6px] border-white shadow-2xl bg-white transition-transform duration-300 group-hover:scale-105" />
                     }
                     else
                     {
-                        <div id="avatarPlaceholder" class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-2 border-brand-blue/20 shadow-md text-3xl">
+                        <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-400 border-[6px] border-white shadow-2xl text-6xl">
                             <i class="fas fa-user"></i>
                         </div>
                     }
+                    <span class="absolute bottom-3 right-3 w-6 h-6 bg-green-500 border-[3px] border-white rounded-full shadow-lg" title="En Línea"></span>
                 </div>
-                
-                <div class="flex-grow space-y-2 text-center sm:text-left">
-                    <label asp-for="ProfileImageFile" class="block text-sm font-bold text-gray-700"></label>
-                    <input asp-for="ProfileImageFile" type="file" accept=".jpg,.jpeg,.png,.webp" onchange="previewFile()"
-                        class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-blue file:text-white hover:file:bg-blue-800 file:cursor-pointer" />
-                    <p class="text-xs text-gray-400">Formatos permitidos: .jpg, .jpeg, .png, .webp. Máximo 5 MB. Deje vacío para conservar la foto actual.</p>
-                </div>
-            </div>
 
-            <!-- Read-Only Fields (Email & UserName) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <div>
-                    <label asp-for="UserName" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1"></label>
-                    <input asp-for="UserName" disabled class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed outline-none text-sm" />
-                    <p class="text-[10px] text-gray-400 mt-1">El nombre de usuario no es editable.</p>
-                </div>
-                <div>
-                    <label asp-for="Email" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1"></label>
-                    <input asp-for="Email" disabled class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed outline-none text-sm" />
-                    <p class="text-[10px] text-gray-400 mt-1">El correo electrónico no es editable.</p>
-                </div>
-            </div>
-
-            <!-- Editable Fields (FirstName, LastName, PhoneNumber) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <input asp-for="FirstName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
-                    <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1"></span>
-                </div>
-                <div>
-                    <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <input asp-for="LastName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
-                    <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1"></span>
-                </div>
-                <div class="sm:col-span-2">
-                    <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <input asp-for="PhoneNumber" required placeholder="809-555-1234" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
-                    <span asp-validation-for="PhoneNumber" class="text-red-500 text-xs mt-1"></span>
-                </div>
-            </div>
-
-            <!-- Optional Password Change Section -->
-            <div class="pt-6 border-t border-gray-100 space-y-4">
-                <h3 class="text-md font-bold text-gray-950 flex items-center gap-1.5">
-                    <i class="fas fa-key text-gray-400"></i> Cambiar Contraseña (Opcional)
-                </h3>
-                <p class="text-xs text-gray-500">Deje estos campos vacíos si no desea cambiar su contraseña.</p>
-
-                <div class="space-y-4">
-                    <!-- Current Password -->
-                    <div>
-                        <label asp-for="CurrentPassword" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
-                            <input asp-for="CurrentPassword" id="currentPasswordField" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
-                            <button type="button" onclick="togglePassword('currentPasswordField', 'toggleIcon1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <i id="toggleIcon1" class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <span asp-validation-for="CurrentPassword" class="text-red-500 text-xs mt-1"></span>
+                <div class="text-center sm:text-left sm:mb-2 space-y-1.5">
+                    <div class="flex items-center justify-center sm:justify-start gap-2.5">
+                        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">@Model.FirstName @Model.LastName</h1>
+                        <i class="fas fa-check-circle text-brand-blue text-xl sm:text-2xl" title="Cuenta Verificada en LinkUp Pro"></i>
                     </div>
-
-                    <!-- New Password -->
-                    <div>
-                        <label asp-for="Password" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
-                            <input asp-for="Password" id="passwordField" oninput="checkStrength(this.value)" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
-                            <button type="button" onclick="togglePassword('passwordField', 'toggleIcon2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <i id="toggleIcon2" class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <span asp-validation-for="Password" class="text-red-500 text-xs mt-1"></span>
-                        
-                        <!-- Strength indicator -->
-                        <div id="strengthBar" class="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden" style="display:none;">
-                            <div id="strengthFill" class="h-full rounded-full transition-all duration-300" style="width:0%"></div>
-                        </div>
-                        <p id="strengthText" class="text-xs mt-1" style="display:none;"></p>
-                    </div>
-
-                    <!-- Confirm Password -->
-                    <div>
-                        <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
-                            <input asp-for="ConfirmPassword" id="confirmPasswordField" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all" />
-                            <button type="button" onclick="togglePassword('confirmPasswordField', 'toggleIcon3')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <i id="toggleIcon3" class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <span asp-validation-for="ConfirmPassword" class="text-red-500 text-xs mt-1"></span>
+                    <p class="text-base sm:text-lg font-extrabold text-gray-400">@@@Model.UserName</p>
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs sm:text-sm text-gray-600 font-semibold pt-1">
+                        <span class="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-full border border-gray-200/80"><i class="fas fa-envelope text-brand-blue"></i> @Model.Email</span>
+                        <span class="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-full border border-gray-200/80"><i class="fas fa-phone-alt text-brand-blue"></i> @Model.PhoneNumber</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Submit Buttons -->
-            <div class="flex gap-3 pt-6 border-t border-gray-100">
-                <a asp-controller="Home" asp-action="Index" class="flex-1 text-center py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                    Cancelar
+            <!-- Botones de Acción Principal: EDITAR PERFIL & JUEGO -->
+            <div class="flex flex-wrap items-center justify-center xl:justify-end gap-3.5 pb-2">
+                <a asp-controller="Battleship" asp-action="Index" 
+                   class="bg-indigo-50 hover:bg-indigo-100 text-indigo-900 px-5 py-3 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm flex items-center gap-2.5">
+                    <i class="fas fa-gamepad text-indigo-600 text-lg"></i> Batalla Naval 12x12
                 </a>
-                <button type="submit" class="flex-1 bg-brand-blue text-white py-2.5 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-md">
-                    Guardar Cambios
-                </button>
+                
+                <a asp-controller="Profile" asp-action="Edit" 
+                   class="bg-gradient-to-r from-brand-blue to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2.5">
+                    <i class="fas fa-user-edit text-base"></i> <span>Editar Mi Perfil</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Barra de Estadísticas Amplia en el Muro -->
+        <div class="grid grid-cols-3 border-t border-gray-100 bg-gray-50/70 p-5 text-center">
+            <div class="border-r border-gray-200">
+                <p class="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Total de Amigos</p>
+                <p class="text-2xl sm:text-3xl font-black text-gray-900 mt-1">@friendsCount</p>
+            </div>
+            <div class="border-r border-gray-200">
+                <p class="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Publicaciones</p>
+                <p class="text-2xl sm:text-3xl font-black text-brand-blue mt-1">@posts.Count</p>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Nivel de Cuenta</p>
+                <p class="text-base sm:text-lg font-black text-green-600 mt-2 flex items-center justify-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-green-500 animate-ping"></span> Verificada / Pro
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. CUERPO DEL PERFIL EN 2 COLUMNAS (Estilo Facebook Desktop / LinkedIn) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- COLUMNA IZQUIERDA: DETALLES Y ACERCA DE MÍ (4 Columnas) -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 space-y-5">
+                <h3 class="font-black text-gray-900 text-base flex items-center gap-2.5 border-b border-gray-100 pb-3">
+                    <i class="fas fa-info-circle text-brand-blue text-lg"></i> Detalles de Mi Cuenta
+                </h3>
+                
+                <div class="space-y-4 text-sm font-medium text-gray-700">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-at text-gray-400 mt-1"></i>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Usuario</p>
+                            <p class="font-extrabold text-gray-900">@@@Model.UserName</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-envelope text-gray-400 mt-1"></i>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Correo Electrónico</p>
+                            <p class="font-extrabold text-gray-900">@Model.Email</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-phone-alt text-gray-400 mt-1"></i>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Teléfono</p>
+                            <p class="font-extrabold text-gray-900">@Model.PhoneNumber</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-shield-alt text-green-500 mt-1"></i>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Seguridad</p>
+                            <p class="font-extrabold text-green-600">Protección Activa</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-gray-100" />
+
+                <a asp-controller="Friendship" asp-action="Index" class="w-full bg-blue-50 hover:bg-blue-100 text-brand-blue font-black text-xs py-3 rounded-2xl transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-user-friends"></i> Ver Mis @friendsCount Amigos
+                </a>
             </div>
 
-        </form>
+            <!-- Caja de Privacidad -->
+            <div class="bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 rounded-3xl p-6 border border-blue-100/80 text-blue-900 space-y-3">
+                <div class="flex items-center gap-2.5 font-black text-sm text-brand-blue">
+                    <i class="fas fa-lock text-lg"></i> Control de Privacidad
+                </div>
+                <p class="text-xs text-gray-600 leading-relaxed font-medium">
+                    Tus publicaciones en este muro muestran el icono de su privacidad. Recuerda que las publicaciones marcadas como <strong>Solo Yo</strong> no son visibles para tus amigos.
+                </p>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: FEED DE MIS PUBLICACIONES (8 Columnas) -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-newspaper text-brand-blue text-2xl"></i> Mis Publicaciones
+                    </h2>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Aquí puedes ver, editar o eliminar todo lo que has publicado</p>
+                </div>
+                <a asp-controller="Home" asp-action="Index" class="bg-brand-blue text-white font-bold text-xs px-5 py-2.5 rounded-2xl shadow-md hover:bg-blue-800 transition-all flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Nueva Publicación
+                </a>
+            </div>
+
+            @if (!posts.Any())
+            {
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-16 text-center space-y-4">
+                    <div class="w-20 h-20 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto text-4xl shadow-inner">
+                        <i class="far fa-folder-open"></i>
+                    </div>
+                    <h3 class="font-black text-gray-900 text-lg">Aún no tienes publicaciones en tu muro</h3>
+                    <p class="text-gray-500 text-sm font-medium max-w-md mx-auto">
+                        Comparte tus pensamientos, fotos o videos favoritos de YouTube con toda tu red de amigos.
+                    </p>
+                    <a asp-controller="Home" asp-action="Index" class="inline-block mt-4 px-8 py-3 bg-gradient-to-r from-brand-blue to-indigo-600 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all hover:scale-105">
+                        Ir al Inicio para Publicar
+                    </a>
+                </div>
+            }
+            else
+            {
+                foreach (var post in posts)
+                {
+                    <article class="bg-white rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200/80 p-7 space-y-5">
+                        <!-- Post Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                @if (!string.IsNullOrEmpty(post.AuthorPhotoUrl))
+                                {
+                                    <img src="@post.AuthorPhotoUrl" alt="Foto" class="w-12 h-12 rounded-full object-cover border-2 border-brand-blue/20 shadow-2xs" />
+                                }
+                                else
+                                {
+                                    <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
+                                        <i class="fas fa-user text-xl"></i>
+                                    </div>
+                                }
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-black text-gray-900 text-base">@post.AuthorName</h4>
+                                        <i class="fas fa-check-circle text-brand-blue text-sm" title="Verificado"></i>
+                                    </div>
+                                    <div class="flex items-center gap-2.5 text-xs text-gray-400 font-semibold mt-0.5">
+                                        <span>@post.Created.ToLocalTime().ToString("g")</span>
+                                        <span>•</span>
+                                        <span class="flex items-center gap-1.5 bg-gray-50 px-2.5 py-0.5 rounded-full border border-gray-200/60 text-gray-700">
+                                            @if (post.PrivacyMode == PrivacyMode.FriendsOnly)
+                                            {
+                                                <i class="fas fa-user-group text-brand-blue" title="Solo amigos"></i>
+                                                <span>Amigos</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-lock text-amber-600" title="Solo yo"></i>
+                                                <span>Solo Yo</span>
+                                            }
+                                        </span>
+                                        @if (post.EditionStatus == EditionStatus.Edited)
+                                        {
+                                            <span class="bg-blue-50 text-brand-blue px-2 py-0.5 rounded-full text-[10px] font-extrabold">Editada</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Opciones de Edición y Eliminación -->
+                            <div class="flex items-center gap-2">
+                                <a asp-controller="Post" asp-action="Edit" asp-route-id="@post.Id" 
+                                   class="text-gray-400 hover:text-brand-blue p-2.5 rounded-xl hover:bg-blue-50 transition-colors" title="Editar publicación">
+                                    <i class="fas fa-edit text-base"></i>
+                                </a>
+                                <a asp-controller="Post" asp-action="Delete" asp-route-id="@post.Id" 
+                                   class="text-gray-400 hover:text-red-600 p-2.5 rounded-xl hover:bg-red-50 transition-colors" title="Eliminar publicación">
+                                    <i class="fas fa-trash-alt text-base"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Post Body (Texto) -->
+                        <p class="text-gray-800 text-base md:text-lg leading-relaxed whitespace-pre-line font-normal px-1">@post.TextContent</p>
+
+                        <!-- Post Body (Multimedia) -->
+                        @if (post.ContentType == ContentType.Image && !string.IsNullOrEmpty(post.MediaUrl))
+                        {
+                            <div class="rounded-3xl overflow-hidden border border-gray-100 max-h-[500px] bg-gray-900 shadow-sm">
+                                <img src="@post.MediaUrl" alt="Contenido multimedia" class="w-full h-full object-cover" />
+                            </div>
+                        }
+                        else if (post.ContentType == ContentType.YouTubeVideo && !string.IsNullOrEmpty(post.MediaUrl))
+                        {
+                            <div class="aspect-video rounded-3xl overflow-hidden border border-gray-100 bg-black shadow-sm">
+                                <iframe src="@post.MediaUrl" class="w-full h-full" frameborder="0" allowfullscreen
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                            </div>
+                        }
+
+                        <hr class="border-gray-100 my-4" />
+
+                        <!-- 3. BARRA DE REACCIONES E INTERACCIÓN -->
+                        <div class="flex items-center justify-between flex-wrap gap-2 text-xs font-extrabold pt-2">
+                            
+                            <!-- Likes y Dislikes -->
+                            <div class="flex items-center gap-1 sm:gap-2">
+                                @{
+                                    var userReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
+                                    var hasLike = userReaction != null && userReaction.ReactionType == ReactionType.Like;
+                                    var hasDislike = userReaction != null && userReaction.ReactionType == ReactionType.Dislike;
+                                }
+                                
+                                <!-- Botón Like -->
+                                <form asp-controller="Reaction" asp-action="Toggle" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="postId" value="@post.Id" />
+                                    <input type="hidden" name="isLike" value="true" />
+                                    <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                    <button type="submit" 
+                                            class="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 @(hasLike ? "bg-brand-blue/10 text-brand-blue shadow-2xs scale-105" : "bg-gray-50 hover:bg-blue-50/80 text-gray-600 hover:text-brand-blue")"
+                                            title="Me gusta">
+                                        <i class="@(hasLike ? "fas text-brand-blue animate-bounce" : "far") fa-thumbs-up text-sm"></i>
+                                        <span>@post.ReactionsCount</span>
+                                    </button>
+                                </form>
+
+                                <!-- Botón Dislike -->
+                                <form asp-controller="Reaction" asp-action="Toggle" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="postId" value="@post.Id" />
+                                    <input type="hidden" name="isLike" value="false" />
+                                    <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                    <button type="submit" 
+                                            class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 @(hasDislike ? "bg-red-100 text-red-600 scale-105" : "bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-500")"
+                                            title="No me gusta">
+                                        <i class="@(hasDislike ? "fas" : "far") fa-thumbs-down text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Botón de Comentarios -->
+                            <div class="flex items-center gap-2">
+                                <!-- Indicador y botón de comentarios -->
+                                <button type="button" onclick="document.getElementById('commentsSection-@post.Id').classList.toggle('hidden');"
+                                        class="flex items-center gap-1.5 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 px-3.5 py-2 rounded-full transition-colors"
+                                        title="Ver comentarios">
+                                    <i class="far fa-comment-dots text-sm"></i>
+                                    <span>@post.CommentsCount</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4. SECCIÓN DE COMENTARIOS (Estilo Burbujas de Chat / Instagram) -->
+                        <div id="commentsSection-@post.Id" class="pt-4 border-t border-gray-100 space-y-4">
+                            @if (post.Comments != null && post.Comments.Any())
+                            {
+                                <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                                    @{
+                                        async Task RenderCommentsAsync(IEnumerable<LinkUpPro.Core.Application.DTOs.CommentDTO.CommentDTO> comments, int depth = 0)
+                                        {
+                                            var commentsToRender = depth == 0 ? comments.Where(c => c.ParentCommentId == null || c.ParentCommentId == 0) : comments;
+                                            foreach (var comment in commentsToRender)
+                                            {
+                                                var isMyComment = comment.AuthorId == userId;
+                                                var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado.";
+                                                
+                                                <div class="bg-gray-50/80 hover:bg-gray-100/60 p-3.5 rounded-2xl border border-gray-200/60 transition-all relative @(depth > 0 ? "ml-6 sm:ml-10 border-l-4 border-l-brand-blue/30 bg-blue-50/20" : "")">
+                                                    <div class="flex justify-between items-start gap-2">
+                                                        <div class="flex items-center gap-2">
+                                                            @if (!isDeletedPlaceholder && !string.IsNullOrEmpty(comment.AuthorPhotoUrl))
+                                                            {
+                                                                <img src="@comment.AuthorPhotoUrl" alt="" class="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-2xs" />
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border border-gray-200">
+                                                                    <i class="fas fa-user text-xs"></i>
+                                                                </div>
+                                                            }
+                                                            <div>
+                                                                <div class="flex items-center gap-1">
+                                                                    <span class="font-extrabold text-xs text-gray-900">
+                                                                        @(isDeletedPlaceholder ? "[Eliminado]" : comment.AuthorName)
+                                                                    </span>
+                                                                    @if (!isDeletedPlaceholder)
+                                                                    {
+                                                                        <i class="fas fa-check-circle text-brand-blue text-[10px]" title="Verificado"></i>
+                                                                    }
+                                                                </div>
+                                                                <span class="text-[10px] text-gray-400 font-medium">@comment.Created.ToLocalTime().ToString("g")</span>
+                                                            </div>
+                                                        </div>
+
+                                                        @if (isMyComment && !isDeletedPlaceholder)
+                                                        {
+                                                            <div class="flex items-center gap-1">
+                                                                <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="text-gray-400 hover:text-brand-blue text-xs p-1 rounded hover:bg-white transition-colors" title="Editar">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro de eliminar este comentario?');" class="inline">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <button type="submit" class="text-gray-400 hover:text-red-500 text-xs p-1 rounded hover:bg-white transition-colors" title="Eliminar">
+                                                                        <i class="fas fa-trash-alt"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        }
+                                                    </div>
+
+                                                    <!-- Contenido del comentario -->
+                                                    <div class="mt-2 text-xs sm:text-sm text-gray-800 font-normal pl-9">
+                                                        <p id="commentContent-@comment.Id" class="leading-relaxed">@comment.Content</p>
+                                                        
+                                                        <!-- Formulario inline para editar -->
+                                                        <form id="commentEditForm-@comment.Id" asp-controller="Comment" asp-action="Edit" asp-route-id="@comment.Id" method="post" class="hidden mt-2 space-y-2">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="text" name="content" value="@comment.Content" required class="w-full px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none" />
+                                                            <div class="flex justify-end gap-1.5">
+                                                                <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="px-3 py-1 text-[10px] font-bold bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300">Cancelar</button>
+                                                                <button type="submit" class="px-3 py-1 text-[10px] font-bold bg-brand-blue text-white rounded-lg hover:bg-blue-800 shadow-2xs">Guardar Cambios</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+
+                                                    <!-- Botón Responder -->
+                                                    @if (post.CommentStatus == CommentStatus.Allowed && !isDeletedPlaceholder)
+                                                    {
+                                                        <div class="mt-2 pl-9 flex justify-start">
+                                                            <button type="button" onclick="toggleReplyForm(@comment.Id)" class="text-[11px] text-brand-blue hover:text-indigo-600 font-extrabold flex items-center gap-1 transition-colors">
+                                                                <i class="fas fa-reply text-[10px]"></i> Responder
+                                                            </button>
+                                                        </div>
+
+                                                        <!-- Formulario de respuesta -->
+                                                        <form id="replyForm-@comment.Id" asp-controller="Comment" asp-action="Create" method="post" class="hidden mt-2 pl-9 space-y-2">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="PostId" value="@post.Id" />
+                                                            <input type="hidden" name="ParentCommentId" value="@comment.Id" />
+                                                            <div class="flex gap-2">
+                                                                <input type="text" name="Content" required maxlength="500" placeholder="Escribe una respuesta para @comment.AuthorName..."
+                                                                       class="flex-grow px-3 py-1.5 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none" />
+                                                                <button type="submit" class="bg-brand-blue text-white px-3.5 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-800 shadow-2xs">Enviar</button>
+                                                                <button type="button" onclick="toggleReplyForm(@comment.Id)" class="px-2.5 py-1.5 bg-gray-200 text-gray-600 rounded-xl text-xs font-bold">✕</button>
+                                                            </div>
+                                                        </form>
+                                                    }
+                                                </div>
+
+                                                if (comment.Replies != null && comment.Replies.Any())
+                                                {
+                                                    await RenderCommentsAsync(comment.Replies, depth + 1);
+                                                }
+                                            }
+                                        }
+
+                                        await RenderCommentsAsync(post.Comments);
+                                    }
+                                </div>
+                            }
+
+                            <!-- Formulario para agregar comentario nuevo -->
+                            @if (post.CommentStatus == CommentStatus.Allowed)
+                            {
+                                <form asp-controller="Comment" asp-action="Create" method="post" class="flex gap-2 pt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="PostId" value="@post.Id" />
+                                    <div class="relative flex-grow">
+                                        <input type="text" name="Content" required maxlength="500" placeholder="Escribe un comentario en la publicación..."
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 hover:bg-gray-100/60 focus:bg-white border border-gray-200 rounded-2xl text-xs font-medium focus:ring-2 focus:ring-brand-blue outline-none transition-all placeholder-gray-400" />
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="far fa-smile"></i></span>
+                                    </div>
+                                    <button type="submit" class="bg-gradient-to-r from-brand-blue to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2 rounded-2xl text-xs font-black transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 active:scale-95">
+                                        <i class="fas fa-paper-plane"></i> <span class="hidden sm:inline">Comentar</span>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="bg-gray-50/80 border border-gray-200/60 text-gray-500 rounded-2xl p-3 text-center text-xs font-semibold">
+                                    <i class="fas fa-comment-slash mr-1 text-gray-400"></i> Los comentarios están desactivados para esta publicación.
+                                </div>
+                            }
+                        </div>
+                    </article>
+                }
+            }
+        </div>
+
     </div>
 </div>
 
 @section Scripts {
     <script>
-        function togglePassword(fieldId, iconId) {
-            const field = document.getElementById(fieldId);
-            const icon = document.getElementById(iconId);
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                field.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
+        function toggleReplyForm(commentId) {
+            const form = document.getElementById('replyForm-' + commentId);
+            if (form) form.classList.toggle('hidden');
         }
 
-        function checkStrength(password) {
-            const bar = document.getElementById('strengthBar');
-            const fill = document.getElementById('strengthFill');
-            const text = document.getElementById('strengthText');
-
-            if (!password) { bar.style.display = 'none'; text.style.display = 'none'; return; }
-            bar.style.display = 'block'; text.style.display = 'block';
-
-            let score = 0;
-            if (password.length >= 8) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[a-z]/.test(password)) score++;
-            if (/[0-9]/.test(password)) score++;
-            if (/[^A-Za-z0-9]/.test(password)) score++;
-
-            if (score <= 2) {
-                fill.style.width = '33%'; fill.className = 'h-full rounded-full transition-all duration-300 bg-red-500';
-                text.textContent = 'Débil'; text.className = 'text-xs mt-1 text-red-500 font-medium';
-            } else if (score <= 4) {
-                fill.style.width = '66%'; fill.className = 'h-full rounded-full transition-all duration-300 bg-yellow-500';
-                text.textContent = 'Media'; text.className = 'text-xs mt-1 text-yellow-500 font-medium';
-            } else {
-                fill.style.width = '100%'; fill.className = 'h-full rounded-full transition-all duration-300 bg-green-500';
-                text.textContent = 'Fuerte'; text.className = 'text-xs mt-1 text-green-500 font-medium';
-            }
-        }
-
-        function previewFile() {
-            const preview = document.getElementById('avatarPreview');
-            const placeholder = document.getElementById('avatarPlaceholder');
-            const file = document.querySelector('input[type=file]').files[0];
-            const reader = new FileReader();
-
-            reader.addEventListener("load", function () {
-                if (preview) {
-                    preview.src = reader.result;
-                } else if (placeholder) {
-                    // Switch placeholder with new preview image tag
-                    const newImg = document.createElement('img');
-                    newImg.id = 'avatarPreview';
-                    newImg.src = reader.result;
-                    newImg.className = 'w-24 h-24 rounded-full object-cover border-2 border-brand-blue/20 shadow-md';
-                    placeholder.parentNode.replaceChild(newImg, placeholder);
-                }
-            }, false);
-
-            if (file) {
-                reader.readAsDataURL(file);
-            }
+        function toggleCommentEditForm(commentId) {
+            const text = document.getElementById('commentContent-' + commentId);
+            const form = document.getElementById('commentEditForm-' + commentId);
+            if (text) text.classList.toggle('hidden');
+            if (form) form.classList.toggle('hidden');
         }
     </script>
 }

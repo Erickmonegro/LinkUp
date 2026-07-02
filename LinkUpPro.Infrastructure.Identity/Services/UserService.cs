@@ -36,12 +36,13 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 Errors = []
             };
 
-            var user = await _userManager.FindByNameAsync(loginDto.UserName);
+            var user = await _userManager.FindByNameAsync(loginDto.UserName)
+                       ?? await _userManager.FindByEmailAsync(loginDto.UserName);
 
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add($"There is no acccount registered with this username: {loginDto.UserName}");
+                response.Errors.Add($"No existe una cuenta registrada con este usuario o correo: {loginDto.UserName}");
                 return response;
             }
 
@@ -255,7 +256,8 @@ namespace LinkUpPro.Infrastructure.Identity.Services
         {
             UserResponseDto response = new() { HasError = false, Errors = [] };
 
-            var user = await _userManager.FindByNameAsync(request.UserName);
+            var user = await _userManager.FindByNameAsync(request.UserName) 
+                       ?? await _userManager.FindByEmailAsync(request.UserName);
 
             if (user == null)
             {

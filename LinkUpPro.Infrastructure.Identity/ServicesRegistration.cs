@@ -53,12 +53,6 @@ namespace LinkUpPro.Infrastructure.Identity
                 options.SlidingExpiration = true;
             });
 
-            services.AddAuthentication()
-                .AddGoogle(options =>
-                {
-                    options.ClientId = config["Authentication:Google:ClientId"] ?? "dummy-id.apps.googleusercontent.com";
-                    options.ClientSecret = config["Authentication:Google:ClientSecret"] ?? "dummy-secret";
-                });
             #endregion
 
             #region Services

@@ -85,101 +85,6 @@ namespace LinkUpPro.Controllers
 
             return RedirectToAction("Index", "Home");
         }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult GoogleLogin()
-        {
-            var redirectUrl = Url.Action("GoogleLoginCallback", "User");
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
-            return Challenge(properties, "Google");
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GoogleLoginCallback(string? remoteError)
-        {
-            if (remoteError != null)
-            {
-                ModelState.AddModelError("", $"Error del proveedor externo: {remoteError}");
-                return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
-            }
-
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-            {
-                ModelState.AddModelError("", "Error al cargar la información del inicio de sesión con Google.");
-                return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
-            }
-
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            if (result.IsLockedOut)
-            {
-                ModelState.AddModelError("", "La cuenta se encuentra bloqueada temporalmente.");
-                return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
-            }
-
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            if (string.IsNullOrEmpty(email))
-            {
-                ModelState.AddModelError("", "No se pudo obtener el correo de su cuenta de Google.");
-                return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
-            }
-
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "Google";
-                var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) ?? "User";
-                var userName = email.Split('@')[0];
-
-                var checkUser = await _userManager.FindByNameAsync(userName);
-                if (checkUser != null)
-                {
-                    userName = $"{userName}_{Guid.NewGuid().ToString().Substring(0, 4)}";
-                }
-
-                var profilePhoto = info.Principal.FindFirstValue("picture") ?? "/uploads/profiles/default.png";
-
-                user = new AppUser
-                {
-                    UserName = userName,
-                    Email = email,
-                    Name = firstName,
-                    LastName = lastName,
-                    ProfilePhoto = profilePhoto,
-                    EmailConfirmed = true
-                };
-
-                var createResult = await _userManager.CreateAsync(user);
-                if (!createResult.Succeeded)
-                {
-                    foreach (var error in createResult.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }
-                    return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
-                }
-
-                await _userManager.AddToRoleAsync(user, "StandardUser");
-            }
-
-            var addLoginResult = await _userManager.AddLoginAsync(user, info);
-            if (addLoginResult.Succeeded || addLoginResult.Errors.Any(e => e.Code == "LoginAlreadyAssociated"))
-            {
-                await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                return RedirectToAction("Index", "Home");
-            }
-
-            ModelState.AddModelError("", "Error al asociar la cuenta de Google.");
-            return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
-        }
-
         #endregion
 
         #region Logout
@@ -419,7 +324,7 @@ namespace LinkUpPro.Controllers
             await _userService.ForgotPasswordAsync(dto);
 
             // Always show the same message regardless of whether username exists
-            ViewBag.Message = "Si el nombre de usuario corresponde a una cuenta registrada, recibirá un enlace para restablecer su contraseña.";
+            ViewBag.Message = "Si el usuario o correo corresponde a una cuenta registrada, recibirá un enlace para restablecer su contraseña.";
             return View("ForgotPasswordResult");
         }
 

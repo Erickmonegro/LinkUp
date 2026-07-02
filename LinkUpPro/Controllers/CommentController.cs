@@ -110,6 +110,18 @@ namespace LinkUpPro.Controllers
                 }
             }
 
+            var redirectUrl = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(redirectUrl))
+            {
+                var fragmentIdx = redirectUrl.IndexOf('#');
+                if (fragmentIdx >= 0)
+                {
+                    redirectUrl = redirectUrl.Substring(0, fragmentIdx);
+                }
+                redirectUrl += $"#post-{vm.PostId}";
+                return Redirect(redirectUrl);
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -129,6 +141,18 @@ namespace LinkUpPro.Controllers
             comment.Content = content.Trim();
             await _commentService.UpdateAsync(comment, id);
 
+            var redirectUrl = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(redirectUrl))
+            {
+                var fragmentIdx = redirectUrl.IndexOf('#');
+                if (fragmentIdx >= 0)
+                {
+                    redirectUrl = redirectUrl.Substring(0, fragmentIdx);
+                }
+                redirectUrl += $"#post-{comment.PostId}";
+                return Redirect(redirectUrl);
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -145,6 +169,7 @@ namespace LinkUpPro.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            var postId = comment.PostId;
             var hasReplies = (comment.Replies != null && comment.Replies.Any()) || await _commentService.HasRepliesAsync(id);
             if (hasReplies)
             {
@@ -154,6 +179,18 @@ namespace LinkUpPro.Controllers
             else
             {
                 await _commentService.DeleteAsync(id);
+            }
+
+            var redirectUrl = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(redirectUrl))
+            {
+                var fragmentIdx = redirectUrl.IndexOf('#');
+                if (fragmentIdx >= 0)
+                {
+                    redirectUrl = redirectUrl.Substring(0, fragmentIdx);
+                }
+                redirectUrl += $"#post-{postId}";
+                return Redirect(redirectUrl);
             }
 
             return RedirectToAction("Index", "Home");

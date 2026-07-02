@@ -21,7 +21,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         public async Task<List<Post>> GetFeedAsync(string userId)
         {
             return await repo.Set<Post>()
-                .Where(p => p.IsActive && (p.AuthorId == userId || p.PrivacyMode != LinkUpPro.Core.Domain.Common.Enums.PrivacyMode.OnlyMe))
+                .Where(p => p.IsActive && p.AuthorId == userId)
                 .Include(p => p.Comments)
                 .Include(p => p.Reactions)
                 .OrderByDescending(p => p.CreatedAt)
@@ -32,7 +32,7 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
         {
             var query = repo.Set<Post>().AsQueryable();
 
-            query = query.Where(p => p.IsActive && (p.AuthorId == userId || p.PrivacyMode != LinkUpPro.Core.Domain.Common.Enums.PrivacyMode.OnlyMe));
+            query = query.Where(p => p.IsActive && p.AuthorId == userId);
 
             if (!string.IsNullOrWhiteSpace(textFilter))
             {

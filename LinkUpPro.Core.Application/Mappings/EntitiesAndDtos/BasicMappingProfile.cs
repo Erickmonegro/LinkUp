@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LinkUpPro.Core.Application.DTOs;
 using LinkUpPro.Core.Domain.Common;
 using System;
@@ -13,7 +13,12 @@ namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
     {
         public BasicMappingProfile() { 
         
-            CreateMap(typeof(BasicDTO<>), typeof(BasicEntity<>)).ReverseMap();
+            CreateMap(typeof(BasicDTO<>), typeof(BasicEntity<>))
+                .ForMember("CreatedAt", opt => opt.MapFrom("Created"))
+                .ForMember("UpdatedAt", opt => opt.MapFrom("Updated"))
+                .ReverseMap()
+                .ForMember("Created", opt => opt.MapFrom("CreatedAt"))
+                .ForMember("Updated", opt => opt.MapFrom("UpdatedAt"));
         }
     }
 }

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 
 namespace LinkUpPro.Controllers
 {
@@ -16,12 +17,17 @@ namespace LinkUpPro.Controllers
     public class ProfileController : Controller
     {
         private readonly IUserService _userService;
+        private readonly IPostService _postService;
+        private readonly IFriendshipService _friendshipService;
 
-        public ProfileController(IUserService _userService)
+        public ProfileController(IUserService userService, IPostService postService, IFriendshipService friendshipService)
         {
-            this._userService = _userService;
+            _userService = userService;
+            _postService = postService;
+            _friendshipService = friendshipService;
         }
 
+        // GET: /Profile/Index -> Muro del Perfil (Profile Wall)
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -41,17 +47,46 @@ namespace LinkUpPro.Controllers
                 PhotoUrl = user.PhotoUrl
             };
 
-            return View(vm);
+            var friendsCount = await _friendshipService.GetActiveFriendsCountAsync(userId);
+            var posts = await _postService.GetUserPostsFilteredAsync(userId, null, null, null, null, null);
+
+            ViewBag.FriendsCount = friendsCount;
+            ViewBag.Posts = posts ?? new List<Core.Application.DTOs.PostDTO.PostDTO>();
+
+            return View("Index", vm);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(UpdateUserViewModel vm)
+        // GET: /Profile/Edit -> Vista para editar todo el perfil
+        public async Task<IActionResult> Edit()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "User");
 
-            // Server-side security check: only the active user can modify their own profile
+            var user = await _userService.GetUserById(userId);
+            if (user == null) return RedirectToAction("Login", "User");
+
+            var vm = new UpdateUserViewModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
+                PhotoUrl = user.PhotoUrl
+            };
+
+            return View("Edit", vm);
+        }
+
+        // POST: /Profile/Edit -> Guardar cambios del perfil
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(UpdateUserViewModel vm)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "User");
+
             if (vm.Id != userId)
             {
                 return RedirectToAction("AccessDenied", "User");
@@ -60,12 +95,9 @@ namespace LinkUpPro.Controllers
             var currentUser = await _userService.GetUserById(userId);
             if (currentUser == null) return RedirectToAction("Login", "User");
 
-            // Ignore modifications to UserName and Email as they are read-only per PDF
             vm.UserName = currentUser.UserName;
             vm.Email = currentUser.Email;
-            vm.PhotoUrl = currentUser.PhotoUrl;
 
-            // Optional profile picture update
             if (vm.ProfileImageFile != null && vm.ProfileImageFile.Length > 0)
             {
                 var validationError = ValidateImageFile(vm.ProfileImageFile);
@@ -78,8 +110,15 @@ namespace LinkUpPro.Controllers
                     vm.PhotoUrl = await SaveImageFileAsync(vm.ProfileImageFile);
                 }
             }
+            else if (!string.IsNullOrWhiteSpace(vm.PhotoUrl))
+            {
+                vm.PhotoUrl = vm.PhotoUrl.Trim();
+            }
+            else
+            {
+                vm.PhotoUrl = currentUser.PhotoUrl;
+            }
 
-            // Optional password update
             bool isChangingPassword = !string.IsNullOrEmpty(vm.Password);
             if (isChangingPassword)
             {
@@ -96,10 +135,9 @@ namespace LinkUpPro.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View(vm);
+                return View("Edit", vm);
             }
 
-            // Perform password change first if requested
             if (isChangingPassword)
             {
                 var passResponse = await _userService.ChangePasswordAsync(userId, vm.CurrentPassword!, vm.Password!);
@@ -120,17 +158,15 @@ namespace LinkUpPro.Controllers
                             ModelState.AddModelError("CurrentPassword", error);
                         }
                     }
-                    return View(vm);
+                    return View("Edit", vm);
                 }
 
-                // If password change is successful, logout of all sessions
                 await _userService.SignOutAsync();
                 HttpContext.Session.Clear();
                 TempData["SuccessMessage"] = "Su contraseña fue restablecida correctamente. Ya puede iniciar sesión.";
                 return RedirectToAction("Login", "User");
             }
 
-            // Save other user profile fields
             var origin = $"{Request.Scheme}://{Request.Host}";
             var saveDto = new SaveUserDto
             {
@@ -172,7 +208,7 @@ namespace LinkUpPro.Controllers
                         ModelState.AddModelError("", error);
                     }
                 }
-                return View(vm);
+                return View("Edit", vm);
             }
 
             TempData["SuccessMessage"] = "Su perfil fue actualizado correctamente.";

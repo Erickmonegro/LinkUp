@@ -133,7 +133,7 @@
                         <label asp-for="UserName" class="block text-sm font-bold text-gray-700 mb-2"></label>
                         <div class="relative flex items-center">
                             <i class="far fa-user absolute left-4 text-gray-400 text-lg"></i>
-                            <input asp-for="UserName" class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-base rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-brand-blue block pl-12 p-4 transition-all outline-none" placeholder="Ingresa tu nombre de usuario" required>
+                            <input asp-for="UserName" class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-base rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-brand-blue block pl-12 p-4 transition-all outline-none" placeholder="Ej. usuario o correo@ejemplo.com" required>
                         </div>
                         <span asp-validation-for="UserName" class="text-red-500 text-xs mt-1 block"></span>
                     </div>
@@ -162,18 +162,7 @@
                     </button>
                 </form>
 
-                <div class="relative flex py-8 items-center">
-                    <div class="flex-grow border-t border-gray-200"></div>
-                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">o</span>
-                    <div class="flex-grow border-t border-gray-200"></div>
-                </div>
-
-                <a asp-controller="User" asp-action="GoogleLogin" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-base px-5 py-4 text-center hover:bg-gray-50 transition-all mb-8 shadow-sm cursor-pointer">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" class="w-6 h-6">
-                    Iniciar sesión con Google
-                </a>
-
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2 mt-6">
                     <a asp-controller="User" asp-action="Register" class="flex justify-between items-center py-3 text-gray-600 hover:text-brand-blue font-medium text-sm border-b border-gray-100 transition-colors">
                         <span><i class="fas fa-user-plus w-6 text-center mr-2 text-gray-400"></i> Crear una cuenta</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>

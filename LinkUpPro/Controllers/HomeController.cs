@@ -62,8 +62,14 @@ namespace LinkUpPro.Controllers
             return View("Feed", posts);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        public IActionResult Terms()
         {
             return View();
         }

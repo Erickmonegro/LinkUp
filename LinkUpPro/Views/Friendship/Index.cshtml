@@ -300,7 +300,8 @@
                                         @{
                                             async Task RenderFriendPostCommentsAsync(IEnumerable<LinkUpPro.Core.Application.DTOs.CommentDTO.CommentDTO> comments, int depth = 0)
                                             {
-                                                foreach (var comment in comments)
+                                                var commentsToRender = depth == 0 ? comments.Where(c => c.ParentCommentId == null || c.ParentCommentId == 0) : comments;
+                                                foreach (var comment in commentsToRender)
                                                 {
                                                     var isMyComment = comment.AuthorId == userId;
                                                     var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado.";

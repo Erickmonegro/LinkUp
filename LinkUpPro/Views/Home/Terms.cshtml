@@ -1,0 +1,137 @@
+@{
+    ViewData["Title"] = "Términos de Uso";
+}
+
+<div class="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+
+    <!-- CABECERA PANORÁMICA -->
+    <div class="bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-10 -top-10 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 space-y-2">
+            <span class="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-black uppercase tracking-wider text-purple-300">Marco Legal & Normativas</span>
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+                <i class="fas fa-file-contract text-purple-400"></i> Términos de Uso
+            </h1>
+            <p class="text-sm sm:text-base text-slate-300 font-medium max-w-2xl">
+                ¡Bienvenido a LinkUp Pro! Al acceder y utilizar nuestra plataforma social y de entretenimiento naval, aceptas cumplir con los siguientes términos y reglas comunitarias.
+            </p>
+        </div>
+
+        <div class="relative z-10 flex-shrink-0">
+            <a asp-controller="Home" asp-action="Index" class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md rounded-2xl text-white font-extrabold text-sm transition-all shadow-md hover:scale-105">
+                <i class="fas fa-arrow-left"></i> <span>Volver al Inicio</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- CONTENIDO DE LOS TÉRMINOS EN TARJETAS MODERNAS -->
+    <div class="space-y-6">
+
+        <!-- Sección 1: Aceptación y Registro -->
+        <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl font-black">
+                    1
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900">Aceptación de los Términos y Registro de Cuenta</h3>
+                    <p class="text-xs text-gray-400 font-bold uppercase">Última actualización: Julio 2026</p>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed font-medium">
+                Al registrar una cuenta en LinkUp Pro, certificas que la información proporcionada (incluyendo tus nombres, correo y número telefónico) es real y verificable. Eres el único responsable de mantener la confidencialidad de tus credenciales de acceso y de todas las actividades que ocurran bajo tu cuenta.
+            </p>
+        </div>
+
+        <!-- Sección 2: Normas de Convivencia Social -->
+        <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-brand-blue flex items-center justify-center text-2xl font-black">
+                    2
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900">Normas de Convivencia y Contenido Social</h3>
+                    <p class="text-xs text-gray-400 font-bold uppercase">Publicaciones, Comentarios & Muros</p>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed font-medium">
+                LinkUp Pro fomenta una comunidad respetuosa, constructiva y segura. Queda estrictamente prohibido:
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs font-bold text-gray-700">
+                <div class="bg-red-50/60 p-3.5 rounded-2xl border border-red-100 flex items-center gap-3 text-red-800">
+                    <i class="fas fa-ban text-red-500 text-base"></i>
+                    <span>Publicar contenido ofensivo, acoso o discurso de odio.</span>
+                </div>
+                <div class="bg-red-50/60 p-3.5 rounded-2xl border border-red-100 flex items-center gap-3 text-red-800">
+                    <i class="fas fa-ban text-red-500 text-base"></i>
+                    <span>Distribuir enlaces fraudulentos, spam o phishing.</span>
+                </div>
+                <div class="bg-red-50/60 p-3.5 rounded-2xl border border-red-100 flex items-center gap-3 text-red-800">
+                    <i class="fas fa-ban text-red-500 text-base"></i>
+                    <span>Suplantar la identidad de otros miembros o instituciones.</span>
+                </div>
+                <div class="bg-red-50/60 p-3.5 rounded-2xl border border-red-100 flex items-center gap-3 text-red-800">
+                    <i class="fas fa-ban text-red-500 text-base"></i>
+                    <span>Infringir derechos de autor en fotos o videos de YouTube.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección 3: Reglamento de Batalla Naval -->
+        <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl font-black">
+                    3
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900">Reglamento de Juego • Batalla Naval 12x12</h3>
+                    <p class="text-xs text-gray-400 font-bold uppercase">Juego Limpio (Fair Play)</p>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed font-medium">
+                El módulo de Batalla Naval de LinkUp Pro está diseñado para el entretenimiento competitivo entre usuarios. Al entrar a las salas de juego, aceptas respetar las reglas de posicionamiento y combate:
+            </p>
+            <ul class="list-disc pl-6 space-y-2 text-xs font-semibold text-gray-600">
+                <li>No se permite el uso de software de automatización, bots o manipulación de peticiones HTTP para adivinar coordenadas o posicionar barcos ilegalmente.</li>
+                <li>Los abandonos de partida o desconexiones repetidas en partidas multijugador podrán resultar en la pérdida de la partida o restricciones temporales de emparejamiento.</li>
+                <li>El respeto entre jugadores en las salas es obligatorio. Cualquier comportamiento antideportivo será sancionado.</li>
+            </ul>
+        </div>
+
+        <!-- Sección 4: Modificaciones y Suspensión -->
+        <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-2xl font-black">
+                    4
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900">Modificaciones y Suspensión de Cuentas</h3>
+                    <p class="text-xs text-gray-400 font-bold uppercase">Derechos de Reserva</p>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed font-medium">
+                Nos reservamos el derecho de suspender o restringir el acceso a cualquier cuenta que viole gravemente estos términos de uso o ponga en peligro la estabilidad del servicio, sin previo aviso. Asimismo, LinkUp Pro puede actualizar estos términos periódicamente para reflejar nuevas funcionalidades o regulaciones legales.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- TARJETA DE COMPROMISO COMUNITARIO -->
+    <div class="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-3xl text-emerald-400 flex-shrink-0 shadow-inner">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <div>
+                <h4 class="text-lg font-black">Gracias por ser parte de LinkUp Pro</h4>
+                <p class="text-xs text-slate-300 font-medium mt-0.5">Disfruta conectando con tus amigos, compartiendo contenido y compitiendo en Batalla Naval.</p>
+            </div>
+        </div>
+        <a asp-controller="Battleship" asp-action="Index" class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all hover:scale-105 flex items-center gap-2 flex-shrink-0">
+            <i class="fas fa-gamepad"></i> <span>Jugar Batalla Naval</span>
+        </a>
+    </div>
+
+</div>

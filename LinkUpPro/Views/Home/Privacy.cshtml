@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Privacidad & Seguridad";
+}
+
+<div class="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+
+    <!-- CABECERA PANORÁMICA -->
+    <div class="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-10 -top-10 w-64 h-64 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 space-y-2">
+            <span class="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-black uppercase tracking-wider text-emerald-300">Protección de Datos</span>
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+                <i class="fas fa-shield-alt text-emerald-400"></i> Privacidad & Seguridad
+            </h1>
+            <p class="text-sm sm:text-base text-slate-300 font-medium max-w-2xl">
+                En LinkUp Pro, tu privacidad es nuestra prioridad absoluta. Conoce las medidas de seguridad avanzadas y los controles que ponemos en tus manos.
+            </p>
+        </div>
+
+        <div class="relative z-10 flex-shrink-0">
+            <a asp-controller="Home" asp-action="Index" class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md rounded-2xl text-white font-extrabold text-sm transition-all shadow-md hover:scale-105">
+                <i class="fas fa-arrow-left"></i> <span>Volver al Inicio</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- CONTENIDO DE PRIVACIDAD EN TARJETAS MODERNAS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Tarjeta 1: Control de Publicaciones -->
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">1. Privacidad Granular en Publicaciones</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Tú decides exactamente quién ve cada una de tus publicaciones, fotos o videos de YouTube:
+            </p>
+            <ul class="space-y-2 text-xs font-bold text-gray-700 pt-1">
+                <li class="flex items-center gap-2.5 bg-gray-50 p-3 rounded-xl border border-gray-200/60">
+                    <i class="fas fa-user-friends text-brand-blue text-sm"></i>
+                    <span><strong>Solo Amigos:</strong> Visible únicamente para tu círculo de amistad aprobado.</span>
+                </li>
+                <li class="flex items-center gap-2.5 bg-gray-50 p-3 rounded-xl border border-gray-200/60">
+                    <i class="fas fa-eye-slash text-amber-600 text-sm"></i>
+                    <span><strong>Solo Yo:</strong> Privado y reservado como tu diario o archivo personal en tu muro.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tarjeta 2: Cifrado y Contraseñas -->
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-brand-blue flex items-center justify-center text-2xl">
+                <i class="fas fa-key"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">2. Cifrado de Credenciales y Contraseñas</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Todas las contraseñas en LinkUp Pro son protegidas mediante algoritmos de hash criptográfico de última generación con salting (PBKDF2 / Identity Hash).
+            </p>
+            <div class="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100 text-xs font-semibold text-blue-900 flex items-start gap-2.5">
+                <i class="fas fa-check-circle text-brand-blue mt-0.5 text-base"></i>
+                <span>Contamos con un indicador de fuerza en tiempo real al editar tu perfil para garantizar contraseñas robustas.</span>
+            </div>
+        </div>
+
+        <!-- Tarjeta 3: Batalla Naval y Juego Limpio -->
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl">
+                <i class="fas fa-ship"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">3. Seguridad en Combates Navales</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                En nuestras salas de Batalla Naval 12x12, las posiciones estratégicas de tu flota se almacenan de forma aislada y secreta en el servidor.
+            </p>
+            <p class="text-xs text-gray-500 font-medium leading-relaxed">
+                Ningún oponente o script externo puede interceptar la ubicación de tus barcos hasta que se realice un disparo directo sobre la celda del tablero.
+            </p>
+        </div>
+
+        <!-- Tarjeta 4: Control de Amistades -->
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-gray-200/80 space-y-4 hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">4. Red y Solicitudes Seguras</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Nadie puede ver tus publicaciones de "Solo Amigos" sin antes enviarte una solicitud formal de amistad y que tú decidas aceptarla de manera explícita en tu panel de alertas.
+            </p>
+            <div class="flex items-center gap-2 text-xs font-bold text-purple-700 bg-purple-50 p-3 rounded-xl border border-purple-100">
+                <i class="fas fa-user-times"></i>
+                <span>Puedes eliminar o cancelar amistades en cualquier momento con un solo clic.</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SECCIÓN DE COMPROMISO DE SEGURIDAD -->
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-2">
+            <h4 class="text-xl font-black flex items-center gap-2">
+                <i class="fas fa-user-check text-green-400"></i> Control Total Sobre tu Cuenta
+            </h4>
+            <p class="text-sm text-slate-300 max-w-xl font-medium">
+                En LinkUp Pro no vendemos tu información personal a terceros ni utilizamos tus datos privados con fines de rastreo publicitario invasivo.
+            </p>
+        </div>
+        <a asp-controller="Profile" asp-action="Edit" class="px-6 py-3.5 bg-gradient-to-r from-brand-blue to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all hover:scale-105 flex items-center gap-2 flex-shrink-0">
+            <i class="fas fa-cog"></i> <span>Configurar Mi Seguridad</span>
+        </a>
+    </div>
+
+</div>

@@ -20,6 +20,12 @@
         currentUser = await UserManager.FindByIdAsync(userId);
         friendsCount = await FriendshipService.GetActiveFriendsCountAsync(userId);
     }
+
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool isHomeFeed = currentController == "Home" && currentAction == "Index";
+    bool isGame = currentController == "Battleship" || currentController == "ShipPosition" || currentController == "Attack";
 }
 
 <!DOCTYPE html>
@@ -38,81 +44,239 @@
                 extend: {
                     colors: {
                         'brand-blue': '#060396',
-                        'bg-soft': '#e8edf3'
+                        'brand-indigo': '#4f46e5',
+                        'bg-soft': '#f0f4f8'
                     },
                     fontFamily: {
                         sans: ['Segoe UI', 'Roboto', 'Helvetica Neue', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
         }
     </script>
+    <style>
+        /* Custom scrollbar for interactive modern feel */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        /* Theme Styles (Claro / Normal / Oscuro) */
+        html.theme-light, body.theme-light { background-color: #ffffff !important; }
+        html.theme-normal, body.theme-normal { background-color: #f0f4f8 !important; }
+        html.theme-dark, body.theme-dark { background-color: #0f172a !important; color: #f1f5f9 !important; }
+        html.theme-dark header, html.theme-dark nav, html.theme-dark footer, html.theme-dark .bg-white, html.theme-dark article, html.theme-dark aside > div {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        html.theme-dark .bg-gray-50, html.theme-dark .bg-gray-50\/80, html.theme-dark .bg-gray-50\/60, html.theme-dark .bg-bg-soft, html.theme-dark .bg-blue-50\/50, html.theme-dark .bg-gray-100 {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        html.theme-dark .text-gray-900, html.theme-dark .text-gray-800, html.theme-dark .text-gray-700 {
+            color: #f8fafc !important;
+        }
+        html.theme-dark .text-gray-600, html.theme-dark .text-gray-500 {
+            color: #cbd5e1 !important;
+        }
+        html.theme-dark .border-gray-200, html.theme-dark .border-gray-100, html.theme-dark .border-gray-300, html.theme-dark .border-t, html.theme-dark .border-b {
+            border-color: #334155 !important;
+        }
+        html.theme-dark input, html.theme-dark select, html.theme-dark textarea {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+        html.theme-dark .shadow-sm, html.theme-dark .shadow-md, html.theme-dark .shadow-lg, html.theme-dark .shadow-xl {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3) !important;
+        }
+    </style>
+    <script>
+        function applyTheme(theme) {
+            document.documentElement.classList.remove('theme-light', 'theme-normal', 'theme-dark');
+            document.documentElement.classList.add('theme-' + theme);
+            try { localStorage.setItem('linkup_theme', theme); } catch(e){}
+            
+            const icon = document.getElementById('currentThemeIcon');
+            const text = document.getElementById('currentThemeText');
+            if (icon && text) {
+                if (theme === 'light') {
+                    icon.className = 'fas fa-sun text-amber-500';
+                    text.textContent = 'Claro';
+                } else if (theme === 'dark') {
+                    icon.className = 'fas fa-moon text-indigo-400';
+                    text.textContent = 'Oscuro';
+                } else {
+                    icon.className = 'fas fa-desktop text-brand-blue';
+                    text.textContent = 'Normal';
+                }
+            }
+        }
+        try {
+            const savedTheme = localStorage.getItem('linkup_theme') || 'normal';
+            document.documentElement.classList.add('theme-' + savedTheme);
+        } catch(e) {
+            document.documentElement.classList.add('theme-normal');
+        }
+    </script>
 </head>
-<body class="flex flex-col min-h-screen bg-bg-soft text-gray-800">
+<body class="flex flex-col min-h-screen bg-bg-soft text-gray-800 antialiased selection:bg-brand-blue selection:text-white transition-colors duration-200">
 
     @if (ViewData["HideNav"] is not true)
     {
-        <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-            <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-infinity text-brand-blue text-2xl"></i>
-                        <a asp-controller="Home" asp-action="Index" class="font-bold text-xl tracking-tight text-gray-900">
-                            LinkUp <span class="text-brand-blue">Pro</span>
+        <!-- Sticky Glassmorphism Header (Estilo Twitter / Instagram / Facebook) -->
+        <header class="backdrop-blur-md bg-white/90 border-b border-gray-200/80 shadow-sm sticky top-0 z-50 transition-all">
+            <nav class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    
+                    <!-- Logo & Brand -->
+                    <div class="flex items-center gap-3">
+                        <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2.5 group">
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue via-indigo-600 to-sky-400 flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 group-hover:rotate-6 transition-all duration-300">
+                                <i class="fas fa-infinity"></i>
+                            </div>
+                            <span class="font-black text-xl tracking-tight text-gray-900 group-hover:text-brand-blue transition-colors">
+                                LinkUp <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-indigo-600">Pro</span>
+                            </span>
                         </a>
                     </div>
-                    <div class="flex items-center space-x-2 md:space-x-4">
+
+                    <!-- Top Navigation Bar (Mobile / Compact links) -->
+                    <div class="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <a asp-controller="Home" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">Home</a>
-                            
-                            <a asp-controller="Friendship" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">Amigos</a>
-                            
-                            <a asp-controller="FriendRequest" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors relative text-sm md:text-base">
-                                Solicitudes
+                            <!-- Home -->
+                            <a asp-controller="Home" asp-action="Index" 
+                               class="flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-sm transition-all @(currentController == "Home" ? "bg-brand-blue/10 text-brand-blue shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")"
+                               title="Inicio">
+                                <i class="fas fa-home text-base"></i>
+                                <span class="hidden lg:inline">Inicio</span>
+                            </a>
+
+                            <!-- Amigos -->
+                            <a asp-controller="Friendship" asp-action="Index" 
+                               class="flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-sm transition-all @(currentController == "Friendship" ? "bg-brand-blue/10 text-brand-blue shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")"
+                               title="Amigos">
+                                <i class="fas fa-user-friends text-base"></i>
+                                <span class="hidden lg:inline">Amigos</span>
+                            </a>
+
+                            <!-- Solicitudes -->
+                            <a asp-controller="FriendRequest" asp-action="Index" 
+                               class="flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-sm transition-all relative @(currentController == "FriendRequest" ? "bg-brand-blue/10 text-brand-blue shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")"
+                               title="Solicitudes">
+                                <i class="fas fa-user-plus text-base"></i>
+                                <span class="hidden lg:inline">Solicitudes</span>
                                 @if (pendingRequestsCount > 0)
                                 {
-                                    <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+                                    <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-full text-[10px] w-5 h-5 flex items-center justify-center font-black shadow animate-pulse">
                                         @pendingRequestsCount
                                     </span>
                                 }
                             </a>
-                            
-                            <a asp-controller="Notification" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors relative text-sm md:text-base">
-                                Notificaciones
+
+                            <!-- Notificaciones -->
+                            <a asp-controller="Notification" asp-action="Index" 
+                               class="flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-sm transition-all relative @(currentController == "Notification" ? "bg-brand-blue/10 text-brand-blue shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")"
+                               title="Notificaciones">
+                                <i class="fas fa-bell text-base"></i>
+                                <span class="hidden lg:inline">Alertas</span>
                                 @if (unreadNotificationsCount > 0)
                                 {
-                                    <span class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
+                                    <span class="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-red-600 text-white rounded-full text-[10px] w-5 h-5 flex items-center justify-center font-black shadow animate-pulse">
                                         @unreadNotificationsCount
                                     </span>
                                 }
                             </a>
-                            
-                            <a asp-controller="Battleship" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">Battleship</a>
-                            
-                            <a asp-controller="Profile" asp-action="Index" class="text-gray-600 hover:text-brand-blue font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base flex items-center gap-1.5">
+
+                            <!-- Battleship Game Button -->
+                            <a asp-controller="Battleship" asp-action="Index" 
+                               class="flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-sm transition-all @(isGame ? "bg-gradient-to-r from-brand-blue to-indigo-600 text-white shadow-md" : "bg-blue-50 text-brand-blue hover:bg-blue-100")"
+                               title="Batalla Naval">
+                                <i class="fas fa-ship text-base"></i>
+                                <span class="hidden sm:inline">Batalla Naval</span>
+                            </a>
+
+                            <!-- Theme Toggle (Claro / Normal / Oscuro) -->
+                            <div class="relative inline-block text-left mr-1" id="themeDropdownContainer">
+                                <button type="button" onclick="toggleThemeDropdown()" 
+                                        class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200/80 bg-white/80 hover:bg-gray-100 text-gray-700 font-bold text-xs shadow-2xs transition-all" title="Cambiar Tema Visual">
+                                    <i id="currentThemeIcon" class="fas fa-desktop text-brand-blue"></i>
+                                    <span id="currentThemeText" class="hidden md:inline">Normal</span>
+                                    <i class="fas fa-chevron-down text-[10px] text-gray-400"></i>
+                                </button>
+
+                                <div id="themeDropdownMenu" class="hidden absolute right-0 mt-2 w-36 bg-white rounded-2xl shadow-xl border border-gray-200 py-1.5 z-50 text-xs font-bold">
+                                    <button type="button" onclick="setTheme('light')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2.5 text-gray-700 transition-colors">
+                                        <i class="fas fa-sun text-amber-500 w-4 text-center"></i> <span>Modo Claro</span>
+                                    </button>
+                                    <button type="button" onclick="setTheme('normal')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2.5 text-gray-700 transition-colors">
+                                        <i class="fas fa-desktop text-brand-blue w-4 text-center"></i> <span>Normal / Sistema</span>
+                                    </button>
+                                    <button type="button" onclick="setTheme('dark')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2.5 text-gray-700 transition-colors">
+                                        <i class="fas fa-moon text-indigo-600 w-4 text-center"></i> <span>Modo Oscuro</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- User Profile Pill -->
+                            <div class="h-6 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+
+                            <a asp-controller="Profile" asp-action="Index" 
+                               class="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-gray-100 transition-all border border-gray-200/80 shadow-2xs group" title="Ver mi muro de perfil">
                                 @if (currentUser != null && !string.IsNullOrEmpty(currentUser.ProfilePhoto))
                                 {
-                                    <img src="@currentUser.ProfilePhoto" alt="Foto" class="w-6 h-6 rounded-full object-cover border border-gray-300" />
+                                    <img src="@currentUser.ProfilePhoto" alt="Foto" class="w-8 h-8 rounded-full object-cover border border-brand-blue/30 group-hover:scale-105 transition-transform" />
                                 }
                                 else
                                 {
-                                    <i class="fas fa-user-circle"></i>
+                                    <div class="w-8 h-8 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-user"></i>
+                                    </div>
                                 }
-                                <span class="hidden sm:inline">Mi Perfil</span>
+                                <span class="font-bold text-xs text-gray-800 hidden sm:inline group-hover:text-brand-blue transition-colors max-w-[100px] truncate">
+                                    @(currentUser?.Name ?? "Mi Muro")
+                                </span>
                             </a>
-                            
+
                             <form asp-controller="User" asp-action="Logout" method="post" class="inline">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="text-red-600 hover:text-red-800 font-medium px-2 py-1 md:px-3 md:py-2 rounded-md transition-colors text-sm md:text-base">
-                                    <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Salir</span>
+                                <button type="submit" class="text-gray-400 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition-colors" title="Cerrar Sesión">
+                                    <i class="fas fa-sign-out-alt text-base"></i>
                                 </button>
                             </form>
                         }
                         else
                         {
-                            <a asp-controller="User" asp-action="Login" class="text-gray-600 hover:text-brand-blue font-medium px-3 py-2 rounded-md transition-colors">Iniciar Sesión</a>
-                            <a asp-controller="User" asp-action="Register" class="bg-brand-blue text-white font-medium px-4 py-2 rounded-md transition-colors hover:bg-blue-800">Registrarse</a>
+                            <!-- Theme Toggle When Logged Out -->
+                            <div class="relative inline-block text-left mr-2" id="themeDropdownContainer">
+                                <button type="button" onclick="toggleThemeDropdown()" 
+                                        class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200/80 bg-white/80 hover:bg-gray-100 text-gray-700 font-bold text-xs shadow-2xs transition-all" title="Cambiar Tema Visual">
+                                    <i id="currentThemeIcon" class="fas fa-desktop text-brand-blue"></i>
+                                    <span id="currentThemeText" class="hidden md:inline">Normal</span>
+                                    <i class="fas fa-chevron-down text-[10px] text-gray-400"></i>
+                                </button>
+
+                                <div id="themeDropdownMenu" class="hidden absolute right-0 mt-2 w-36 bg-white rounded-2xl shadow-xl border border-gray-200 py-1.5 z-50 text-xs font-bold">
+                                    <button type="button" onclick="setTheme('light')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2.5 text-gray-700 transition-colors">
+                                        <i class="fas fa-sun text-amber-500 w-4 text-center"></i> <span>Modo Claro</span>
+                                    </button>
+                                    <button type="button" onclick="setTheme('normal')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2.5 text-gray-700 transition-colors">
+                                        <i class="fas fa-desktop text-brand-blue w-4 text-center"></i> <span>Normal / Sistema</span>
+                                    </button>
+                                    <button type="button" onclick="setTheme('dark')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-2.5 text-gray-700 transition-colors">
+                                        <i class="fas fa-moon text-indigo-600 w-4 text-center"></i> <span>Modo Oscuro</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <a asp-controller="User" asp-action="Login" class="text-gray-600 hover:text-brand-blue font-bold px-4 py-2 rounded-xl transition-colors">Iniciar Sesión</a>
+                            <a asp-controller="User" asp-action="Register" class="bg-gradient-to-r from-brand-blue to-indigo-600 text-white font-bold px-5 py-2 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105">Registrarse</a>
                         }
                     </div>
                 </div>
@@ -120,62 +284,218 @@
         </header>
     }
 
-    <main class="flex-grow @(ViewData["HideNav"] is true ? "flex flex-col" : "max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6")">
+    <!-- CONTENEDOR PRINCIPAL SUPER AMPLIO (max-w-[1600px]) PARA APROVECHAR TODA LA PANTALLA -->
+    <main class="flex-grow @(ViewData["HideNav"] is true ? "flex flex-col" : "max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8")">
 
         @if (ViewData["HideNav"] is not true
              && User.Identity != null
              && User.Identity.IsAuthenticated
              && currentUser != null)
         {
-            <div class="flex gap-6 items-start">
-
-                <!-- Sidebar izquierdo: visible en md+ -->
-                <aside class="hidden md:flex flex-col w-64 flex-shrink-0 sticky top-20">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col items-center gap-3">
-
-                        @if (!string.IsNullOrEmpty(currentUser.ProfilePhoto))
-                        {
-                            <img src="@currentUser.ProfilePhoto"
-                                 alt="Foto de perfil"
-                                 class="w-20 h-20 rounded-full object-cover border-2 border-brand-blue shadow-sm" />
-                        }
-                        else
-                        {
-                            <div class="w-20 h-20 rounded-full bg-gray-100 border-2 border-gray-300 flex items-center justify-center text-gray-400">
-                                <i class="fas fa-user-circle text-5xl"></i>
-                            </div>
-                        }
-
-                        <div class="text-center">
-                            <p class="font-bold text-gray-900 text-base leading-tight">
-                                @currentUser.Name @currentUser.LastName
-                            </p>
-                            <p class="text-sm text-gray-500 mt-0.5">
-                                @@currentUser.UserName
-                            </p>
-                        </div>
-
-                        <hr class="w-full border-gray-100" />
-
-                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                            <i class="fas fa-user-friends text-brand-blue"></i>
-                            <span><strong class="text-gray-900">@friendsCount</strong> amigos</span>
-                        </div>
-
-                        <a asp-controller="Profile" asp-action="Index"
-                           class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 rounded-lg transition-colors mt-1">
-                            Ver mi perfil
-                        </a>
-
-                    </div>
-                </aside>
-
-                <!-- Contenido principal -->
-                <div class="flex-1 min-w-0">
+            @if (isGame)
+            {
+                <!-- PARA BATALLA NAVAL: 100% DE ANCHO SIN BARRAS LATERALES PARA MÁXIMA INMERSIÓN -->
+                <div class="w-full animate-fade-in">
                     @RenderBody()
                 </div>
+            }
+            else
+            {
+                <!-- GRID DINÁMICO DE RED SOCIAL -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 xl:gap-8 items-start">
 
-            </div>
+                    <!-- COLUMNA IZQUIERDA: Panel de Usuario & Navegación (3 col o 2 col en xl) -->
+                    <aside class="hidden md:flex md:col-span-3 xl:col-span-2 flex-col space-y-4 sticky top-20">
+                        
+                        <!-- Tarjeta de Perfil Elegante con Banner Gráfica -->
+                        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                            <!-- Banner Gráfico -->
+                            <div class="h-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
+                                <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                            </div>
+
+                            <!-- Foto y Datos -->
+                            <div class="px-4 pb-5 pt-0 relative flex flex-col items-center text-center">
+                                <div class="-mt-10 mb-2 relative">
+                                    @if (!string.IsNullOrEmpty(currentUser.ProfilePhoto))
+                                    {
+                                        <img src="@currentUser.ProfilePhoto" alt="Foto de perfil"
+                                             class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md bg-white" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-white shadow-md flex items-center justify-center text-gray-400">
+                                            <i class="fas fa-user text-3xl"></i>
+                                        </div>
+                                    }
+                                    <span class="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" title="En línea"></span>
+                                </div>
+
+                                <div class="flex items-center justify-center gap-1">
+                                    <h3 class="font-extrabold text-gray-900 text-base leading-tight truncate max-w-[170px]">
+                                        @currentUser.Name @currentUser.LastName
+                                    </h3>
+                                    <i class="fas fa-check-circle text-brand-blue text-xs" title="Cuenta Verificada en LinkUp Pro"></i>
+                                </div>
+                                <p class="text-xs text-gray-500 font-medium">
+                                    @@currentUser.UserName
+                                </p>
+
+                                <!-- Estadísticas Rápidas -->
+                                <div class="grid grid-cols-2 gap-2 w-full mt-4 pt-4 border-t border-gray-100 bg-gray-50/50 rounded-2xl p-2">
+                                    <div class="text-center">
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase">Amigos</p>
+                                        <p class="text-sm font-black text-gray-900">@friendsCount</p>
+                                    </div>
+                                    <div class="text-center border-l border-gray-200">
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase">Estado</p>
+                                        <p class="text-xs font-bold text-green-600 mt-0.5 flex items-center justify-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span> Pro
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-2 w-full mt-3">
+                                    <a asp-controller="Profile" asp-action="Index"
+                                       class="w-full bg-brand-blue/10 hover:bg-brand-blue text-brand-blue hover:text-white font-extrabold text-xs py-2.5 rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 group" title="Ver mi muro de perfil">
+                                        <i class="fas fa-id-card group-hover:text-white transition-colors"></i> Mi Muro
+                                    </a>
+                                    <a asp-controller="Profile" asp-action="Edit"
+                                       class="w-full bg-gray-100 hover:bg-indigo-600 text-gray-700 hover:text-white font-extrabold text-xs py-2 rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 group" title="Editar Mi Perfil">
+                                        <i class="fas fa-user-edit text-gray-400 group-hover:text-white transition-colors"></i> Editar Perfil
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Menú Lateral Social (Estilo Twitter / X) -->
+                        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-3 space-y-1">
+                            <p class="text-[11px] font-black uppercase tracking-wider text-gray-400 px-3 py-1">Navegación</p>
+
+                            <a asp-controller="Home" asp-action="Index" 
+                               class="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all @(currentController == "Home" ? "bg-brand-blue text-white shadow-md" : "text-gray-700 hover:bg-gray-50 hover:text-brand-blue")">
+                                <i class="fas fa-stream w-5 text-center text-lg"></i>
+                                <span>Mi Muro / Feed</span>
+                            </a>
+
+                            <a asp-controller="Profile" asp-action="Index" 
+                               class="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all @(currentController == "Profile" && currentAction == "Index" ? "bg-brand-blue text-white shadow-md" : "text-gray-700 hover:bg-gray-50 hover:text-brand-blue")">
+                                <i class="fas fa-user-circle w-5 text-center text-lg"></i>
+                                <span>Mi Muro Personal</span>
+                            </a>
+
+                            <a asp-controller="Friendship" asp-action="Index" 
+                               class="flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm transition-all @(currentController == "Friendship" ? "bg-brand-blue text-white shadow-md" : "text-gray-700 hover:bg-gray-50 hover:text-brand-blue")">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-users w-5 text-center text-lg"></i>
+                                    <span>Amigos</span>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-black @(currentController == "Friendship" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600")">@friendsCount</span>
+                            </a>
+
+                            <a asp-controller="FriendRequest" asp-action="Index" 
+                               class="flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm transition-all @(currentController == "FriendRequest" ? "bg-brand-blue text-white shadow-md" : "text-gray-700 hover:bg-gray-50 hover:text-brand-blue")">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-user-clock w-5 text-center text-lg"></i>
+                                    <span>Solicitudes</span>
+                                </div>
+                                @if (pendingRequestsCount > 0)
+                                {
+                                    <span class="px-2 py-0.5 rounded-full text-xs font-black bg-red-500 text-white animate-pulse">@pendingRequestsCount</span>
+                                }
+                            </a>
+
+                            <a asp-controller="Notification" asp-action="Index" 
+                               class="flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm transition-all @(currentController == "Notification" ? "bg-brand-blue text-white shadow-md" : "text-gray-700 hover:bg-gray-50 hover:text-brand-blue")">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-bell w-5 text-center text-lg"></i>
+                                    <span>Notificaciones</span>
+                                </div>
+                                @if (unreadNotificationsCount > 0)
+                                {
+                                    <span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-500 text-white animate-pulse">@unreadNotificationsCount</span>
+                                }
+                            </a>
+
+                            <hr class="border-gray-100 my-2" />
+                            <p class="text-[11px] font-black uppercase tracking-wider text-gray-400 px-3 py-1">Juegos & Entretenimiento</p>
+
+                            <a asp-controller="Battleship" asp-action="Index" 
+                               class="flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm transition-all @(currentController == "Battleship" || currentController == "ShipPosition" || currentController == "Attack" ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" : "text-gray-700 hover:bg-blue-50 hover:text-brand-blue")">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-gamepad w-5 text-center text-lg text-indigo-500 @(currentController == "Battleship" ? "text-white" : "")"></i>
+                                    <span>Batalla Naval</span>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-indigo-100 text-indigo-800 @(currentController == "Battleship" ? "bg-white/20 text-white" : "")">12x12 Pro</span>
+                            </a>
+                        </div>
+                    </aside>
+
+                    <!-- COLUMNA CENTRAL: SE EXPANDE A 10 COLUMNAS EN PERFIL/AMIGOS Y 7 EN INICIO -->
+                    <div class="@(isHomeFeed ? "md:col-span-9 lg:col-span-6 xl:col-span-7" : "md:col-span-9 xl:col-span-10") min-w-0">
+                        @RenderBody()
+                    </div>
+
+                    @if (isHomeFeed)
+                    {
+                        <!-- COLUMNA DERECHA (SOLO EN EL INICIO / FEED): Widgets de Tendencia & Acceso Rápido -->
+                        <aside class="hidden lg:flex lg:col-span-3 xl:col-span-3 flex-col space-y-4 sticky top-20">
+                            
+                            <!-- Widget de Juego Destacado: Battleship -->
+                            <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden group">
+                                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
+                                <span class="px-2.5 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-[10px] font-black uppercase tracking-wider text-blue-300">Juego En Vivo</span>
+                                <h4 class="text-lg font-black mt-2 leading-tight">Batalla Naval 12x12</h4>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">Despliega estratégicamente tu flota naval en el mapa interactivo y desafía a tus amigos en combate en tiempo real.</p>
+                                <a asp-controller="Battleship" asp-action="Index" 
+                                   class="mt-4 w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+                                    <i class="fas fa-play"></i> Entrar a las Salas de Juego
+                                </a>
+                            </div>
+
+                            <!-- Widget de Novedades y Tendencias (Estilo Twitter Trending) -->
+                            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-5 space-y-4">
+                                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                                    <h4 class="font-black text-gray-900 text-sm flex items-center gap-2">
+                                        <i class="fas fa-bolt text-amber-500"></i> Tendencias en LinkUp
+                                    </h4>
+                                    <span class="text-[10px] font-bold text-brand-blue bg-blue-50 px-2 py-0.5 rounded-full">Hoy</span>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="p-2.5 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Tecnología • Trending</p>
+                                        <p class="font-bold text-xs text-gray-800 group-hover:text-brand-blue transition-colors">#LinkUpPro2026</p>
+                                        <p class="text-[10px] text-gray-500 mt-0.5">1,420 publicaciones interactivas</p>
+                                    </div>
+
+                                    <div class="p-2.5 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Gaming • En Directo</p>
+                                        <p class="font-bold text-xs text-gray-800 group-hover:text-brand-blue transition-colors">Torneo Naval Marítimo</p>
+                                        <p class="text-[10px] text-gray-500 mt-0.5">Tableros de combate 12x12</p>
+                                    </div>
+
+                                    <div class="p-2.5 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Comunidad • Amigos</p>
+                                        <p class="font-bold text-xs text-gray-800 group-hover:text-brand-blue transition-colors">Conecta con tu Red</p>
+                                        <p class="text-[10px] text-gray-500 mt-0.5">Comparte videos de YouTube y fotos</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Widget de Consejos -->
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-3xl p-5 border border-blue-100/80 text-blue-900 space-y-2">
+                                <div class="flex items-center gap-2 font-bold text-xs text-brand-blue">
+                                    <i class="fas fa-shield-alt text-base"></i> Privacidad Protegida
+                                </div>
+                                <p class="text-xs text-gray-600 leading-relaxed">Puedes elegir en cada publicación si deseas que sea visible para <strong>Solo Amigos</strong> o <strong>Solo Yo</strong>.</p>
+                            </div>
+
+                        </aside>
+                    }
+
+                </div>
+            }
         }
         else
         {
@@ -186,13 +506,47 @@
 
     @if (ViewData["HideNav"] is not true)
     {
-        <footer class="bg-white border-t border-gray-200 mt-auto">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500">
-                &copy; 2026 - LinkUp Pro - <a asp-controller="Home" asp-action="Privacy" class="hover:text-brand-blue transition-colors">Privacidad</a>
+        <footer class="bg-white border-t border-gray-200 mt-auto transition-colors">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-500">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg bg-brand-blue text-white flex items-center justify-center text-xs font-bold">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <span>&copy; 2026 <strong>LinkUp Pro</strong>. Todos los derechos reservados.</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a asp-controller="Home" asp-action="Privacy" class="hover:text-brand-blue transition-colors">Privacidad & Seguridad</a>
+                    <a asp-controller="Battleship" asp-action="Index" class="hover:text-brand-blue transition-colors">Batalla Naval</a>
+                    <a asp-controller="Home" asp-action="Terms" class="hover:text-brand-blue transition-colors">Términos de Uso</a>
+                </div>
             </div>
         </footer>
     }
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            try {
+                const savedTheme = localStorage.getItem('linkup_theme') || 'normal';
+                applyTheme(savedTheme);
+            } catch(e){}
+        });
+        function toggleThemeDropdown() {
+            const menu = document.getElementById('themeDropdownMenu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+        function setTheme(theme) {
+            applyTheme(theme);
+            const menu = document.getElementById('themeDropdownMenu');
+            if (menu) menu.classList.add('hidden');
+        }
+        window.addEventListener('click', function(e) {
+            const container = document.getElementById('themeDropdownContainer');
+            if (container && !container.contains(e.target)) {
+                const menu = document.getElementById('themeDropdownMenu');
+                if (menu) menu.classList.add('hidden');
+            }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

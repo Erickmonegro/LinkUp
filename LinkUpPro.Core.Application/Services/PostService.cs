@@ -44,6 +44,21 @@ namespace LinkUpPro.Core.Application.Services
             return dtos;
         }
 
+        public async Task<List<PostDTO>> GetHomePostsFilteredAsync(string userId, string? textFilter, ContentType? contentType, DateTime? dateFrom, DateTime? dateTo, EditionStatus? editionStatus)
+        {
+            var posts = await _postRepository.GetFeedFilteredAsync(
+                userId,
+                textFilter,
+                contentType.HasValue ? (int)contentType.Value : null,
+                dateFrom,
+                dateTo,
+                editionStatus.HasValue ? (int)editionStatus.Value : null
+            );
+            var dtos = _mapper.Map<List<PostDTO>>(posts);
+            await PopulateAuthorsAsync(dtos);
+            return dtos;
+        }
+
         public async Task<List<PostDTO>> GetUserPostsFilteredAsync(string userId, string? textFilter, ContentType? contentType, DateTime? dateFrom, DateTime? dateTo, EditionStatus? editionStatus)
         {
             var posts = await _postRepository.GetUserPostsAsync(userId);

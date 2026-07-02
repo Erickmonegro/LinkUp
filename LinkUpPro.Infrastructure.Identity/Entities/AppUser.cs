@@ -7,5 +7,6 @@ namespace LinkUpPro.Infrastructure.Identity.Entities
         public required string Name { get; set; }
         public required string LastName { get; set; }
         public required string ProfilePhoto { get; set; }
+        public string? CoverPhoto { get; set; }
     }
 }

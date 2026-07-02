@@ -44,7 +44,8 @@ namespace LinkUpPro.Controllers
                 Email = user.Email,
                 UserName = user.UserName,
                 PhoneNumber = user.PhoneNumber,
-                PhotoUrl = user.PhotoUrl
+                PhotoUrl = user.PhotoUrl,
+                CoverPhotoUrl = user.CoverPhotoUrl
             };
 
             var friendsCount = await _friendshipService.GetActiveFriendsCountAsync(userId);
@@ -73,7 +74,8 @@ namespace LinkUpPro.Controllers
                 Email = user.Email,
                 UserName = user.UserName,
                 PhoneNumber = user.PhoneNumber,
-                PhotoUrl = user.PhotoUrl
+                PhotoUrl = user.PhotoUrl,
+                CoverPhotoUrl = user.CoverPhotoUrl
             };
 
             return View("Edit", vm);
@@ -117,6 +119,27 @@ namespace LinkUpPro.Controllers
             else
             {
                 vm.PhotoUrl = currentUser.PhotoUrl;
+            }
+
+            if (vm.CoverImageFile != null && vm.CoverImageFile.Length > 0)
+            {
+                var validationError = ValidateImageFile(vm.CoverImageFile);
+                if (validationError != null)
+                {
+                    ModelState.AddModelError("CoverImageFile", validationError);
+                }
+                else
+                {
+                    vm.CoverPhotoUrl = await SaveImageFileAsync(vm.CoverImageFile);
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(vm.CoverPhotoUrl))
+            {
+                vm.CoverPhotoUrl = vm.CoverPhotoUrl.Trim();
+            }
+            else
+            {
+                vm.CoverPhotoUrl = currentUser.CoverPhotoUrl;
             }
 
             bool isChangingPassword = !string.IsNullOrEmpty(vm.Password);
@@ -178,6 +201,7 @@ namespace LinkUpPro.Controllers
                 Password = "",
                 PhoneNumber = vm.PhoneNumber,
                 PhotoUrl = vm.PhotoUrl,
+                CoverPhotoUrl = vm.CoverPhotoUrl,
                 Role = currentUser.Role
             };
 

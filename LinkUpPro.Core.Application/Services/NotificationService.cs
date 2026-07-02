@@ -12,11 +12,13 @@ namespace LinkUpPro.Core.Application.Services
     {
         private readonly INotificationRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IUserService _userService;
 
-        public NotificationService(INotificationRepository repository, IMapper mapper) : base(repository, mapper)
+        public NotificationService(INotificationRepository repository, IMapper mapper, IUserService userService) : base(repository, mapper)
         {
             _repository = repository;
             _mapper = mapper;
+            _userService = userService;
         }
 
         public async Task<int> GetUnreadCountAsync(string userId)
@@ -27,7 +29,23 @@ namespace LinkUpPro.Core.Application.Services
         public async Task<List<NotificationDTO>> GetUserNotificationsAsync(string userId)
         {
             var notifications = await _repository.GetUserNotificationsAsync(userId);
-            return _mapper.Map<List<NotificationDTO>>(notifications);
+            var dtos = _mapper.Map<List<NotificationDTO>>(notifications);
+            foreach (var dto in dtos)
+            {
+                if (!string.IsNullOrEmpty(dto.TriggerUserId))
+                {
+                    var user = await _userService.GetUserById(dto.TriggerUserId);
+                    if (user != null)
+                    {
+                        dto.TriggerUserPhotoUrl = user.PhotoUrl;
+                        if (string.IsNullOrEmpty(dto.TriggerUserName) || dto.TriggerUserName == "Un usuario")
+                        {
+                            dto.TriggerUserName = user.UserName;
+                        }
+                    }
+                }
+            }
+            return dtos;
         }
 
         public async Task<bool> MarkAllAsReadAsync(string userId)

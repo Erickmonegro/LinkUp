@@ -74,7 +74,7 @@
                                 }
                                 <div>
                                     <h4 class="font-bold text-gray-900">@req.SenderName</h4>
-                                    <p class="text-xs text-gray-400">@@@req.SenderId.Substring(0, Math.Min(req.SenderId.Length, 8))</p>
+                                    <p class="text-xs text-gray-400">&#64;@(req.SenderId.Substring(0, Math.Min(req.SenderId.Length, 8)))</p>
                                     <p class="text-xs text-gray-500 mt-1">Enviada: @req.CreatedAt.ToLocalTime().ToString("g")</p>
                                 </div>
                             </div>
@@ -128,7 +128,7 @@
                                 }
                                 <div>
                                     <h4 class="font-bold text-gray-900">@req.ReceiverName</h4>
-                                    <p class="text-xs text-gray-400">@@@req.ReceiverId.Substring(0, Math.Min(req.ReceiverId.Length, 8))</p>
+                                    <p class="text-xs text-gray-400">&#64;@(req.ReceiverId.Substring(0, Math.Min(req.ReceiverId.Length, 8)))</p>
                                     <p class="text-xs text-gray-500 mt-1">
                                         Estado: 
                                         @if (isPending)
@@ -164,19 +164,40 @@
                                 }
                                 else
                                 {
-                                    <form asp-action="Hide" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@req.Id" />
-                                        <button type="submit" class="text-gray-400 hover:text-gray-600 p-2 rounded text-xs font-bold" title="Ocultar del historial">
-                                            <i class="fas fa-eye-slash"></i> Ocultar
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="openDeleteHistoryModal(@req.Id)" class="bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs">
+                                        <i class="fas fa-trash-alt"></i> Eliminar del historial
+                                    </button>
                                 }
                             </div>
                         </div>
                     }
                 </div>
             }
+        </div>
+
+        <!-- Modal Confirmación Eliminar del Historial -->
+        <div id="deleteHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-xs transition-opacity">
+            <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 max-w-md w-full mx-4 transform transition-all space-y-5 text-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto text-xl shadow-inner">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                
+                <div class="space-y-2">
+                    <h3 class="text-base font-bold text-gray-900">¿Está seguro que desea eliminar esta solicitud de su historial?</h3>
+                </div>
+                
+                <form id="deleteHistoryForm" asp-action="Hide" method="post" class="flex items-center justify-center gap-3 pt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteHistoryRequestId" value="" />
+                    
+                    <button type="button" onclick="closeDeleteHistoryModal()" class="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-red-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-700 transition-colors shadow-sm flex items-center justify-center gap-1">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </form>
+            </div>
         </div>
 
     </div>
@@ -201,6 +222,15 @@
                 sentContent.classList.remove('hidden');
                 receivedContent.classList.add('hidden');
             }
+        }
+
+        function openDeleteHistoryModal(id) {
+            document.getElementById('deleteHistoryRequestId').value = id;
+            document.getElementById('deleteHistoryModal').classList.remove('hidden');
+        }
+
+        function closeDeleteHistoryModal() {
+            document.getElementById('deleteHistoryModal').classList.add('hidden');
         }
     </script>
 }

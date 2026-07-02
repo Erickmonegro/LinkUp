@@ -34,6 +34,8 @@ namespace LinkUpPro.Core.Application.ViewModels.Battleship
         [Display(Name = "Fecha de asignación de turno")]
         public DateTime TurnAssignedAt { get; set; }
 
+        public DateTime CreatedAt { get; set; }
+
         public string? Player1Name { get; set; }
         public string? Player2Name { get; set; }
         public string? WinnerName { get; set; }

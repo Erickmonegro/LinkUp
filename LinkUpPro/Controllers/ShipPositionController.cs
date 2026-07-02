@@ -29,6 +29,8 @@ namespace LinkUpPro.Controllers
         [HttpGet]
         public async Task<IActionResult> PlaceShip(int matchId, int? shipSize)
         {
+            await _matchService.CheckAndProcessTurnTimeoutForMatchAsync(matchId);
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (userId == null)
@@ -160,6 +162,8 @@ namespace LinkUpPro.Controllers
         {
             try
             {
+                await _matchService.CheckAndProcessTurnTimeoutForMatchAsync(matchId);
+
                 var ships = await shipService.GetByPlayerAsync(
                     matchId,
                     playerId);

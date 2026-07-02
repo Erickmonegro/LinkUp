@@ -12,6 +12,7 @@ namespace LinkUpPro.Core.Application.DTOs.CommentDTO
         public required string AuthorId { get; set; }
         public required string AuthorName { get; set; }
         public string? AuthorPhotoUrl { get; set; }
+        public bool IsEdited { get; set; }
 
         public ICollection<CommentDTO> Replies { get; set; } = new List<CommentDTO>();
     }

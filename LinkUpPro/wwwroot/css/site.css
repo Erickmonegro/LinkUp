@@ -197,11 +197,6 @@ body {
     color: #94a3b8;
 }
 
-.btn-google {
-    border-radius: 12px;
-    font-weight: 600;
-    background: white;
-}
 
 .action-links a {
     text-decoration: none;
@@ -237,4 +232,33 @@ body {
 .logo-main {
     font-size: 3.5rem;
     color: var(--primary-blue);
+}
+
+/* Smooth scroll for anchor navigation */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Highlight post when navigated to via #post-id anchor from notifications */
+@keyframes highlight-post-glow {
+    0% {
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.6), 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+        border-color: #2563eb;
+        background-color: #eff6ff;
+    }
+    30% {
+        box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.4), 0 10px 25px -5px rgba(37, 99, 235, 0.2);
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    100% {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-color: rgba(229, 231, 235, 0.8);
+        background-color: #ffffff;
+    }
+}
+
+.post-anchor-target:target {
+    animation: highlight-post-glow 4s ease-out forwards;
+    border: 2px solid #2563eb !important;
 }

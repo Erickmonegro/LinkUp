@@ -16,6 +16,7 @@ namespace LinkUpPro.Controllers
         private readonly IUserService _userService;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> _activationCooldowns = new(StringComparer.OrdinalIgnoreCase);
 
         public UserController(
             IUserService userService,
@@ -83,6 +84,7 @@ namespace LinkUpPro.Controllers
                 return View("~/Views/Home/Index.cshtml", vm);
             }
 
+            TempData["JustLoggedIn"] = true;
             return RedirectToAction("Index", "Home");
         }
         #endregion
@@ -258,6 +260,18 @@ namespace LinkUpPro.Controllers
             {
                 return View(vm);
             }
+
+            var cacheKey = vm.UserName.Trim();
+            if (_activationCooldowns.TryGetValue(cacheKey, out var lastRequestTime))
+            {
+                if ((DateTime.UtcNow - lastRequestTime).TotalMinutes < 5)
+                {
+                    ModelState.AddModelError("", "No puede realizar múltiples solicitudes de código de activación consecutivas en un período menor a cinco minutos. Por favor espere e inténtelo de nuevo.");
+                    return View(vm);
+                }
+            }
+
+            _activationCooldowns[cacheKey] = DateTime.UtcNow;
 
             // Always show same message regardless of whether account exists
             var user = await _userService.GetUserByUserName(vm.UserName.Trim());

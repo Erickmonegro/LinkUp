@@ -42,6 +42,11 @@ namespace LinkUpPro.Core.Application.Services
             return dto;
         }
 
+        public async Task<bool> HasRepliesAsync(int commentId)
+        {
+            return await _commentRepository.HasRepliesAsync(commentId);
+        }
+
         #region Private Helpers
 
         private async Task PopulateCommentAuthorsAsync(List<CommentDTO> commentDtos)

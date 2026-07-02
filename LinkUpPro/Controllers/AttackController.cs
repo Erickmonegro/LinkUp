@@ -35,12 +35,24 @@ namespace LinkUpPro.Controllers
         {
             try
             {
+                bool timedOut = await matchService.CheckAndProcessTurnTimeoutForMatchAsync(matchId);
+                if (timedOut)
+                {
+                    TempData["Warning"] = "La partida finalizó por abandono al transcurrir 48 horas sin realizar un ataque válido.";
+                    return RedirectToAction("Details", "Battleship", new { id = matchId });
+                }
+
                 var match = await matchService.GetByIdAsync(matchId);
 
                 if (match == null)
                 {
                     TempData["Error"] = "La partida no existe.";
                     return RedirectToAction("Index", "Battleship");
+                }
+
+                if (match.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Finished || match.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Rejected)
+                {
+                    return RedirectToAction("Details", "Battleship", new { id = matchId });
                 }
 
                 var ships = await shipPositionService.GetByMatchAsync(matchId);
@@ -101,6 +113,13 @@ namespace LinkUpPro.Controllers
                 var dto = mapper.Map<AttackDTO>(vm);
 
                 await attackService.AttackAsync(dto);
+
+                var updatedMatch = await matchService.GetByIdAsync(vm.MatchId);
+                if (updatedMatch != null && updatedMatch.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Finished)
+                {
+                    TempData["Success"] = "¡Victoria! Has hundido toda la flota enemiga.";
+                    return RedirectToAction("Details", "Battleship", new { id = vm.MatchId });
+                }
 
                 TempData["Success"] = "Ataque realizado correctamente.";
 

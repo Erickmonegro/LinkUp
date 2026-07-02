@@ -5,6 +5,9 @@ namespace LinkUpPro.Core.Domain.Common.Enums
         Comment = 1,
         Reply = 2,
         Reaction = 3,
-        ChangeReactions = 4
+        ChangeReactions = 4,
+        BattleChallenge = 5,
+        BattleAccepted = 6,
+        BattleRejected = 7
     }
 }

@@ -125,6 +125,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 Email = saveDto.Email,
                 UserName = saveDto.UserName,
                 ProfilePhoto = saveDto.PhotoUrl ?? string.Empty,
+                CoverPhoto = saveDto.CoverPhotoUrl,
                 EmailConfirmed = false,
                 PhoneNumber = saveDto.PhoneNumber ?? string.Empty
             };
@@ -200,6 +201,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             user.LastName = saveDto.LastName;
             user.UserName = saveDto.UserName;
             user.ProfilePhoto = string.IsNullOrWhiteSpace(saveDto.PhotoUrl) ? user.ProfilePhoto : saveDto.PhotoUrl;
+            user.CoverPhoto = string.IsNullOrWhiteSpace(saveDto.CoverPhotoUrl) ? user.CoverPhoto : saveDto.CoverPhotoUrl;
             user.EmailConfirmed = user.EmailConfirmed && user.Email == saveDto.Email;
             user.Email = saveDto.Email;
             user.PhoneNumber = saveDto.PhoneNumber ?? string.Empty;
@@ -215,6 +217,8 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                     response.Errors.AddRange(resultChange.Errors.Select(s => s.Description).ToList());
                     return response;
                 }
+                await _userManager.ResetAccessFailedCountAsync(user);
+                await _userManager.SetLockoutEndDateAsync(user, null);
             }
 
             var result = await _userManager.UpdateAsync(user);
@@ -301,6 +305,8 @@ namespace LinkUpPro.Infrastructure.Identity.Services
 
             user.EmailConfirmed = true;
             await _userManager.UpdateAsync(user);
+            await _userManager.ResetAccessFailedCountAsync(user);
+            await _userManager.SetLockoutEndDateAsync(user, null);
 
             return response;
         }
@@ -341,6 +347,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 FirstName = user.Name,
                 UserName = user.UserName!,
                 PhotoUrl = user.ProfilePhoto,
+                CoverPhotoUrl = user.CoverPhoto,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 IsVerified = user.EmailConfirmed,
                 Role = rolesList.FirstOrDefault() ?? "",
@@ -369,6 +376,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 FirstName = user.Name,
                 UserName = user.UserName!,
                 PhotoUrl = user.ProfilePhoto,
+                CoverPhotoUrl = user.CoverPhoto,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 IsVerified = user.EmailConfirmed,
                 Role = rolesList.FirstOrDefault() ?? "",
@@ -397,6 +405,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 FirstName = user.Name,
                 UserName = user.UserName!,
                 PhotoUrl = user.ProfilePhoto,
+                CoverPhotoUrl = user.CoverPhoto,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 IsVerified = user.EmailConfirmed,
                 Role = rolesList.FirstOrDefault() ?? "",
@@ -431,6 +440,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                     FirstName = item.Name,
                     UserName = item.UserName!,
                     PhotoUrl = item.ProfilePhoto,
+                    CoverPhotoUrl = item.CoverPhoto,
                     PhoneNumber = item.PhoneNumber ?? string.Empty,
                     IsVerified = item.EmailConfirmed,
                     Role = roleList.FirstOrDefault() ?? "",

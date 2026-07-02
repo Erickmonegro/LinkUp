@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.Battleship;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Domain.Common.Enums;
@@ -46,7 +46,7 @@ namespace LinkUpPro.Core.Application.Services
                 Id = 0,
                 Player1Id = player1Id,
                 Player2Id = player2Id,
-                Status = MatchStatus.Pending,
+                Status = MatchStatus.ChallengePending,
                 CurrentTurnUserId = player1Id,
                 TurnAssignedAt = DateTime.Now
             };
@@ -131,6 +131,82 @@ namespace LinkUpPro.Core.Application.Services
             await repo.UpdateAsync(match.Id, match);
 
             return true;
+        }
+
+        public async Task<BattleshipMatchDTO> AcceptChallengeAsync(int matchId, string playerId)
+        {
+            var match = await repo.GetByIdAsync(matchId);
+            if (match == null)
+                throw new Exception("La partida no existe");
+
+            if (match.Player2Id != playerId)
+                throw new Exception("No tienes permiso para aceptar este desafío.");
+
+            if (match.Status != MatchStatus.ChallengePending)
+                throw new Exception("El desafío ya fue procesado o no está pendiente.");
+
+            match.Status = MatchStatus.Pending;
+            var updated = await repo.UpdateAsync(match.Id, match);
+            return _mapper.Map<BattleshipMatchDTO>(updated);
+        }
+
+        public async Task<BattleshipMatchDTO> RejectChallengeAsync(int matchId, string playerId)
+        {
+            var match = await repo.GetByIdAsync(matchId);
+            if (match == null)
+                throw new Exception("La partida no existe");
+
+            if (match.Player2Id != playerId && match.Player1Id != playerId)
+                throw new Exception("No tienes permiso para rechazar o cancelar este desafío.");
+
+            if (match.Status != MatchStatus.ChallengePending)
+                throw new Exception("El desafío ya fue procesado o no está pendiente.");
+
+            match.Status = MatchStatus.Rejected;
+            match.EndDate = DateTime.Now;
+            var updated = await repo.UpdateAsync(match.Id, match);
+            return _mapper.Map<BattleshipMatchDTO>(updated);
+        }
+
+        public async Task<bool> CheckAndProcessTurnTimeoutsAsync(string? playerId = null)
+        {
+            List<BattleshipMatch> matchesToCheck;
+            if (!string.IsNullOrEmpty(playerId))
+            {
+                matchesToCheck = await repo.GetActiveMatchesAsync(playerId);
+            }
+            else
+            {
+                var all = await repo.GetAllListAsync();
+                matchesToCheck = all.Where(m => m.Status == MatchStatus.InProgress).ToList();
+            }
+
+            bool anyTimedOut = false;
+            foreach (var match in matchesToCheck)
+            {
+                if (match.Status == MatchStatus.InProgress && DateTime.Now >= match.TurnAssignedAt.AddHours(48))
+                {
+                    string winnerId = match.CurrentTurnUserId == match.Player1Id ? match.Player2Id : match.Player1Id;
+                    await FinishMatchAsync(match.Id, winnerId);
+                    anyTimedOut = true;
+                }
+            }
+            return anyTimedOut;
+        }
+
+        public async Task<bool> CheckAndProcessTurnTimeoutForMatchAsync(int matchId)
+        {
+            var match = await repo.GetByIdAsync(matchId);
+            if (match == null || match.Status != MatchStatus.InProgress)
+                return false;
+
+            if (DateTime.Now >= match.TurnAssignedAt.AddHours(48))
+            {
+                string winnerId = match.CurrentTurnUserId == match.Player1Id ? match.Player2Id : match.Player1Id;
+                await FinishMatchAsync(match.Id, winnerId);
+                return true;
+            }
+            return false;
         }
     }
 }

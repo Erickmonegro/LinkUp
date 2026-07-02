@@ -16,6 +16,14 @@
             <span class="font-bold">@TempData["SuccessMessage"]</span>
         </div>
     }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm animate-fade-in mb-4">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span class="font-bold">@TempData["ErrorMessage"]</span>
+        </div>
+    }
     
     @if (TempData["CreatePostError"] != null)
     {
@@ -107,6 +115,7 @@
                     <label class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl border border-gray-200/80 cursor-pointer transition-all">
                         <input type="checkbox" name="CommentStatus" value="@((int)CommentStatus.Allowed)" checked
                             class="w-3.5 h-3.5 text-brand-blue border-gray-300 rounded focus:ring-brand-blue" />
+                        <input type="hidden" name="CommentStatus" value="@((int)CommentStatus.NotAllowed)" />
                         <span class="text-xs font-extrabold text-gray-700">💬 Comentarios</span>
                     </label>
                 </div>
@@ -143,6 +152,10 @@
                    class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.EditionStatus == EditionStatus.Edited ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
                     <i class="fas fa-pen mr-1"></i> Editadas
                 </a>
+                <a asp-controller="Home" asp-action="Index" asp-route-editionStatus="@((int)EditionStatus.NotEdited)"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.EditionStatus == EditionStatus.NotEdited ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <i class="fas fa-check mr-1"></i> Sin editar
+                </a>
             </div>
 
             <!-- Botón desplegar filtros avanzados -->
@@ -153,14 +166,22 @@
         </div>
 
         <!-- Caja Desplegable de Búsqueda Avanzada -->
-        <div id="advancedFilterBox" class="@(string.IsNullOrEmpty(ViewBag.TextFilter) && ViewBag.DateFrom == null && ViewBag.DateTo == null ? "hidden" : "") pt-2 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/60">
+        <div id="advancedFilterBox" class="@(string.IsNullOrEmpty(ViewBag.TextFilter) && ViewBag.DateFrom == null && ViewBag.DateTo == null && (ViewBag.EditionStatus == null || ViewBag.EditionStatus == EditionStatus.All) ? "hidden" : "") pt-2 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/60">
             <form asp-controller="Home" asp-action="Index" method="get" class="space-y-3">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
                         <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Palabra Clave</label>
                         <input type="text" name="textFilter" value="@ViewBag.TextFilter"
                             class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none font-medium placeholder-gray-400"
                             placeholder="Buscar en el contenido..." />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Estado</label>
+                        <select name="editionStatus" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none font-medium">
+                            <option value="@((int)EditionStatus.All)" selected="@(ViewBag.EditionStatus == null || ViewBag.EditionStatus == EditionStatus.All)">Todas</option>
+                            <option value="@((int)EditionStatus.Edited)" selected="@(ViewBag.EditionStatus == EditionStatus.Edited)">Editadas</option>
+                            <option value="@((int)EditionStatus.NotEdited)" selected="@(ViewBag.EditionStatus == EditionStatus.NotEdited)">Sin editar</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Desde Fecha</label>
@@ -195,9 +216,9 @@
                 </div>
                 <h3 class="font-black text-gray-900 text-base">No hay publicaciones para mostrar</h3>
                 <p class="text-gray-500 text-xs font-medium max-w-sm mx-auto">
-                    @(string.IsNullOrEmpty(ViewBag.TextFilter) && ViewBag.DateFrom == null && ViewBag.DateTo == null ? "Sé el primero en compartir un pensamiento, foto o video con la comunidad de LinkUp Pro." : "No se encontraron publicaciones con los filtros seleccionados.")
+                    @(!string.IsNullOrEmpty(ViewBag.TextFilter) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentType != null && ViewBag.ContentType != ContentType.All) || (ViewBag.EditionStatus != null && ViewBag.EditionStatus != EditionStatus.All) ? "No se encontraron publicaciones que coincidan con los criterios seleccionados." : "Sé el primero en compartir un pensamiento, foto o video con la comunidad de LinkUp Pro.")
                 </p>
-                @if (!string.IsNullOrEmpty(ViewBag.TextFilter) || ViewBag.DateFrom != null)
+                @if (!string.IsNullOrEmpty(ViewBag.TextFilter) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentType != null && ViewBag.ContentType != ContentType.All) || (ViewBag.EditionStatus != null && ViewBag.EditionStatus != EditionStatus.All))
                 {
                     <a asp-controller="Home" asp-action="Index" class="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors mt-2">
                         Ver todas las publicaciones
@@ -209,7 +230,7 @@
         {
             foreach (var post in Model)
             {
-                <article class="bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/80 p-6 space-y-4 overflow-hidden relative group">
+                <article id="post-@post.Id" class="bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/80 p-6 space-y-4 overflow-hidden relative group post-anchor-target">
                     
                     <!-- Post Header -->
                     <div class="flex items-center justify-between">
@@ -217,7 +238,9 @@
                             <div class="relative">
                                 @if (!string.IsNullOrEmpty(post.AuthorPhotoUrl))
                                 {
-                                    <img src="@post.AuthorPhotoUrl" alt="Foto de @post.AuthorName" class="w-11 h-11 rounded-full object-cover border-2 border-brand-blue/20 shadow-sm" />
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="block">
+                                        <img src="@post.AuthorPhotoUrl" alt="Foto de @post.AuthorName" class="w-11 h-11 rounded-full object-cover border-2 border-brand-blue/20 shadow-sm hover:ring-2 hover:ring-brand-blue transition-all" />
+                                    </a>
                                 }
                                 else
                                 {
@@ -228,7 +251,7 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-1.5">
-                                    <h4 class="font-extrabold text-gray-900 text-sm leading-tight hover:text-brand-blue transition-colors cursor-pointer">@post.AuthorName</h4>
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="font-extrabold text-gray-900 text-sm leading-tight hover:text-brand-blue transition-colors">@post.AuthorName</a>
                                     <i class="fas fa-check-circle text-brand-blue text-xs" title="Usuario Verificado"></i>
                                 </div>
                                 <div class="flex items-center gap-2 text-[11px] text-gray-400 font-medium mt-0.5">
@@ -317,7 +340,7 @@
                                         class="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 @(hasLike ? "bg-brand-blue/10 text-brand-blue shadow-2xs scale-105" : "bg-gray-50 hover:bg-blue-50/80 text-gray-600 hover:text-brand-blue")"
                                         title="Me gusta">
                                     <i class="@(hasLike ? "fas text-brand-blue animate-bounce" : "far") fa-thumbs-up text-sm"></i>
-                                    <span>@post.ReactionsCount</span>
+                                    <span>@post.LikesCount</span>
                                 </button>
                             </form>
 
@@ -331,6 +354,10 @@
                                         class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 @(hasDislike ? "bg-red-100 text-red-600 scale-105" : "bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-500")"
                                         title="No me gusta">
                                     <i class="@(hasDislike ? "fas" : "far") fa-thumbs-down text-xs"></i>
+                                    @if (post.DislikesCount > 0)
+                                    {
+                                        <span class="text-[11px]">@post.DislikesCount</span>
+                                    }
                                 </button>
                             </form>
                         </div>
@@ -359,14 +386,16 @@
                                         foreach (var comment in commentsToRender)
                                         {
                                             var isMyComment = comment.AuthorId == userId;
-                                            var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado.";
+                                            var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado." || comment.Content == "comentario eliminado" || comment.Content == "Comentario eliminado";
                                             
                                             <div class="bg-gray-50/80 hover:bg-gray-100/60 p-3.5 rounded-2xl border border-gray-200/60 transition-all relative @(depth > 0 ? "ml-6 sm:ml-10 border-l-4 border-l-brand-blue/30 bg-blue-50/20" : "")">
                                                 <div class="flex justify-between items-start gap-2">
                                                     <div class="flex items-center gap-2">
                                                         @if (!isDeletedPlaceholder && !string.IsNullOrEmpty(comment.AuthorPhotoUrl))
                                                         {
-                                                            <img src="@comment.AuthorPhotoUrl" alt="" class="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-2xs" />
+                                                            <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="flex-shrink-0">
+                                                                <img src="@comment.AuthorPhotoUrl" alt="" class="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-2xs hover:ring-2 hover:ring-brand-blue transition-all" />
+                                                            </a>
                                                         }
                                                         else
                                                         {
@@ -376,15 +405,25 @@
                                                         }
                                                         <div>
                                                             <div class="flex items-center gap-1">
-                                                                <span class="font-extrabold text-xs text-gray-900">
-                                                                    @(isDeletedPlaceholder ? "[Eliminado]" : comment.AuthorName)
-                                                                </span>
                                                                 @if (!isDeletedPlaceholder)
                                                                 {
+                                                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="font-extrabold text-xs text-gray-900 hover:text-brand-blue transition-colors">
+                                                                        @comment.AuthorName
+                                                                    </a>
                                                                     <i class="fas fa-check-circle text-brand-blue text-[10px]" title="Verificado"></i>
                                                                 }
+                                                                else
+                                                                {
+                                                                    <span class="font-extrabold text-xs text-gray-900">[Eliminado]</span>
+                                                                }
                                                             </div>
-                                                            <span class="text-[10px] text-gray-400 font-medium">@comment.Created.ToLocalTime().ToString("g")</span>
+                                                            <span class="text-[10px] text-gray-400 font-medium">
+                                                                @comment.Created.ToLocalTime().ToString("g")
+                                                                @if (comment.IsEdited && !isDeletedPlaceholder)
+                                                                {
+                                                                    <span class="bg-blue-50 text-brand-blue px-1.5 py-0.5 rounded text-[9px] font-extrabold border border-blue-100 ml-1">Editado</span>
+                                                                }
+                                                            </span>
                                                         </div>
                                                     </div>
 

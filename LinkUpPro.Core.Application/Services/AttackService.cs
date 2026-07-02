@@ -30,12 +30,18 @@ namespace LinkUpPro.Core.Application.Services
         public async Task<AttackDTO> AttackAsync(AttackDTO dto)
         {
             var match = await _matchRepository.GetByIdAsync(dto.MatchId);
-            var turn = match!.CurrentTurnUserId;
+            if (match == null)
+                throw new Exception("La partida no existe");
+
+            if (match.Status != MatchStatus.InProgress)
+                throw new Exception("La partida ya finalizó y no se permiten más intentos.");
+
+            await ValidateTurnExpirationAsync(match);
+
+            var turn = match.CurrentTurnUserId;
 
             if (turn != dto.AttackerId)
                 throw new Exception("No es tu turno para atacar");
-
-            await ValidateTurnExpirationAsync(match);
 
             bool attacked = await repo.ExistsAttackAsync(dto.MatchId, dto.AttackerId, dto.X, dto.Y);
 
@@ -61,8 +67,9 @@ namespace LinkUpPro.Core.Application.Services
                     if (ship.Hits >= ship.ShipSize)
                     {
                         ship.IsSunk = true;
-                        await _shipPositionRepository.UpdateAsync(ship.Id, ship);
                     }
+
+                    await _shipPositionRepository.UpdateAsync(ship.Id, ship);
                     break;
                 }
             }
@@ -102,6 +109,9 @@ namespace LinkUpPro.Core.Application.Services
 
         private async Task ValidateTurnExpirationAsync(BattleshipMatch match)
         {
+            if (match.Status != MatchStatus.InProgress)
+                return;
+
             if (DateTime.Now <= match.TurnAssignedAt.AddHours(48))
                 return;
 
@@ -111,7 +121,7 @@ namespace LinkUpPro.Core.Application.Services
 
             await _matchService.FinishMatchAsync(match.Id, winnerId);
 
-            throw new Exception("La partida finalizó por inactividad.");
+            throw new Exception("La partida finalizó por abandono al transcurrir 48 horas sin realizar un ataque válido.");
         }
     }
 }

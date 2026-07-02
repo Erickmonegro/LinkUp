@@ -127,5 +127,20 @@ namespace LinkUpPro.Core.Application.Services
             // Sort alphabetically by friend name as required by PDF
             return dtos.OrderBy(f => f.FriendName).ToList();
         }
+
+        public async Task<List<UserDTO>> GetMutualFriendsAsync(string userId1, string userId2)
+        {
+            var mutualIds = await _repository.GetMutualFriendIdsAsync(userId1, userId2);
+            var result = new List<UserDTO>();
+            foreach (var id in mutualIds)
+            {
+                var user = await _userService.GetUserById(id);
+                if (user != null)
+                {
+                    result.Add(user);
+                }
+            }
+            return result.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
+        }
     }
 }

@@ -42,6 +42,7 @@ namespace LinkUpPro.Controllers
             if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
             {
                 ModelState.AddModelError("", "La fecha inicial no puede ser posterior a la fecha final.");
+                TempData["ErrorMessage"] = "La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).";
             }
 
             var friends = await _friendshipService.GetFriendsAsync(userId);
@@ -124,12 +125,21 @@ namespace LinkUpPro.Controllers
                 null
             );
 
-            // Filter out OnlyMe posts and logically deleted posts
             var visiblePosts = allFriendPosts
-                .Where(p => p.PrivacyMode == PrivacyMode.FriendsOnly)
+                .Where(p => p.PrivacyMode != PrivacyMode.OnlyMe)
                 .ToList();
 
-            var mutualCount = friendship?.MutualFriendsCount ?? 0;
+            var mutualUsersDto = await _friendshipService.GetMutualFriendsAsync(userId, id);
+            var mutualFriendsVMs = mutualUsersDto.Select(u => new FriendViewModel
+            {
+                Id = "",
+                UserId = u.Id,
+                FullName = $"{u.FirstName} {u.LastName}",
+                ProfilePhoto = u.PhotoUrl,
+                UserName = u.UserName
+            }).ToList();
+
+            var mutualCount = mutualFriendsVMs.Count;
 
             ViewBag.FriendshipId = friendshipId;
             ViewBag.Posts = visiblePosts;
@@ -139,12 +149,14 @@ namespace LinkUpPro.Controllers
                 UserId = friend.Id,
                 FullName = $"{friend.FirstName} {friend.LastName}",
                 ProfilePhoto = friend.PhotoUrl,
+                CoverPhoto = friend.CoverPhotoUrl,
                 UserName = friend.UserName,
                 Phone = friend.PhoneNumber,
                 Email = friend.Email,
                 TotalFriends = await _friendshipService.GetActiveFriendsCountAsync(id),
                 MutualFriendsCount = mutualCount,
-                IsFriend = true
+                IsFriend = true,
+                MutualFriends = mutualFriendsVMs
             };
 
             return View(vm);

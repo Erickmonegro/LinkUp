@@ -11,6 +11,7 @@ namespace LinkUpPro.Core.Application.ViewModels.User
         public required string UserName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? PhotoUrl { get; set; }
+        public string? CoverPhotoUrl { get; set; }
         public required string Role { get; set; }
     }
 }

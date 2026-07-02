@@ -10,6 +10,7 @@ namespace LinkUpPro.Core.Application.DTOs.User
         public required string Password { get; set; }
         public string? PhoneNumber { get; set; }
         public string? PhotoUrl { get; set; }
+        public string? CoverPhotoUrl { get; set; }
         public required string Role { get; set; }
     }
 }

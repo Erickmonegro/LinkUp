@@ -1,4 +1,4 @@
-﻿using LinkUpPro.Core.Application.DTOs.Battleship;
+using LinkUpPro.Core.Application.DTOs.Battleship;
 
 namespace LinkUpPro.Core.Application.Interfaces
 {
@@ -12,5 +12,9 @@ namespace LinkUpPro.Core.Application.Interfaces
         Task<BattleshipMatchDTO?> GetByIdAsync(int id);
         Task ChangeTurnAsync(int matchId);
         Task<bool> SurrenderAsync(int matchId, string playerId);
+        Task<BattleshipMatchDTO> AcceptChallengeAsync(int matchId, string playerId);
+        Task<BattleshipMatchDTO> RejectChallengeAsync(int matchId, string playerId);
+        Task<bool> CheckAndProcessTurnTimeoutsAsync(string? playerId = null);
+        Task<bool> CheckAndProcessTurnTimeoutForMatchAsync(int matchId);
     }
 }

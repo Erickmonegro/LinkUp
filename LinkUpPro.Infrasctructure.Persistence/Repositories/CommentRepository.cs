@@ -39,5 +39,11 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
             return await repo.Set<Comment>()
                 .AnyAsync(c => c.ParentCommentId == commentId);
         }
+
+        public override async Task<Comment?> UpdateAsync(int id, Comment entity)
+        {
+            entity.UpdatedAt = DateTime.UtcNow;
+            return await base.UpdateAsync(id, entity);
+        }
     }
 }

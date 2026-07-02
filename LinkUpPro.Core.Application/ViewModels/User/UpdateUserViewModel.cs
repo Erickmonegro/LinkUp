@@ -47,9 +47,14 @@ namespace LinkUpPro.Core.Application.ViewModels.User
         public string? PhoneNumber { get; set; }
 
         public string? PhotoUrl { get; set; }
+        public string? CoverPhotoUrl { get; set; }
 
         [Display(Name = "Actualizar Foto de Perfil (Opcional)")]
         [DataType(DataType.Upload)]
         public IFormFile? ProfileImageFile { get; set; }
+
+        [Display(Name = "Actualizar Foto de Portada (Opcional)")]
+        [DataType(DataType.Upload)]
+        public IFormFile? CoverImageFile { get; set; }
     }
 }

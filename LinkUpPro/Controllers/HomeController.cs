@@ -29,7 +29,7 @@ namespace LinkUpPro.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
-                // Render the original design (which contains the login form)
+                
                 var vm = new LinkUpPro.Core.Application.ViewModels.User.LoginViewModel
                 {
                     UserName = "",
@@ -38,20 +38,14 @@ namespace LinkUpPro.Controllers
                 return View("Index", vm);
             }
 
-            // User is authenticated, show their timeline feed
-            if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
-            {
-                ModelState.AddModelError("", "La fecha inicial no puede ser posterior a la fecha final.");
-                TempData["ErrorMessage"] = "La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).";
-            }
-
+            
             var posts = await _postService.GetHomePostsFilteredAsync(
                 userId,
-                ModelState.IsValid ? textFilter : null,
-                ModelState.IsValid ? contentType : null,
-                ModelState.IsValid ? dateFrom : null,
-                ModelState.IsValid ? dateTo : null,
-                ModelState.IsValid ? editionStatus : null
+                textFilter,
+                contentType,
+                dateFrom,
+                dateTo,
+                editionStatus
             );
 
             ViewBag.TextFilter = textFilter;

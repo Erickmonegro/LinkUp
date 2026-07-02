@@ -1,9 +1,10 @@
-using AutoMapper;
+﻿using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.Battleship;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.Battleship;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LinkUpPro.Core.Domain.Common.Enums;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -34,7 +35,7 @@ namespace LinkUpPro.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (userId == null)
-                return RedirectToAction("Login", "User");
+                return RedirectToAction("Login", "Login");
 
             var existingShips = await shipService.GetByPlayerAsync(matchId, userId);
 
@@ -51,10 +52,10 @@ namespace LinkUpPro.Controllers
                 {
                     int x = ship.StartX;
                     int y = ship.StartY;
-                    if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Up) y -= i;
-                    else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Down) y += i;
-                    else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Left) x -= i;
-                    else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Right) x += i;
+                    if (ship.Direction == ShipDirection.Up) y -= i;
+                    else if (ship.Direction == ShipDirection.Down) y += i;
+                    else if (ship.Direction == ShipDirection.Left) x -= i;
+                    else if (ship.Direction == ShipDirection.Right) x += i;
                     occupiedCells.Add($"{x},{y}");
                 }
             }
@@ -92,10 +93,10 @@ namespace LinkUpPro.Controllers
                         {
                             int x = ship.StartX;
                             int y = ship.StartY;
-                            if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Up) y -= i;
-                            else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Down) y += i;
-                            else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Left) x -= i;
-                            else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Right) x += i;
+                            if (ship.Direction == ShipDirection.Up) y -= i;
+                            else if (ship.Direction == ShipDirection.Down) y += i;
+                            else if (ship.Direction == ShipDirection.Left) x -= i;
+                            else if (ship.Direction == ShipDirection.Right) x += i;
                             occupiedCells.Add($"{x},{y}");
                         }
                     }
@@ -145,10 +146,10 @@ namespace LinkUpPro.Controllers
                     {
                         int x = ship.StartX;
                         int y = ship.StartY;
-                        if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Up) y -= i;
-                        else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Down) y += i;
-                        else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Left) x -= i;
-                        else if (ship.Direction == LinkUpPro.Core.Domain.Common.Enums.ShipDirection.Right) x += i;
+                        if (ship.Direction == ShipDirection.Up) y -= i;
+                        else if (ship.Direction == ShipDirection.Down) y += i;
+                        else if (ship.Direction == ShipDirection.Left) x -= i;
+                        else if (ship.Direction == ShipDirection.Right) x += i;
                         occupiedCells.Add($"{x},{y}");
                     }
                 }

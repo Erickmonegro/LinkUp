@@ -1,8 +1,6 @@
 using LinkUpPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LinkUpPro.Infrastructure.Identity.Seeds
 {

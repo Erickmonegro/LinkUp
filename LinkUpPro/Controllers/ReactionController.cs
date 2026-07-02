@@ -33,26 +33,24 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Toggle(int postId, bool isLike, string? returnUrl)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var post = await _postService.GetByIdAsync(postId);
             if (post == null)
             {
-                TempData["ReactionError"] = "La publicación no existe o no está activa.";
                 return RedirectToAction("Index", "Home");
             }
 
-            // Check if user has already reacted and what type
+           
             var existingReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
             var isNew = existingReaction == null;
             var isChanged = existingReaction != null && 
                             ((isLike && existingReaction.ReactionType == ReactionType.Dislike) ||
                              (!isLike && existingReaction.ReactionType == ReactionType.Like));
 
-            // Perform toggle
+            
             await _reactionService.ToggleReactionAsync(postId, userId, isLike);
 
-            // Generate notification if reaction was added or changed, and trigger user is not post author
             if ((isNew || isChanged) && post.AuthorId != userId)
             {
                 var currentUser = await _userService.GetUserById(userId);

@@ -1,3 +1,4 @@
+using AutoMapper;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.Friendship;
 using LinkUpPro.Core.Domain.Common.Enums;
@@ -17,15 +18,18 @@ namespace LinkUpPro.Controllers
         private readonly IFriendshipService _friendshipService;
         private readonly IUserService _userService;
         private readonly IPostService _postService;
+        private readonly IMapper _mapper;
 
         public FriendshipController(
             IFriendshipService friendshipService,
             IUserService userService,
-            IPostService postService)
+            IPostService postService,
+            IMapper mapper)
         {
             _friendshipService = friendshipService;
             _userService = userService;
             _postService = postService;
+            _mapper = mapper;
         }
 
         public async Task<IActionResult> Index(
@@ -37,44 +41,25 @@ namespace LinkUpPro.Controllers
             int? editionStatusFilter)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
-
-            if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
-            {
-                ModelState.AddModelError("", "La fecha inicial no puede ser posterior a la fecha final.");
-                TempData["ErrorMessage"] = "La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).";
-            }
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var friends = await _friendshipService.GetFriendsAsync(userId);
             var friendsCount = await _friendshipService.GetActiveFriendsCountAsync(userId);
             var postsCount = await _friendshipService.GetFriendPostsCountAsync(userId);
 
-            // Filter posts if model state is valid
-            var posts = new List<Core.Application.DTOs.PostDTO.PostDTO>();
-            if (ModelState.IsValid)
-            {
-                posts = await _friendshipService.GetFriendPostsAsync(
-                    userId,
-                    textFilter,
-                    friendIdFilter,
-                    contentTypeFilter,
-                    dateFrom,
-                    dateTo,
-                    editionStatusFilter
-                );
-            }
+            var posts = await _friendshipService.GetFriendPostsAsync(
+                userId,
+                textFilter,
+                friendIdFilter,
+                contentTypeFilter,
+                dateFrom,
+                dateTo,
+                editionStatusFilter
+            );
 
-            var friendViewModels = friends.Select(f => new FriendViewModel
-            {
-                Id = f.Id.ToString(), // Fixed: converted int to string to match property type
-                UserId = f.FriendId,
-                FullName = f.FriendName,
-                ProfilePhoto = f.FriendPhotoUrl,
-                UserName = f.FriendId,
-                MutualFriendsCount = f.MutualFriendsCount
-            }).ToList();
+            var friendViewModels = _mapper.Map<List<FriendViewModel>>(friends);
 
-            // Populate UserNames for friend list
+        
             foreach (var fvm in friendViewModels)
             {
                 var u = await _userService.GetUserById(fvm.UserId);
@@ -89,7 +74,7 @@ namespace LinkUpPro.Controllers
                 Posts = posts
             };
 
-            // Filters repopulation
+           
             ViewBag.TextFilter = textFilter;
             ViewBag.FriendIdFilter = friendIdFilter;
             ViewBag.ContentTypeFilter = contentTypeFilter ?? (int)ContentType.All;
@@ -103,19 +88,19 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Profile(string id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var friend = await _friendshipService.GetFriendProfileAsync(userId, id);
             if (friend == null)
             {
-                return RedirectToAction("AccessDenied", "User");
+                return RedirectToAction("AccessDenied", "Login");
             }
 
             var friends = await _friendshipService.GetFriendsAsync(userId);
             var friendship = friends.FirstOrDefault(f => f.FriendId == id);
             var friendshipId = friendship?.Id ?? 0;
 
-            // Fetch the friend's posts with privacy SoloAmigos (FriendsOnly)
+            
             var allFriendPosts = await _postService.GetUserPostsFilteredAsync(
                 id,
                 null,
@@ -130,34 +115,18 @@ namespace LinkUpPro.Controllers
                 .ToList();
 
             var mutualUsersDto = await _friendshipService.GetMutualFriendsAsync(userId, id);
-            var mutualFriendsVMs = mutualUsersDto.Select(u => new FriendViewModel
-            {
-                Id = "",
-                UserId = u.Id,
-                FullName = $"{u.FirstName} {u.LastName}",
-                ProfilePhoto = u.PhotoUrl,
-                UserName = u.UserName
-            }).ToList();
+            var mutualFriendsVMs = _mapper.Map<List<FriendViewModel>>(mutualUsersDto);
 
             var mutualCount = mutualFriendsVMs.Count;
 
             ViewBag.FriendshipId = friendshipId;
             ViewBag.Posts = visiblePosts;
 
-            var vm = new FriendProfileViewModel
-            {
-                UserId = friend.Id,
-                FullName = $"{friend.FirstName} {friend.LastName}",
-                ProfilePhoto = friend.PhotoUrl,
-                CoverPhoto = friend.CoverPhotoUrl,
-                UserName = friend.UserName,
-                Phone = friend.PhoneNumber,
-                Email = friend.Email,
-                TotalFriends = await _friendshipService.GetActiveFriendsCountAsync(id),
-                MutualFriendsCount = mutualCount,
-                IsFriend = true,
-                MutualFriends = mutualFriendsVMs
-            };
+            var vm = _mapper.Map<FriendProfileViewModel>(friend);
+            vm.TotalFriends = await _friendshipService.GetActiveFriendsCountAsync(id);
+            vm.MutualFriendsCount = mutualCount;
+            vm.IsFriend = true;
+            vm.MutualFriends = mutualFriendsVMs;
 
             return View(vm);
         }
@@ -167,7 +136,7 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Delete(int friendshipId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var result = await _friendshipService.DeleteFriendshipAsync(userId, friendshipId);
 

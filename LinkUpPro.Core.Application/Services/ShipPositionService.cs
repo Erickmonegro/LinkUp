@@ -66,7 +66,7 @@ namespace LinkUpPro.Core.Application.Services
             if (!ShipHelper.IsInsideBoard(ship, 12))
                 throw new Exception("El barco queda fuera del tablero.");
 
-            // Validar superposición
+            // Validar superposicion
             foreach (var existing in ships)
             {
                 if (ShipHelper.Overlap(ship, existing))

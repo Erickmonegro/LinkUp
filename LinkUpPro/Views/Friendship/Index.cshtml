@@ -23,6 +23,12 @@
             <i class="fas fa-exclamation-circle mr-1"></i> @TempData["ErrorMessage"]
         </div>
     }
+    @if (ViewBag.DateFrom != null && ViewBag.DateTo != null && DateTime.Parse(ViewBag.DateFrom.ToString()) > DateTime.Parse(ViewBag.DateTo.ToString()))
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
+            <i class="fas fa-exclamation-circle mr-1"></i> La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).
+        </div>
+    }
 
     <!-- 1. Resumen de Amistades -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -360,7 +366,13 @@
 
                                                         <!-- Content -->
                                                         <div class="mt-2 text-sm text-gray-700">
-                                                            <p id="commentContent-@comment.Id">@comment.Content</p>
+                                                            <p id="commentContent-@comment.Id">
+                                                                @comment.Content
+                                                                @if (comment.IsEdited)
+                                                                {
+                                                                    <span class="text-[11px] text-gray-400 font-normal italic ml-1">(editado)</span>
+                                                                }
+                                                            </p>
                                                             
                                                             <form id="commentEditForm-@comment.Id" asp-controller="Comment" asp-action="Edit" asp-route-id="@comment.Id" method="post" class="hidden mt-2 space-y-2">
                                                                 @Html.AntiForgeryToken()

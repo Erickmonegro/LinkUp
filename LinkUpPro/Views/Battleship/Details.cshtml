@@ -21,7 +21,7 @@
 
     TimeSpan duration = TimeSpan.Zero;
     var start = Model.TurnAssignedAt > DateTime.MinValue && Model.TurnAssignedAt.Year >= 2020 ? Model.TurnAssignedAt : Model.CreatedAt;
-    var end = Model.EndDate ?? DateTime.Now;
+    var end = Model.EndDate ?? DateTime.UtcNow;
     if (end > start && start.Year >= 2020)
     {
         duration = end - start;

@@ -310,7 +310,13 @@
                                                 </div>
 
                                                 <div class="mt-2 text-xs text-gray-700 pl-9">
-                                                    <p id="commentContent-@comment.Id" class="leading-relaxed">@comment.Content</p>
+                                                    <p id="commentContent-@comment.Id" class="leading-relaxed">
+                                                        @comment.Content
+                                                        @if (comment.IsEdited)
+                                                        {
+                                                            <span class="text-[11px] text-gray-400 font-normal italic ml-1">(editado)</span>
+                                                        }
+                                                    </p>
                                                     <form id="commentEditForm-@comment.Id" asp-controller="Comment" asp-action="Edit" asp-route-id="@comment.Id" method="post" class="hidden mt-2 space-y-2">
                                                         @Html.AntiForgeryToken()
                                                         <input type="text" name="content" value="@comment.Content" required class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-brand-blue outline-none" />

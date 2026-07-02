@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.NotificationDTO;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.Battleship;
@@ -55,7 +55,7 @@ namespace LinkUpPro.Controllers
             try
             {
                 playerId ??= User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (playerId == null) return RedirectToAction("Login", "User");
+                if (playerId == null) return RedirectToAction("Login", "Login");
 
                 await matchService.CheckAndProcessTurnTimeoutsAsync(playerId);
 
@@ -87,7 +87,7 @@ namespace LinkUpPro.Controllers
             try
             {
                 playerId ??= User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (playerId == null) return RedirectToAction("Login", "User");
+                if (playerId == null) return RedirectToAction("Login", "Login");
 
                 await matchService.CheckAndProcessTurnTimeoutsAsync(playerId);
 
@@ -123,7 +123,7 @@ namespace LinkUpPro.Controllers
                 var vm = mapper.Map<BattleshipMatchViewModel>(match);
                 await PopulateNamesAsync(new[] { vm });
 
-                if (match.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Finished)
+                if (match.Status == MatchStatus.Finished)
                 {
                     ViewBag.Ships = await shipPositionService.GetByMatchAsync(id);
                     ViewBag.Attacks = await attackService.GetByMatchAsync(id);
@@ -161,7 +161,6 @@ namespace LinkUpPro.Controllers
 
                 var createdMatch = await matchService.CreateMatchAsync(player1Id, vm.Player2Id);
 
-                // Enviar notificación de desafío al rival
                 var currentUser = await userService.GetUserById(player1Id);
                 var triggerName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "Un usuario";
                 var notification = new NotificationDTO
@@ -216,7 +215,7 @@ namespace LinkUpPro.Controllers
             try
             {
                 playerId ??= User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (playerId == null) return RedirectToAction("Login", "User");
+                if (playerId == null) return RedirectToAction("Login", "Login");
 
                 await matchService.SurrenderAsync(id, playerId);
                 TempData["Success"] = "Te has rendido. La partida ha finalizado y tu contrincante ha sido el ganador.";
@@ -236,11 +235,10 @@ namespace LinkUpPro.Controllers
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null) return RedirectToAction("Login", "User");
+                if (userId == null) return RedirectToAction("Login", "Login");
 
                 var match = await matchService.AcceptChallengeAsync(id, userId);
 
-                // Enviar notificación de aceptación al retador
                 var currentUser = await userService.GetUserById(userId);
                 var triggerName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "Un usuario";
                 var notification = new NotificationDTO
@@ -274,11 +272,10 @@ namespace LinkUpPro.Controllers
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null) return RedirectToAction("Login", "User");
+                if (userId == null) return RedirectToAction("Login", "Login");
 
                 var match = await matchService.RejectChallengeAsync(id, userId);
 
-                // Enviar notificación de rechazo al retador si fue rechazado por el rival
                 if (match.Player2Id == userId)
                 {
                     var currentUser = await userService.GetUserById(userId);
@@ -318,7 +315,7 @@ namespace LinkUpPro.Controllers
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null) return RedirectToAction("Login", "User");
+                if (userId == null) return RedirectToAction("Login", "Login");
 
                 var match = await matchService.GetByIdAsync(id);
                 if (match == null) return RedirectToAction(nameof(Index));

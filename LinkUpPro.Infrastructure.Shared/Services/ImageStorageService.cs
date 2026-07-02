@@ -1,18 +1,29 @@
-﻿namespace LinkUpPro.Helpers
+using LinkUpPro.Core.Application.Helpers.Validations;
+using LinkUpPro.Core.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace LinkUpPro.Infrastructure.Shared.Services
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out", Justification = "<Pending>")]
-    public static class FileManager
+    public class ImageStorageService : IImageStorageService
     {
-        public static string? Upload(IFormFile? file, string id, string folderName, bool isEditMode = false, string? imagePath = "")
+        public async Task<string?> UploadImageAsync(IFormFile? file, string id, string folderName, bool isEditMode = false, string? existingImagePath = "")
         {
             if (isEditMode && file == null)
             {
-                return imagePath;
+                return existingImagePath;
             }
 
-            if (file == null)
+            if (file == null || file.Length == 0)
             {
                 return string.Empty;
+            }
+
+            if (!ImageValidator.ValidateFile(file, out string errorMessage))
+            {
+                throw new ArgumentException(errorMessage);
             }
 
             string basePath = $"Images/{folderName}/{id}";
@@ -27,16 +38,16 @@
             FileInfo fileInfo = new(file.FileName);
             string fileName = guid + fileInfo.Extension;
 
-            string fullFilePath = Path.Combine(path, fileName);           
+            string fullFilePath = Path.Combine(path, fileName);
 
             using (var stream = new FileStream(fullFilePath, FileMode.Create))
             {
-                file.CopyTo(stream);
+                await file.CopyToAsync(stream);
             }
 
-            if (isEditMode && !string.IsNullOrWhiteSpace(imagePath))
+            if (isEditMode && !string.IsNullOrWhiteSpace(existingImagePath))
             {
-                string[] oldImagePart = imagePath.Split("/");
+                string[] oldImagePart = existingImagePath.Split("/");
                 string oldFileName = oldImagePart[^1];
                 string completeOldPath = Path.Combine(path, oldFileName);
 
@@ -46,10 +57,10 @@
                 }
             }
 
-            return $"{basePath}/{fileName}";
+            return $"/{basePath}/{fileName}";
         }
 
-        public static bool Delete(string id, string folderName)
+        public bool DeleteImage(string id, string folderName)
         {
             string basePath = $"Images/{folderName}/{id}";
             string path = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot/{basePath}");
@@ -57,13 +68,10 @@
             if (Directory.Exists(path))
             {
                 Directory.Delete(path, true);
-            }
-            else
-            {
-                return false;
+                return true;
             }
 
-            return true;
-        }       
+            return false;
+        }
     }
 }

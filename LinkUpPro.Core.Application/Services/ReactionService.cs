@@ -40,19 +40,19 @@ namespace LinkUpPro.Core.Application.Services
             {
                 if (existingReaction.ReactionType == reactionType)
                 {
-                    // Remove reaction if clicking the same one again
+                    
                     await _repository.DeleteAsync(existingReaction.Id);
                 }
                 else
                 {
-                    // Change reaction type
+                   
                     existingReaction.ReactionType = reactionType;
                     await _repository.UpdateAsync(existingReaction.Id, existingReaction);
                 }
             }
             else
             {
-                // Create new reaction
+                
                 var newReaction = new Reaction
                 {
                     Id = 0,

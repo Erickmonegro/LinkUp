@@ -86,7 +86,7 @@ namespace LinkUpPro.Core.Application.Services
 
             attack = await repo.AddAsync(attack);
 
-            bool winner = ships.All(s => s.IsSunk);
+            bool winner = ships.Count(s => s.IsSunk) >= 5 || (ships.Any() && ships.All(s => s.IsSunk));
 
             if (winner)
             {
@@ -112,7 +112,7 @@ namespace LinkUpPro.Core.Application.Services
             if (match.Status != MatchStatus.InProgress)
                 return;
 
-            if (DateTime.Now <= match.TurnAssignedAt.AddHours(48))
+            if (DateTime.UtcNow <= match.TurnAssignedAt.AddHours(48))
                 return;
 
             string winnerId = match.CurrentTurnUserId == match.Player1Id

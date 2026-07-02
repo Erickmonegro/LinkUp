@@ -36,7 +36,7 @@ namespace LinkUpPro.Core.Application.Services
             if (friendship.UserId1 != userId && friendship.UserId2 != userId)
                 return false;
 
-            // Logical deletion per PDF requirements: "cambiando el estado de la relación a eliminada."
+           
             friendship.Status = FriendshipStatus.Deleted;
             await _repository.UpdateAsync(friendshipId, friendship);
             return true;
@@ -124,7 +124,7 @@ namespace LinkUpPro.Core.Application.Services
                 dto.MutualFriendsCount = await _repository.GetMutualFriendsCountAsync(userId, dto.FriendId);
             }
             
-            // Sort alphabetically by friend name as required by PDF
+            
             return dtos.OrderBy(f => f.FriendName).ToList();
         }
 

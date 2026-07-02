@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using LinkUpPro.Core.Application.Helpers.Validations;
 
 namespace LinkUpPro.Core.Application.ViewModels.User
 {
-    public class UpdateUserViewModel : BasicViewModel<string>
+    public class UpdateUserViewModel : BasicViewModel<string>, IValidatableObject
     {
         [Required(ErrorMessage = "Debe ingresar su nombre")]
         [Display(Name = "Nombre")]
@@ -15,13 +16,13 @@ namespace LinkUpPro.Core.Application.ViewModels.User
         [DataType(DataType.Text)]
         public required string LastName { get; set; }
 
-        // Note: Read-only in UI per PDF, but we keep validation
+        
         [Required(ErrorMessage = "Debe ingresar su correo electrónico")]
         [Display(Name = "Correo Electrónico")]
         [DataType(DataType.EmailAddress)]
         public required string Email { get; set; }
 
-        // Note: Read-only in UI per PDF, but we keep validation
+        
         [Required(ErrorMessage = "Debe ingresar un nombre de usuario")]
         [Display(Name = "Nombre de Usuario")]
         [DataType(DataType.Text)]
@@ -51,10 +52,20 @@ namespace LinkUpPro.Core.Application.ViewModels.User
 
         [Display(Name = "Actualizar Foto de Perfil (Opcional)")]
         [DataType(DataType.Upload)]
+        [ValidImageFile]
         public IFormFile? ProfileImageFile { get; set; }
 
         [Display(Name = "Actualizar Foto de Portada (Opcional)")]
         [DataType(DataType.Upload)]
+        [ValidImageFile]
         public IFormFile? CoverImageFile { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(CurrentPassword))
+            {
+                yield return new ValidationResult("Debe ingresar su contraseña actual para realizar el cambio.", new[] { nameof(CurrentPassword) });
+            }
+        }
     }
 }

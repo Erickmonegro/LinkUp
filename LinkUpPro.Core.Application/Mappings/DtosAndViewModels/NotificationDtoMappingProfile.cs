@@ -14,6 +14,7 @@ namespace LinkUpPro.Core.Application.Mappings.DtosAndViewModels
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Description))
                 .ForMember(dest => dest.NotificationType, opt => opt.MapFrom(src => src.ActivityType.ToString()))
                 .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.Status == NotificationStatus.Read))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Created))
                 .ReverseMap();
         }
     }

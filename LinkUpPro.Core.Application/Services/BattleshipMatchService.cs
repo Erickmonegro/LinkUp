@@ -34,7 +34,7 @@ namespace LinkUpPro.Core.Application.Services
 
             match.CurrentTurnUserId = match.CurrentTurnUserId == match.Player1Id ? match.Player2Id : match.Player1Id;
 
-            match.TurnAssignedAt = DateTime.Now;
+            match.TurnAssignedAt = DateTime.UtcNow;
 
             await repo.UpdateAsync(match.Id, match);
         }
@@ -48,7 +48,7 @@ namespace LinkUpPro.Core.Application.Services
                 Player2Id = player2Id,
                 Status = MatchStatus.ChallengePending,
                 CurrentTurnUserId = player1Id,
-                TurnAssignedAt = DateTime.Now
+                TurnAssignedAt = DateTime.UtcNow
             };
 
             var created = await repo.AddAsync(match);
@@ -68,7 +68,7 @@ namespace LinkUpPro.Core.Application.Services
 
             match.Status = MatchStatus.Finished;
             match.WinnerId = winnerId;
-            match.EndDate = DateTime.Now;
+            match.EndDate = DateTime.UtcNow;
 
             await repo.UpdateAsync(match.Id, match);
         }
@@ -110,7 +110,7 @@ namespace LinkUpPro.Core.Application.Services
                 throw new Exception("Ambos jugadores deben colocar sus barcos.");
 
             match.Status = MatchStatus.InProgress;
-            match.TurnAssignedAt = DateTime.Now;
+            match.TurnAssignedAt = DateTime.UtcNow;
 
             var updatedMatch = await repo.UpdateAsync(match.Id, match);
 
@@ -126,7 +126,7 @@ namespace LinkUpPro.Core.Application.Services
 
             match.Status = MatchStatus.Finished;
             match.WinnerId = playerId == match.Player1Id ? match.Player2Id : match.Player1Id;
-            match.EndDate = DateTime.Now;
+            match.EndDate = DateTime.UtcNow;
 
             await repo.UpdateAsync(match.Id, match);
 
@@ -163,7 +163,7 @@ namespace LinkUpPro.Core.Application.Services
                 throw new Exception("El desafío ya fue procesado o no está pendiente.");
 
             match.Status = MatchStatus.Rejected;
-            match.EndDate = DateTime.Now;
+            match.EndDate = DateTime.UtcNow;
             var updated = await repo.UpdateAsync(match.Id, match);
             return _mapper.Map<BattleshipMatchDTO>(updated);
         }
@@ -184,7 +184,7 @@ namespace LinkUpPro.Core.Application.Services
             bool anyTimedOut = false;
             foreach (var match in matchesToCheck)
             {
-                if (match.Status == MatchStatus.InProgress && DateTime.Now >= match.TurnAssignedAt.AddHours(48))
+                if (match.Status == MatchStatus.InProgress && DateTime.UtcNow >= match.TurnAssignedAt.AddHours(48))
                 {
                     string winnerId = match.CurrentTurnUserId == match.Player1Id ? match.Player2Id : match.Player1Id;
                     await FinishMatchAsync(match.Id, winnerId);
@@ -200,7 +200,7 @@ namespace LinkUpPro.Core.Application.Services
             if (match == null || match.Status != MatchStatus.InProgress)
                 return false;
 
-            if (DateTime.Now >= match.TurnAssignedAt.AddHours(48))
+            if (DateTime.UtcNow >= match.TurnAssignedAt.AddHours(48))
             {
                 string winnerId = match.CurrentTurnUserId == match.Player1Id ? match.Player2Id : match.Player1Id;
                 await FinishMatchAsync(match.Id, winnerId);

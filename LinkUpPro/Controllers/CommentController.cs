@@ -1,3 +1,4 @@
+using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.CommentDTO;
 using LinkUpPro.Core.Application.DTOs.NotificationDTO;
 using LinkUpPro.Core.Application.Interfaces;
@@ -18,17 +19,20 @@ namespace LinkUpPro.Controllers
         private readonly IPostService _postService;
         private readonly INotificationService _notificationService;
         private readonly IUserService _userService;
+        private readonly IMapper _mapper;
 
         public CommentController(
             ICommentService commentService,
             IPostService postService,
             INotificationService notificationService,
-            IUserService userService)
+            IUserService userService,
+            IMapper mapper)
         {
             _commentService = commentService;
             _postService = postService;
             _notificationService = notificationService;
             _userService = userService;
+            _mapper = mapper;
         }
 
         [HttpPost]
@@ -36,49 +40,30 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Create(SaveCommentViewModel vm)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
-            if (string.IsNullOrWhiteSpace(vm.Content))
+            if (!ModelState.IsValid)
             {
-                TempData["CommentError"] = "El comentario no puede estar vacío.";
-                return RedirectToAction("Index", "Home");
-            }
-
-            if (vm.Content.Length > 500)
-            {
-                TempData["CommentError"] = "El comentario debe tener un máximo de 500 caracteres.";
                 return RedirectToAction("Index", "Home");
             }
 
             var post = await _postService.GetByIdAsync(vm.PostId);
-            if (post == null)
+            if (post == null || post.CommentStatus == CommentStatus.NotAllowed)
             {
-                TempData["CommentError"] = "La publicación no existe o no está activa.";
                 return RedirectToAction("Index", "Home");
             }
 
-            if (post.CommentStatus == CommentStatus.NotAllowed)
-            {
-                TempData["CommentError"] = "Los comentarios están desactivados para esta publicación.";
-                return RedirectToAction("Index", "Home");
-            }
-
-            var commentDto = new CommentDTO
-            {
-                Id = 0,
-                Content = vm.Content.Trim(),
-                PostId = vm.PostId,
-                ParentCommentId = vm.ParentCommentId,
-                AuthorId = userId,
-                AuthorName = ""
-            };
+            var commentDto = _mapper.Map<CommentDTO>(vm);
+            commentDto.Id = 0;
+            commentDto.Content = vm.Content.Trim();
+            commentDto.AuthorId = userId;
+            commentDto.AuthorName = "";
 
             CommentDTO savedComment;
             if (vm.ParentCommentId.HasValue)
             {
                 savedComment = await _commentService.ReplyToCommentAsync(vm.ParentCommentId.Value, commentDto);
 
-                // Notify parent comment author if not self
                 var parentComment = await _commentService.GetByIdAsync(vm.ParentCommentId.Value);
                 if (parentComment != null && parentComment.AuthorId != userId)
                 {
@@ -104,7 +89,6 @@ namespace LinkUpPro.Controllers
             {
                 savedComment = await _commentService.AddAsync(commentDto);
 
-                // Notify post author if not self
                 if (post.AuthorId != userId)
                 {
                     var currentUser = await _userService.GetUserById(userId);
@@ -134,29 +118,15 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Edit(int id, string content)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var comment = await _commentService.GetByIdAsync(id);
-            if (comment == null || comment.AuthorId != userId)
+            if (comment == null || comment.AuthorId != userId || string.IsNullOrWhiteSpace(content) || content.Length > 500)
             {
-                TempData["CommentError"] = "No posee permisos para editar este contenido.";
-                return RedirectToAction("Index", "Home");
-            }
-
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                TempData["CommentError"] = "El comentario no puede estar vacío.";
-                return RedirectToAction("Index", "Home");
-            }
-
-            if (content.Length > 500)
-            {
-                TempData["CommentError"] = "El comentario debe tener un máximo de 500 caracteres.";
                 return RedirectToAction("Index", "Home");
             }
 
             comment.Content = content.Trim();
-            // Wait, we need to map back to save. Yes, we call UpdateAsync.
             await _commentService.UpdateAsync(comment, id);
 
             return RedirectToAction("Index", "Home");
@@ -167,26 +137,22 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var comment = await _commentService.GetByIdAsync(id);
             if (comment == null || comment.AuthorId != userId)
             {
-                TempData["CommentError"] = "No posee permisos para realizar esta acción.";
                 return RedirectToAction("Index", "Home");
             }
 
-            // Check if it has replies
             var hasReplies = (comment.Replies != null && comment.Replies.Any()) || await _commentService.HasRepliesAsync(id);
             if (hasReplies)
             {
-                // Has replies: substitute content
                 comment.Content = "comentario eliminado";
                 await _commentService.UpdateAsync(comment, id);
             }
             else
             {
-                // No replies: physical deletion
                 await _commentService.DeleteAsync(id);
             }
 

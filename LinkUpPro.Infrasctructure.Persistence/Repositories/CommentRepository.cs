@@ -42,8 +42,15 @@ namespace LinkUpPro.Infrastructure.Persistence.Repositories
 
         public override async Task<Comment?> UpdateAsync(int id, Comment entity)
         {
-            entity.UpdatedAt = DateTime.UtcNow;
-            return await base.UpdateAsync(id, entity);
+            var existingComment = await repo.Set<Comment>().FindAsync(id);
+            if (existingComment != null)
+            {
+                existingComment.Content = entity.Content;
+                existingComment.UpdatedAt = DateTime.UtcNow;
+                await repo.SaveChangesAsync();
+                return existingComment;
+            }
+            return null;
         }
     }
 }

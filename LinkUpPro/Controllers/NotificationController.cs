@@ -1,3 +1,4 @@
+﻿using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.NotificationDTO;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.Notification;
@@ -5,6 +6,7 @@ using LinkUpPro.Core.Domain.Common.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -17,41 +19,34 @@ namespace LinkUpPro.Controllers
         private readonly INotificationService _notificationService;
         private readonly IPostService _postService;
         private readonly IUserService _userService;
+        private readonly IMapper _mapper;
 
         public NotificationController(
             INotificationService notificationService,
             IPostService postService,
-            IUserService userService)
+            IUserService userService,
+            IMapper mapper)
         {
             _notificationService = notificationService;
             _postService = postService;
             _userService = userService;
+            _mapper = mapper;
         }
 
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var notifications = await _notificationService.GetUserNotificationsAsync(userId);
 
-            // Sort chronologically from newest to oldest as required by PDF
             var sortedNotifications = notifications
-                .OrderByDescending(n => n.Created) // Fixed: changed CreatedAt to Created
+                .OrderByDescending(n => n.Created) 
                 .ToList();
 
-            var vms = sortedNotifications.Select(n => new NotificationViewModel
-            {
-                Id = n.Id,
-                UserId = n.ReceiverId,
-                Content = n.Description,
-                NotificationType = n.ActivityType.ToString(),
-                IsRead = n.Status == NotificationStatus.Read,
-                RelatedEntityId = n.RelatedEntityId,
-                CreatedAt = n.Created
-            }).ToList();
+            var vms = _mapper.Map<List<NotificationViewModel>>(sortedNotifications);
 
-            // Populate sender info for the list (e.g. trigger user details)
+          
             foreach (var vm in vms)
             {
                 var originalDto = sortedNotifications.First(n => n.Id == vm.Id);
@@ -67,12 +62,12 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> MarkAsRead(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             var notification = await _notificationService.GetByIdAsync(id);
             if (notification == null || notification.ReceiverId != userId)
             {
-                return RedirectToAction("AccessDenied", "User");
+                return RedirectToAction("AccessDenied", "Login");
             }
 
             notification.Status = NotificationStatus.Read;
@@ -80,7 +75,7 @@ namespace LinkUpPro.Controllers
 
             if (notification.RelatedEntityId.HasValue)
             {
-                // Battle notifications → go to battleship details
+              
                 if (notification.ActivityType == NotificationType.BattleChallenge ||
                     notification.ActivityType == NotificationType.BattleAccepted ||
                     notification.ActivityType == NotificationType.BattleRejected)
@@ -88,7 +83,7 @@ namespace LinkUpPro.Controllers
                     return RedirectToAction("Details", "Battleship", new { id = notification.RelatedEntityId.Value });
                 }
 
-                // Post-related notifications → redirect to the correct feed and scroll to the post
+              
                 var post = await _postService.GetByIdAsync(notification.RelatedEntityId.Value);
                 if (post != null && post.IsActive)
                 {
@@ -96,13 +91,13 @@ namespace LinkUpPro.Controllers
 
                     if (post.AuthorId == userId)
                     {
-                        // The post belongs to me → go to my profile
+                      
                         var profileUrl = Url.Action("Index", "Profile") + anchor;
                         return Redirect(profileUrl!);
                     }
                     else
                     {
-                        // The post belongs to a friend → go to their profile
+                      
                         var friendProfileUrl = Url.Action("Profile", "Friendship", new { id = post.AuthorId }) + anchor;
                         return Redirect(friendProfileUrl!);
                     }
@@ -121,7 +116,7 @@ namespace LinkUpPro.Controllers
         public async Task<IActionResult> MarkAllAsRead()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "User");
+            if (userId == null) return RedirectToAction("Login", "Login");
 
             await _notificationService.MarkAllAsReadAsync(userId);
             TempData["SuccessMessage"] = "Todas las notificaciones fueron marcadas como leídas.";

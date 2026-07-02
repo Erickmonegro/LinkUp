@@ -5,6 +5,7 @@ using LinkUpPro.Core.Application.Services;
 using LinkUpPro.Core.Application.ViewModels.Battleship;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LinkUpPro.Core.Domain.Common.Enums;
 using System.Diagnostics;
 
 namespace LinkUpPro.Controllers
@@ -50,7 +51,7 @@ namespace LinkUpPro.Controllers
                     return RedirectToAction("Index", "Battleship");
                 }
 
-                if (match.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Finished || match.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Rejected)
+                if (match.Status == MatchStatus.Finished || match.Status == MatchStatus.Rejected)
                 {
                     return RedirectToAction("Details", "Battleship", new { id = matchId });
                 }
@@ -115,7 +116,7 @@ namespace LinkUpPro.Controllers
                 await attackService.AttackAsync(dto);
 
                 var updatedMatch = await matchService.GetByIdAsync(vm.MatchId);
-                if (updatedMatch != null && updatedMatch.Status == LinkUpPro.Core.Domain.Common.Enums.MatchStatus.Finished)
+                if (updatedMatch != null && updatedMatch.Status == MatchStatus.Finished)
                 {
                     TempData["Success"] = "¡Victoria! Has hundido toda la flota enemiga.";
                     return RedirectToAction("Details", "Battleship", new { id = vm.MatchId });

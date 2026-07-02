@@ -129,7 +129,7 @@
 
     @if (ViewData["HideNav"] is not true)
     {
-        <!-- Sticky Glassmorphism Header (Estilo Twitter / Instagram / Facebook) -->
+      
         <header class="backdrop-blur-md bg-white/90 border-b border-gray-200/80 shadow-sm sticky top-0 z-50 transition-all">
             <nav class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
@@ -244,7 +244,7 @@
                                 </span>
                             </a>
 
-                            <form asp-controller="User" asp-action="Logout" method="post" class="inline">
+                            <form id="logoutFormElement" asp-controller="Login" asp-action="Logout" method="post" class="inline">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="text-gray-400 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition-colors" title="Cerrar Sesión">
                                     <i class="fas fa-sign-out-alt text-base"></i>
@@ -275,7 +275,7 @@
                                 </div>
                             </div>
 
-                            <a asp-controller="User" asp-action="Login" class="text-gray-600 hover:text-brand-blue font-bold px-4 py-2 rounded-xl transition-colors">Iniciar Sesión</a>
+                            <a asp-controller="Login" asp-action="Login" class="text-gray-600 hover:text-brand-blue font-bold px-4 py-2 rounded-xl transition-colors">Iniciar Sesión</a>
                             <a asp-controller="User" asp-action="Register" class="bg-gradient-to-r from-brand-blue to-indigo-600 text-white font-bold px-5 py-2 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105">Registrarse</a>
                         }
                     </div>
@@ -553,10 +553,6 @@
         if (isPersistentClaim != "true")
         {
             var isJustLoggedIn = TempData["JustLoggedIn"] != null;
-            if (isJustLoggedIn)
-            {
-                TempData.Keep("JustLoggedIn");
-            }
             <script>
                 (function() {
                     const isJustLoggedIn = @(isJustLoggedIn.ToString().ToLower());
@@ -567,12 +563,19 @@
                             if (!sessionStorage.getItem('linkup_active_window_session')) {
                                 // Al no ser sesión persistente, si sessionStorage está vacío significa
                                 // que el navegador fue cerrado y reabierto (ej. restauración de sesión de Chrome/Edge).
-                                // Proceder a cerrar sesión inmediatamente según requerimiento.
-                                const logoutForm = document.querySelector('form[action*="Logout"]');
+                                // Proceder a cerrar sesión inmediatamente mediante el formulario de logout.
+                                const logoutForm = document.getElementById('logoutFormElement') || document.querySelector('form[action*="Logout" i]');
                                 if (logoutForm) {
                                     logoutForm.submit();
                                 } else {
-                                    window.location.href = '/User/Login';
+                                    fetch('/Login/Logout', {
+                                        method: 'POST',
+                                        headers: {
+                                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                                        }
+                                    }).finally(() => {
+                                        window.location.href = '/Login/Login';
+                                    });
                                 }
                             }
                         } catch(e){}

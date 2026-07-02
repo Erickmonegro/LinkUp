@@ -15,6 +15,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IEmailService _emailService;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> _activationCooldowns = new(StringComparer.OrdinalIgnoreCase);
 
         public UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IEmailService emailService)
         {
@@ -49,7 +50,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (!user.EmailConfirmed)
             {
                 response.HasError = true;
-                response.Errors.Add($"This account {loginDto.UserName} is not active, you should check your email");
+                response.Errors.Add("Su cuenta se encuentra inactiva. Debe activarla mediante el enlace enviado a su correo electrónico.");
                 return response;
             }
 
@@ -60,13 +61,11 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 response.HasError = true;
                 if (result.IsLockedOut)
                 {
-                    response.Errors.Add($"Your account {loginDto.UserName} has been locked due to multiple failed attempts." +
-                        $" Please try again in 10 minutes. If you don’t remember your password, you can go through the password " +
-                        $"reset process.");
+                    response.Errors.Add("La cuenta se encuentra bloqueada temporalmente debido a varios intentos fallidos. Inténtelo nuevamente en 15 minutos o restablezca su contraseña.");
                 }
                 else
                 {
-                    response.Errors.Add($"these credentials are invalid for this user: {user.UserName}");
+                    response.Errors.Add("El nombre de usuario o la contraseña son incorrectos.");
                 }
                 return response;
             }
@@ -106,7 +105,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (userWithSameUserName != null)
             {
                 response.HasError = true;
-                response.Errors.Add($"this username: {saveDto.UserName} is already taken.");
+                response.Errors.Add("Este nombre de usuario ya se encuentra registrado.");
                 return response;
             }
 
@@ -114,7 +113,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (userWithSameEmail != null)
             {
                 response.HasError = true;
-                response.Errors.Add($"this email: {saveDto.Email} is already taken.");
+                response.Errors.Add("Este correo electrónico ya se encuentra registrado.");
                 return response;
             }
 
@@ -153,7 +152,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             else
             {
                 response.HasError = true;
-                response.Errors.AddRange(result.Errors.Select(s => s.Description).ToList());
+                response.Errors.AddRange(FormatErrors(result.Errors));
                 return response;
             }
         }
@@ -176,7 +175,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (userWithSameUserName != null)
             {
                 response.HasError = true;
-                response.Errors.Add($"this username: {saveDto.UserName} is already taken.");
+                response.Errors.Add("Este nombre de usuario ya se encuentra registrado.");
                 return response;
             }
 
@@ -184,7 +183,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (userWithSameEmail != null)
             {
                 response.HasError = true;
-                response.Errors.Add($"this email: {saveDto.Email} is already taken.");
+                response.Errors.Add("Este correo electrónico ya se encuentra registrado.");
                 return response;
             }
 
@@ -193,7 +192,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add($"There is no acccount registered with this user");
+                response.Errors.Add("No existe una cuenta registrada para este usuario.");
                 return response;
             }
 
@@ -214,7 +213,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 if (resultChange != null && !resultChange.Succeeded)
                 {
                     response.HasError = true;
-                    response.Errors.AddRange(resultChange.Errors.Select(s => s.Description).ToList());
+                    response.Errors.AddRange(FormatErrors(resultChange.Errors));
                     return response;
                 }
                 await _userManager.ResetAccessFailedCountAsync(user);
@@ -251,7 +250,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             else
             {
                 response.HasError = true;
-                response.Errors.AddRange(result.Errors.Select(s => s.Description).ToList());
+                response.Errors.AddRange(FormatErrors(result.Errors));
                 return response;
             }
         }
@@ -265,7 +264,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
 
             if (user == null)
             {
-                // Don't reveal if username exists - just return success silently
+               
                 return response;
             }
 
@@ -290,7 +289,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add($"There is no acccount registered with this user");
+                response.Errors.Add("No existe una cuenta registrada para este usuario.");
                 return response;
             }
 
@@ -299,7 +298,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (!result.Succeeded)
             {
                 response.HasError = true;
-                response.Errors.AddRange(result.Errors.Select(s => s.Description).ToList());
+                response.Errors.AddRange(FormatErrors(result.Errors));
                 return response;
             }
 
@@ -319,7 +318,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add($"There is no acccount registered with this user");
+                response.Errors.Add("No existe una cuenta registrada para este usuario.");
                 return response;
             }
 
@@ -456,18 +455,18 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return "There is no acccount registered with this user";
+                return "No existe una cuenta registrada para este usuario.";
             }
 
             token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
-                return $"Account confirmed for {user.Email}. You can now use the app";
+                return $"Cuenta confirmada para {user.Email}. Ya puedes iniciar sesión.";
             }
             else
             {
-                return $"An error occurred while confirming this email {user.Email}";
+                return $"Ocurrió un error al confirmar el correo {user.Email}.";
             }
         }
 
@@ -476,16 +475,64 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return new UserResponseDto { HasError = true, Errors = new List<string> { "There is no acccount registered with this user" } };
+                return new UserResponseDto { HasError = true, Errors = new List<string> { "No existe una cuenta registrada para este usuario." } };
             }
 
             var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
             if (!result.Succeeded)
             {
-                return new UserResponseDto { HasError = true, Errors = result.Errors.Select(e => e.Description).ToList() };
+                return new UserResponseDto { HasError = true, Errors = FormatErrors(result.Errors) };
             }
 
             return new UserResponseDto { HasError = false, Errors = new List<string>() };
+        }
+
+        public async Task<UserResponseDto> ResendActivationAsync(string userName, string origin)
+        {
+            var response = new UserResponseDto { Errors = new List<string>() };
+            var cacheKey = userName.Trim();
+            if (_activationCooldowns.TryGetValue(cacheKey, out var lastRequestTime))
+            {
+                if ((DateTime.UtcNow - lastRequestTime).TotalMinutes < 5)
+                {
+                    response.HasError = true;
+                    response.Errors.Add("No puede realizar múltiples solicitudes de código de activación consecutivas en un período menor a cinco minutos. Por favor espere e inténtelo de nuevo.");
+                    return response;
+                }
+            }
+
+            _activationCooldowns[cacheKey] = DateTime.UtcNow;
+            var user = await GetUserByUserName(userName.Trim());
+            if (user != null && !user.IsVerified)
+            {
+                var saveDto = new SaveUserDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    Password = "",
+                    Role = user.Role
+                };
+                await EditUser(saveDto, origin, false);
+            }
+            return response;
+        }
+
+        private static List<string> FormatErrors(IEnumerable<IdentityError> errors)
+        {
+            var list = new List<string>();
+            foreach (var err in errors)
+            {
+                if (err.Description.Contains("alphanumeric", StringComparison.OrdinalIgnoreCase))
+                    list.Add("La contraseña debe tener al menos un carácter no alfanumérico.");
+                else if (err.Description.Contains("uppercase", StringComparison.OrdinalIgnoreCase))
+                    list.Add("La contraseña debe tener al menos una letra mayúscula ('A'-'Z').");
+                else
+                    list.Add(err.Description);
+            }
+            return list;
         }
 
         #region "Private methods"
@@ -506,7 +553,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-            var route = "User/ResetPassword";
+            var route = "Login/ResetPassword";
             var completeUrl = new Uri(string.Concat(origin, "/", route));
             var resetUri = QueryHelpers.AddQueryString(completeUrl.ToString(), "userId", user.Id);
             resetUri = QueryHelpers.AddQueryString(resetUri.ToString(), "token", token);

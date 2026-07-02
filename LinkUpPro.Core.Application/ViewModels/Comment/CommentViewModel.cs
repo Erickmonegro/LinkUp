@@ -25,6 +25,7 @@ namespace LinkUpPro.Core.Application.ViewModels.Comment
         public DateTime CreatedAt { get; set; }
         
         public int? ParentCommentId { get; set; }
+        public bool IsEdited { get; set; }
         
         public List<CommentViewModel> Replies { get; set; } = new List<CommentViewModel>();
     }

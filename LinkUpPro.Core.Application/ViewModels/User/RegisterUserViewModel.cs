@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using LinkUpPro.Core.Application.Helpers.Validations;
 
 namespace LinkUpPro.Core.Application.ViewModels.User
 {
@@ -45,6 +46,7 @@ namespace LinkUpPro.Core.Application.ViewModels.User
         [Required(ErrorMessage = "Debe seleccionar una foto de perfil")]
         [Display(Name = "Foto de Perfil")]
         [DataType(DataType.Upload)]
+        [ValidImageFile]
         public IFormFile? ProfileImageFile { get; set; }
     }
 }

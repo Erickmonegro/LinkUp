@@ -38,7 +38,8 @@ namespace LinkUpPro.Core.Application.ViewModels.Post
         {
             if (ContentType == ContentType.Image)
             {
-                if ((Id == 0 || string.IsNullOrWhiteSpace(MediaUrl)) && (ImageFile == null || ImageFile.Length == 0))
+                // Solo requiere imagen si es una publicación nueva (Id == 0)
+                if (Id == 0 && (ImageFile == null || ImageFile.Length == 0))
                 {
                     yield return new ValidationResult("Debe seleccionar una imagen para crear la publicación.", new[] { nameof(ImageFile) });
                 }

@@ -44,164 +44,105 @@
                 </form>
             </div>
 
-            <!-- Search Results -->
-            @if (hasSearched)
-            {
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                        <h2 class="font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-list-ul text-brand-blue"></i>
-                            Resultados para "@Model.SearchTerm"
-                        </h2>
-                        <span class="text-xs font-bold bg-brand-blue/10 text-brand-blue px-2.5 py-1 rounded-full">
-                            @Model.AvailableUsers.Count encontrado@(Model.AvailableUsers.Count != 1 ? "s" : "")
-                        </span>
-                    </div>
-
-                    @if (!Model.AvailableUsers.Any())
-                    {
-                        <div class="text-center py-10 text-gray-400">
-                            <i class="fas fa-user-slash text-4xl mb-3"></i>
-                            <p class="font-semibold text-gray-600">No se encontraron usuarios elegibles.</p>
-                            <p class="text-xs mt-1">El usuario puede ya ser tu amigo o tener una solicitud pendiente.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <form asp-action="Send" method="post" class="divide-y divide-gray-100">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" asp-for="SearchTerm" />
-
-                            @foreach (var user in Model.AvailableUsers)
-                            {
-                                <div class="flex items-center justify-between px-6 py-4 hover:bg-blue-50/40 transition-colors group" id="user-row-@user.UserId">
-                                    @if (!user.IsAlreadyFriend)
-                                    {
-                                        <label class="flex items-center gap-3 cursor-pointer flex-grow">
-                                            <input type="radio" asp-for="SelectedUserId" value="@user.UserId"
-                                                   class="w-4 h-4 text-brand-blue border-gray-300 focus:ring-brand-blue" />
-                                            @if (!string.IsNullOrEmpty(user.ProfilePhoto))
-                                            {
-                                                <img src="@user.ProfilePhoto" alt="@user.FullName" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
-                                            }
-                                            else
-                                            {
-                                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-blue to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                                                    @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
-                                                </div>
-                                            }
-                                            <div>
-                                                <h4 class="font-bold text-gray-900 text-sm group-hover:text-brand-blue transition-colors">@user.FullName</h4>
-                                                <p class="text-xs text-gray-400">&#64;@user.UserName</p>
-                                            </div>
-                                        </label>
-                                        <span class="text-xs text-brand-blue font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
-                                            <i class="fas fa-user-plus"></i> Seleccionar
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <div class="flex items-center gap-3">
-                                            @if (!string.IsNullOrEmpty(user.ProfilePhoto))
-                                            {
-                                                <img src="@user.ProfilePhoto" alt="@user.FullName" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
-                                            }
-                                            else
-                                            {
-                                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                                                    @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
-                                                </div>
-                                            }
-                                            <div>
-                                                <div class="flex items-center gap-1.5">
-                                                    <h4 class="font-bold text-gray-900 text-sm">@user.FullName</h4>
-                                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-check-circle"></i> Amigo</span>
-                                                </div>
-                                                <p class="text-xs text-gray-400">&#64;@user.UserName</p>
-                                            </div>
-                                        </div>
-                                        <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@user.UserId"
-                                           class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm border border-emerald-200">
-                                            <i class="fas fa-eye"></i> Ver perfil
-                                        </a>
-                                    }
-                                </div>
-                            }
-
-                            @if (Model.AvailableUsers.Any(u => !u.IsAlreadyFriend))
-                            {
-                                <div class="px-6 py-4 bg-gray-50/50">
-                                    <button type="submit"
-                                            class="w-full bg-brand-blue text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-800 transition-colors shadow-md flex items-center justify-center gap-2">
-                                        <i class="fas fa-paper-plane"></i> Enviar Solicitud de Amistad
-                                    </button>
-                                </div>
-                            }
-                        </form>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 text-center text-gray-400">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-search text-2xl text-gray-300"></i>
-                    </div>
-                    <p class="font-semibold text-gray-600">Busca personas para conectar</p>
-                    <p class="text-xs mt-1">Escribe un nombre o usuario en el buscador de arriba.</p>
-                </div>
-            }
-        </div>
-
-        <!-- RIGHT: Current Friends -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-4">
-                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <!-- Search Results / Available Users -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-users text-brand-blue"></i> Mis Amigos
+                        <i class="fas fa-list-ul text-brand-blue"></i>
+                        @if (hasSearched)
+                        {
+                            <span>Resultados para "@Model.SearchTerm"</span>
+                        }
+                        else
+                        {
+                            <span>Usuarios Disponibles</span>
+                        }
                     </h2>
-                    <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
-                        @Model.CurrentFriends.Count
+                    <span class="text-xs font-bold bg-brand-blue/10 text-brand-blue px-2.5 py-1 rounded-full">
+                        @Model.AvailableUsers.Count encontrado@(Model.AvailableUsers.Count != 1 ? "s" : "")
                     </span>
                 </div>
 
-                @if (!Model.CurrentFriends.Any())
+                @if (!Model.AvailableUsers.Any())
                 {
-                    <div class="px-5 py-8 text-center text-gray-400">
-                        <i class="fas fa-user-friends text-3xl mb-2 text-gray-300"></i>
-                        <p class="text-sm font-medium text-gray-500">Aún no tienes amigos.</p>
-                        <p class="text-xs mt-1">¡Usa el buscador para conectar!</p>
+                    <div class="text-center py-10 text-gray-400">
+                        <i class="fas fa-user-slash text-4xl mb-3"></i>
+                        <p class="font-semibold text-gray-600">No existen usuarios disponibles para enviar una solicitud de amistad.</p>
+                        <p class="text-xs mt-1">El usuario puede ya ser tu amigo o tener una solicitud pendiente.</p>
                     </div>
                 }
                 else
                 {
-                    <div class="divide-y divide-gray-100 max-h-[520px] overflow-y-auto">
-                        @foreach (var friend in Model.CurrentFriends)
+                    <form asp-action="Send" method="post" class="divide-y divide-gray-100">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="SearchTerm" />
+
+                        @foreach (var user in Model.AvailableUsers)
                         {
-                            <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@friend.UserId"
-                               class="flex items-center gap-3 px-5 py-3.5 hover:bg-blue-50/40 transition-colors group">
-                                @if (!string.IsNullOrEmpty(friend.ProfilePhoto))
+                            <div class="flex items-center justify-between px-6 py-4 hover:bg-blue-50/40 transition-colors group" id="user-row-@user.UserId">
+                                @if (!user.IsAlreadyFriend)
                                 {
-                                    <img src="@friend.ProfilePhoto" alt="@friend.FullName"
-                                         class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
+                                    <label class="flex items-center gap-3 cursor-pointer flex-grow">
+                                        <input type="radio" asp-for="SelectedUserId" value="@user.UserId"
+                                               class="w-4 h-4 text-brand-blue border-gray-300 focus:ring-brand-blue" />
+                                        @if (!string.IsNullOrEmpty(user.ProfilePhoto))
+                                        {
+                                            <img src="@user.ProfilePhoto" alt="@user.FullName" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-blue to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                                                @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
+                                            </div>
+                                        }
+                                        <div>
+                                            <h4 class="font-bold text-gray-900 text-sm group-hover:text-brand-blue transition-colors">@user.FullName</h4>
+                                            <p class="text-xs text-gray-400">&#64;@user.UserName</p>
+                                        </div>
+                                    </label>
+                                    <span class="text-xs text-brand-blue font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+                                        <i class="fas fa-user-plus"></i> Seleccionar
+                                    </span>
                                 }
                                 else
                                 {
-                                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                        @(friend.FullName.Length > 0 ? friend.FullName[0].ToString().ToUpper() : "?")
+                                    <div class="flex items-center gap-3">
+                                        @if (!string.IsNullOrEmpty(user.ProfilePhoto))
+                                        {
+                                            <img src="@user.ProfilePhoto" alt="@user.FullName" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                                                @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
+                                            </div>
+                                        }
+                                        <div>
+                                            <div class="flex items-center gap-1.5">
+                                                <h4 class="font-bold text-gray-900 text-sm">@user.FullName</h4>
+                                                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-check-circle"></i> Amigo</span>
+                                            </div>
+                                            <p class="text-xs text-gray-400">&#64;@user.UserName</p>
+                                        </div>
                                     </div>
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@user.UserId"
+                                       class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm border border-emerald-200">
+                                        <i class="fas fa-eye"></i> Ver perfil
+                                    </a>
                                 }
-                                <div class="flex-grow min-w-0">
-                                    <h4 class="font-semibold text-gray-900 text-sm truncate group-hover:text-brand-blue transition-colors">@friend.FullName</h4>
-                                    @if (friend.MutualFriendsCount > 0)
-                                    {
-                                        <p class="text-[11px] text-gray-400">@friend.MutualFriendsCount amigo@(friend.MutualFriendsCount != 1 ? "s" : "") en común</p>
-                                    }
-                                </div>
-                                <i class="fas fa-chevron-right text-xs text-gray-300 group-hover:text-brand-blue transition-colors flex-shrink-0"></i>
-                            </a>
+                            </div>
                         }
-                    </div>
+
+                        @if (Model.AvailableUsers.Any(u => !u.IsAlreadyFriend))
+                        {
+                            <div class="px-6 py-4 bg-gray-50/50">
+                                <button type="submit"
+                                        class="w-full bg-brand-blue text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-800 transition-colors shadow-md flex items-center justify-center gap-2">
+                                    <i class="fas fa-paper-plane"></i> Enviar Solicitud de Amistad
+                                </button>
+                            </div>
+                        }
+                    </form>
                 }
             </div>
         </div>

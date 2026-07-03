@@ -6,7 +6,6 @@ namespace LinkUpPro.Core.Application.ViewModels.FriendRequest
     public class SendRequestViewModel
     {
         [Display(Name = "Buscar amigo (nombre o usuario)")]
-        [Required(ErrorMessage = "El término de búsqueda es requerido.")]
         public string SearchTerm { get; set; } = string.Empty;
 
         public List<FriendViewModel> AvailableUsers { get; set; } = new List<FriendViewModel>();

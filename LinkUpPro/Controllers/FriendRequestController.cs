@@ -65,7 +65,8 @@ namespace LinkUpPro.Controllers
             var currentFriends = await _friendshipService.GetFriendsAsync(userId);
             var friendIds = currentFriends.Select(f => f.FriendId).ToHashSet();
 
-            var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, searchTerm ?? "");
+            var searchQuery = searchTerm ?? "";
+            var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, searchQuery);
 
             var availableFriendVMs = _mapper.Map<List<FriendViewModel>>(availableUsers);
             availableFriendVMs.ForEach(u => u.IsAlreadyFriend = friendIds.Contains(u.UserId));
@@ -74,7 +75,7 @@ namespace LinkUpPro.Controllers
 
             var vm = new SendRequestViewModel
             {
-                SearchTerm = searchTerm ?? "",
+                SearchTerm = searchQuery,
                 AvailableUsers = availableFriendVMs,
                 CurrentFriends = currentFriendVMs
             };
@@ -89,14 +90,17 @@ namespace LinkUpPro.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Login");
 
-            if (!ModelState.IsValid || string.IsNullOrEmpty(vm.SelectedUserId))
+            if (string.IsNullOrEmpty(vm.SelectedUserId))
             {
                 var currentFriends = await _friendshipService.GetFriendsAsync(userId);
                 var friendIds = currentFriends.Select(f => f.FriendId).ToHashSet();
                 var availableUsers = await _friendRequestService.SearchAvailableUsersAsync(userId, vm.SearchTerm ?? "");
                 var availableFriendVMs = _mapper.Map<List<FriendViewModel>>(availableUsers);
                 availableFriendVMs.ForEach(u => u.IsAlreadyFriend = friendIds.Contains(u.UserId));
+                var currentFriendVMs = _mapper.Map<List<FriendViewModel>>(currentFriends);
+
                 vm.AvailableUsers = availableFriendVMs;
+                vm.CurrentFriends = currentFriendVMs;
                 return View("New", vm);
             }
 

@@ -86,7 +86,7 @@ namespace LinkUpPro.Infrastructure.Identity
                             if (DateTimeOffset.UtcNow.Subtract(issuedUtc) > TimeSpan.FromMinutes(30))
                             {
                                 context.RejectPrincipal();
-                                await context.HttpContext.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                                await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
                             }
                         }
                         await Task.CompletedTask;

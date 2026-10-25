@@ -34,7 +34,7 @@
             <div class="absolute top-4 left-4 z-10">
                 <a asp-controller="Friendship" asp-action="Index"
                    class="inline-flex items-center gap-2 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white text-sm font-semibold px-4 py-2 rounded-full border border-white/20 transition-all shadow-lg">
-                    <i class="fas fa-arrow-left text-xs"></i> Volver
+                    <i class="fas fa-arrow-left text-xs"></i> Volver atrás
                 </a>
             </div>
         </div>
@@ -87,7 +87,7 @@
                     <!-- Action buttons -->
                     <div class="flex items-center gap-2 flex-wrap">
                         <form asp-controller="Friendship" asp-action="Delete" method="post"
-                              onsubmit="return confirm('¿Está seguro de eliminar esta amistad? Ambas partes dejarán de ver sus publicaciones.');">
+                              onsubmit="return confirm('¿Está seguro que desea eliminar de sus amigos al usuario @Model.UserName?');">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="friendshipId" value="@ViewBag.FriendshipId" />
                             <button type="submit"
@@ -299,7 +299,7 @@
                                                             <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="text-gray-400 hover:text-brand-blue text-xs p-1 rounded hover:bg-white transition-colors" title="Editar">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
-                                                            <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro de eliminar este comentario?');" class="inline">
+                                                            <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro que desea eliminar este comentario?');" class="inline">
                                                                 @Html.AntiForgeryToken()
                                                                 <button type="submit" class="text-gray-400 hover:text-red-500 text-xs p-1 rounded hover:bg-white transition-colors" title="Eliminar">
                                                                     <i class="fas fa-trash-alt"></i>
@@ -360,24 +360,18 @@
                             </div>
                         }
 
+                        <!-- Add comment -->
                         @if (post.CommentStatus == CommentStatus.Allowed)
                         {
-                            <form asp-controller="Comment" asp-action="Create" method="post" class="flex gap-2 pt-2">
+                            <form asp-controller="Comment" asp-action="Create" method="post" class="flex gap-2">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="PostId" value="@post.Id" />
                                 <input type="text" name="Content" required maxlength="500" placeholder="Escribe un comentario..."
-                                       class="flex-grow px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all bg-gray-50" />
-                                <button type="submit"
-                                        class="bg-brand-blue text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-1.5">
-                                    <i class="fas fa-paper-plane text-xs"></i> Comentar
+                                    class="flex-grow px-4 py-2 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none" />
+                                <button type="submit" class="bg-brand-blue text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-800 transition-colors shadow-sm">
+                                    Comentar
                                 </button>
                             </form>
-                        }
-                        else
-                        {
-                            <div class="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-center text-xs font-medium">
-                                <i class="fas fa-comment-slash mr-1"></i> Los comentarios están desactivados para esta publicación.
-                            </div>
                         }
                     </div>
                 </article>
@@ -386,17 +380,19 @@
     </div>
 </div>
 
-<!-- Mutual Friends Modal -->
-<div id="mutualFriendsModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 transform transition-all">
-        <div class="bg-gradient-to-r from-indigo-600 to-brand-blue px-6 py-5 flex items-center justify-between text-white">
+<!-- ══════════════════════════════════════════════════ -->
+<!-- MODAL: Mutual Friends List                         -->
+<!-- ══════════════════════════════════════════════════ -->
+<div id="mutualFriendsModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-md w-full mx-4 overflow-hidden transform transition-all">
+        <div class="bg-gradient-to-r from-brand-blue to-indigo-600 px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                    <i class="fas fa-handshake text-lg"></i>
+                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-sm">
+                    <i class="fas fa-handshake"></i>
                 </div>
                 <div>
-                    <h3 class="font-black text-lg">Amigos en Común</h3>
-                    <p class="text-xs text-indigo-100">@Model.MutualFriends.Count amigo@(Model.MutualFriends.Count != 1 ? "s" : "") en común con @Model.FullName</p>
+                    <h3 class="text-white font-black text-base">Amigos en Común</h3>
+                    <p class="text-blue-100 text-xs">Con @Model.FullName</p>
                 </div>
             </div>
             <button type="button" onclick="closeMutualFriendsModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">

@@ -72,7 +72,9 @@ namespace LinkUpPro.Core.Application.Services
             if (request == null || request.SenderId != userId || request.Status != FriendRequestStatus.Pending)
                 return false;
 
-            await _repository.DeleteAsync(requestId);
+            request.Status = FriendRequestStatus.Canceled;
+            request.RespondedAt = DateTime.UtcNow;
+            await _repository.UpdateAsync(requestId, request);
             return true;
         }
 
@@ -93,6 +95,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (sender != null)
                 {
                     dto.SenderName = $"{sender.FirstName} {sender.LastName}";
+                    dto.SenderUserName = sender.UserName;
                     dto.SenderPhotoUrl = sender.PhotoUrl;
                 }
                 else
@@ -104,6 +107,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (receiver != null)
                 {
                     dto.ReceiverName = $"{receiver.FirstName} {receiver.LastName}";
+                    dto.ReceiverUserName = receiver.UserName;
                     dto.ReceiverPhotoUrl = receiver.PhotoUrl;
                 }
                 else
@@ -128,6 +132,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (sender != null)
                 {
                     dto.SenderName = $"{sender.FirstName} {sender.LastName}";
+                    dto.SenderUserName = sender.UserName;
                     dto.SenderPhotoUrl = sender.PhotoUrl;
                 }
                 else
@@ -139,6 +144,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (receiver != null)
                 {
                     dto.ReceiverName = $"{receiver.FirstName} {receiver.LastName}";
+                    dto.ReceiverUserName = receiver.UserName;
                     dto.ReceiverPhotoUrl = receiver.PhotoUrl;
                 }
                 else
@@ -158,17 +164,13 @@ namespace LinkUpPro.Core.Application.Services
             
             if (request == null) return false;
 
-            
             if (request.SenderId != userId) return false;
 
-            
             if (request.Status != FriendRequestStatus.Accepted && request.Status != FriendRequestStatus.Rejected)
                 return false;
 
-            
             if (request.IsHiddenForSender) return false;
 
-       
             request.IsHiddenForSender = true;
             await _repository.UpdateAsync(requestId, request);
             return true;
@@ -191,8 +193,7 @@ namespace LinkUpPro.Core.Application.Services
             var allUsers = await _userService.GetAllUser(true);
             var friends = await _friendshipRepository.GetActiveFriendIdsAsync(userId);
             
-           
-            var available = allUsers.Where(u => u.Id != userId);
+            var available = allUsers.Where(u => u.Id != userId && !friends.Contains(u.Id));
             
             var pendingRequests = await _repository.GetAllListAsync();
             var excludedUserIds = pendingRequests

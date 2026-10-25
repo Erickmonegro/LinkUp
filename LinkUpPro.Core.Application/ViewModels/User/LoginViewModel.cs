@@ -4,12 +4,12 @@ namespace LinkUpPro.Core.Application.ViewModels.User
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "Debe ingresar el usuario o correo electrónico")]
-        [Display(Name = "Usuario o Correo Electrónico")]
+        [Required(ErrorMessage = "El nombre de usuario es requerido.")]
+        [Display(Name = "Nombre de usuario")]
         [DataType(DataType.Text)]
         public required string UserName { get; set; }
 
-        [Required(ErrorMessage = "Debe ingresar la contraseña")]
+        [Required(ErrorMessage = "La contraseña es requerida.")]
         [Display(Name = "Contraseña")]
         [DataType(DataType.Password)]
         public required string Password { get; set; }

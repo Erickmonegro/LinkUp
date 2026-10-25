@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LinkUpPro.Core.Domain.Common.Enums;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace LinkUpPro.Controllers
 {
@@ -36,6 +37,9 @@ namespace LinkUpPro.Controllers
         {
             try
             {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(currentUserId)) return RedirectToAction("Login", "Login");
+
                 bool timedOut = await matchService.CheckAndProcessTurnTimeoutForMatchAsync(matchId);
                 if (timedOut)
                 {
@@ -51,12 +55,20 @@ namespace LinkUpPro.Controllers
                     return RedirectToAction("Index", "Battleship");
                 }
 
+                if (match.Player1Id != currentUserId && match.Player2Id != currentUserId)
+                {
+                    TempData["Error"] = "No posee permisos para acceder a esta partida.";
+                    return RedirectToAction("Index", "Battleship");
+                }
+
                 if (match.Status == MatchStatus.Finished || match.Status == MatchStatus.Rejected)
                 {
                     return RedirectToAction("Details", "Battleship", new { id = matchId });
                 }
 
                 var ships = await shipPositionService.GetByMatchAsync(matchId);
+                // Previene la filtración de coordenadas enemigas en el cliente
+                var userShips = ships.Where(s => s.UserId == currentUserId).ToList();
                 var attacks = await attackService.GetByMatchAsync(matchId);
 
                 var matchVm = mapper.Map<BattleshipMatchViewModel>(match);
@@ -104,10 +116,16 @@ namespace LinkUpPro.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Attack(AttackViewModel vm)
         {
             try
             {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(currentUserId)) return RedirectToAction("Login", "Login");
+
+                vm.AttackerId = currentUserId;
+
                 if (!ModelState.IsValid)
                     return RedirectToAction(nameof(Play), new { matchId = vm.MatchId });
 

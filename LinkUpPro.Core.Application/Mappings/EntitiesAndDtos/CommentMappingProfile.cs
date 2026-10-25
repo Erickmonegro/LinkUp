@@ -1,6 +1,8 @@
 using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.CommentDTO;
 using LinkUpPro.Core.Domain.Entities;
+using System;
+using System.Linq;
 
 namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
 {
@@ -14,7 +16,7 @@ namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
                 .ForMember(dest => dest.AuthorName, opt => opt.Ignore())
                 .ForMember(dest => dest.AuthorPhotoUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.IsEdited, opt => opt.MapFrom(src => src.UpdatedAt.HasValue && src.UpdatedAt.Value != DateTime.MinValue))
-                .ForMember(dest => dest.Replies, opt => opt.MapFrom(src => src.Replies))
+                .ForMember(dest => dest.Replies, opt => opt.MapFrom(src => src.Replies != null ? src.Replies.OrderBy(r => r.CreatedAt).ToList() : null))
                 .ReverseMap()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Created))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.Updated))

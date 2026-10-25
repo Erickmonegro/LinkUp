@@ -46,7 +46,7 @@ namespace LinkUpPro.Core.Application.Services
                 Id = 0,
                 Player1Id = player1Id,
                 Player2Id = player2Id,
-                Status = MatchStatus.ChallengePending,
+                Status = MatchStatus.Pending,
                 CurrentTurnUserId = player1Id,
                 TurnAssignedAt = DateTime.UtcNow
             };
@@ -75,9 +75,9 @@ namespace LinkUpPro.Core.Application.Services
 
         public async Task<BattleshipMatchDTO?> GetActiveMatchAsync(string playerId)
         {
-            var match = await repo.GetActiveMatchesAsync(playerId);
+            var matches = await repo.GetActiveMatchesAsync(playerId);
 
-            return _mapper.Map<BattleshipMatchDTO>(match);
+            return _mapper.Map<BattleshipMatchDTO>(matches.FirstOrDefault());
         }
 
         public async Task<BattleshipMatchDTO?> GetByIdAsync(int id)

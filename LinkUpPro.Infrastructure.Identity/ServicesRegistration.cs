@@ -29,14 +29,21 @@ namespace LinkUpPro.Infrastructure.Identity
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
                 options.Lockout.AllowedForNewUsers = true;
 
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
+                // Reglas de contraseña estrictas según pliego (mayúscula, minúscula, número, especial, >=8)
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<IdentityUserContext>()
             .AddDefaultTokenProviders();
+
+            // Configurar vigencia de tokens de recuperación / restablecimiento (1 hora según pliego)
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromHours(1);
+            });
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -46,7 +53,6 @@ namespace LinkUpPro.Infrastructure.Identity
 
                 // Cookie security per requirements:
                 // HttpOnly impide lectura desde JavaScript.
-                // SecurePolicy en SameAsRequest/Always asegura envío únicamente mediante HTTPS en ambientes publicados.
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
@@ -69,8 +75,8 @@ namespace LinkUpPro.Infrastructure.Identity
                         }
                         else
                         {
-                            context.Properties.ExpiresUtc = null;
-                            context.Properties.AllowRefresh = false;
+                            context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30);
+                            context.Properties.AllowRefresh = true;
                             context.Properties.IsPersistent = false;
                             context.CookieOptions.Expires = null;
                             context.CookieOptions.MaxAge = null;
@@ -87,6 +93,7 @@ namespace LinkUpPro.Infrastructure.Identity
                             {
                                 context.RejectPrincipal();
                                 await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                                context.Response.Redirect("/Login/Login?timeout=true");
                             }
                         }
                         await Task.CompletedTask;
@@ -111,30 +118,21 @@ namespace LinkUpPro.Infrastructure.Identity
             await Seeds.DefaultBasicUser.SeedAsync(userManager);
         }
 
-        #region Private Methods
         private static void GeneralConfiguration(IServiceCollection services, IConfiguration config)
         {
             #region Contexts
             if (config.GetValue<bool>("UseInMemoryDatabase"))
             {
-                services.AddDbContext<IdentityUserContext>(options => options.UseInMemoryDatabase("LinkUpAppDb"));
+                services.AddDbContext<IdentityUserContext>(options =>
+                    options.UseInMemoryDatabase("IdentityAppDb"));
             }
             else
             {
-                var connectionString = config.GetConnectionString("DefaultConnection");
-                services.AddDbContext<IdentityUserContext>(
-
-                    (serviceProvider, opt) =>
-                    {
-                        opt.UseSqlServer(connectionString,
-                        m => m.MigrationsAssembly(typeof(IdentityUserContext).Assembly.FullName));
-                    },
-                    contextLifetime: ServiceLifetime.Scoped,
-                    optionsLifetime: ServiceLifetime.Scoped
-                );
+                services.AddDbContext<IdentityUserContext>(options =>
+                    options.UseSqlServer(config.GetConnectionString("DefaultConnection"),
+                        b => b.MigrationsAssembly(typeof(IdentityUserContext).Assembly.FullName)));
             }
             #endregion
         }
-        #endregion
     }
 }

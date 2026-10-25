@@ -37,7 +37,6 @@ namespace LinkUpPro.Core.Application.Services
             if (friendship.UserId1 != userId && friendship.UserId2 != userId)
                 return false;
 
-           
             friendship.Status = FriendshipStatus.Deleted;
             await _repository.UpdateAsync(friendshipId, friendship);
             return true;
@@ -76,6 +75,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (users.TryGetValue(post.AuthorId, out var user))
                 {
                     post.AuthorName = $"{user.FirstName} {user.LastName}";
+                    post.AuthorUserName = user.UserName;
                     post.AuthorPhotoUrl = user.PhotoUrl;
                 }
 
@@ -120,6 +120,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (friendUser != null)
                 {
                     dto.FriendName = $"{friendUser.FirstName} {friendUser.LastName}";
+                    dto.FriendUserName = friendUser.UserName;
                     dto.FriendPhotoUrl = friendUser.PhotoUrl;
                 }
                 else
@@ -129,7 +130,6 @@ namespace LinkUpPro.Core.Application.Services
                 
                 dto.MutualFriendsCount = await _repository.GetMutualFriendsCountAsync(userId, dto.FriendId);
             }
-            
             
             return dtos.OrderBy(f => f.FriendName).ToList();
         }
@@ -190,6 +190,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (users.TryGetValue(comment.AuthorId, out var user))
                 {
                     comment.AuthorName = $"{user.FirstName} {user.LastName}";
+                    comment.AuthorUserName = user.UserName;
                     comment.AuthorPhotoUrl = user.PhotoUrl;
                 }
 

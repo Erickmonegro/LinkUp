@@ -12,6 +12,8 @@ namespace LinkUpPro.Core.Application.ViewModels.FriendRequest
         [Display(Name = "Enviado por")]
         public string SenderName { get; set; } = string.Empty;
 
+        public string? SenderUserName { get; set; }
+
         public string? SenderProfilePhoto { get; set; }
 
         [Required(ErrorMessage = "El Id del destinatario es requerido.")]
@@ -20,6 +22,8 @@ namespace LinkUpPro.Core.Application.ViewModels.FriendRequest
         [Required(ErrorMessage = "El nombre del destinatario es requerido.")]
         [Display(Name = "Recibido por")]
         public string ReceiverName { get; set; } = string.Empty;
+
+        public string? ReceiverUserName { get; set; }
 
         public string? ReceiverProfilePhoto { get; set; }
 
@@ -32,6 +36,8 @@ namespace LinkUpPro.Core.Application.ViewModels.FriendRequest
 
         [Display(Name = "Fecha de Respuesta")]
         public DateTime? RespondedAt { get; set; }
+
+        public int MutualFriendsCount { get; set; }
 
         public bool IsHidden { get; set; }
 

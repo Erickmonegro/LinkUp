@@ -71,6 +71,7 @@ namespace LinkUpPro.Controllers
             saveDto.LastName = vm.LastName.Trim();
             saveDto.Email = vm.Email.Trim();
             saveDto.UserName = vm.UserName.Trim();
+            saveDto.PhoneNumber = vm.PhoneNumber.Trim();
             saveDto.PhotoUrl = null;
             saveDto.Role = "StandardUser";
 
@@ -118,10 +119,10 @@ namespace LinkUpPro.Controllers
 
             var result = await _userService.ConfirmAccountAsync(userId, token);
 
-            if (result.Contains("confirm", StringComparison.OrdinalIgnoreCase))
+            if (result.Contains("confirm", StringComparison.OrdinalIgnoreCase) || result.Contains("activad", StringComparison.OrdinalIgnoreCase))
             {
-                ViewBag.Message = "Su cuenta fue activada correctamente. Ya puede iniciar sesión.";
-                ViewBag.IsSuccess = true;
+                TempData["SuccessMessage"] = "Su cuenta fue activada correctamente. Ya puede iniciar sesión.";
+                return RedirectToAction("Login", "Login");
             }
             else
             {
@@ -176,7 +177,5 @@ namespace LinkUpPro.Controllers
         }
 
         #endregion
-
-
     }
 }

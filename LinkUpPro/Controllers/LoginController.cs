@@ -23,7 +23,7 @@ namespace LinkUpPro.Controllers
         #region Login
 
         [AllowAnonymous]
-        public IActionResult Login()
+        public IActionResult Login([FromQuery] bool timeout = false)
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
@@ -31,6 +31,11 @@ namespace LinkUpPro.Controllers
             }
 
             ViewData["HideNav"] = true;
+            if (timeout || TempData["InactivityTimeout"] != null)
+            {
+                ViewBag.InactivityMessage = "Su sesión finalizó por inactividad. Inicie sesión nuevamente para continuar.";
+            }
+
             return View("~/Views/Home/Index.cshtml", new LoginViewModel { UserName = "", Password = "" });
         }
 
@@ -59,7 +64,6 @@ namespace LinkUpPro.Controllers
                 return View("~/Views/Home/Index.cshtml", vm);
             }
 
-
             TempData["JustLoggedIn"] = true;
             return RedirectToAction("Index", "Home");
         }
@@ -71,15 +75,6 @@ namespace LinkUpPro.Controllers
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
-        {
-            await _userService.SignOutAsync();
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login");
-        }
-
-        [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> LogoutGet()
         {
             await _userService.SignOutAsync();
             HttpContext.Session.Clear();
@@ -116,7 +111,7 @@ namespace LinkUpPro.Controllers
 
             await _userService.ForgotPasswordAsync(dto);
 
-            ViewBag.Message = "Si el usuario o correo corresponde a una cuenta registrada, recibirá un enlace para restablecer su contraseña.";
+            ViewBag.Message = "Si el nombre de usuario corresponde a una cuenta registrada, recibirá un enlace para restablecer su contraseña.";
             return View("ForgotPasswordResult");
         }
 
@@ -138,7 +133,7 @@ namespace LinkUpPro.Controllers
 
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
             {
-                ViewBag.Error = "El enlace para restablecer la contraseña no es válido.";
+                ViewBag.Error = "El enlace para restablecer la contraseña no es válido o ya fue utilizado.";
                 return View("ResetPasswordError");
             }
 
@@ -166,7 +161,7 @@ namespace LinkUpPro.Controllers
             var user = await _userService.GetUserById(vm.UserId);
             if (user == null)
             {
-                ViewBag.Error = "El enlace para restablecer la contraseña no es válido.";
+                ViewBag.Error = "El enlace para restablecer la contraseña no es válido o ya fue utilizado.";
                 return View("ResetPasswordError");
             }
 

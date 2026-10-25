@@ -28,7 +28,7 @@
     {
         <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm animate-fade-in mb-4">
             <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
-            <span class="font-bold">La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).</span>
+            <span class="font-bold">La fecha inicial no puede ser posterior a la fecha final.</span>
         </div>
     }
     
@@ -203,10 +203,10 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-1">
                     <a asp-controller="Home" asp-action="Index" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded-xl transition-colors">
-                        Limpiar Filtros
+                        Limpiar filtros
                     </a>
                     <button type="submit" class="px-5 py-1.5 bg-brand-blue hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center gap-1.5">
-                        <i class="fas fa-search"></i> Filtrar
+                        <i class="fas fa-search"></i> Buscar
                     </button>
                 </div>
             </form>
@@ -260,6 +260,7 @@
                             <div>
                                 <div class="flex items-center gap-1.5">
                                     <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="font-extrabold text-gray-900 text-sm leading-tight hover:text-brand-blue transition-colors">@post.AuthorName</a>
+                                    <span class="text-xs text-gray-400 font-medium">&#64;@(post.AuthorUserName ?? post.AuthorName)</span>
                                     <i class="fas fa-check-circle text-brand-blue text-xs" title="Usuario Verificado"></i>
                                 </div>
                                 <div class="flex items-center gap-2 text-[11px] text-gray-400 font-medium mt-0.5">
@@ -331,7 +332,7 @@
                     <div class="flex items-center justify-between flex-wrap gap-2 text-xs font-extrabold">
                         
                         <!-- Likes y Dislikes -->
-                        <div class="flex items-center gap-1 sm:gap-2">
+                        <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
                             @{
                                 var userReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
                                 var hasLike = userReaction != null && userReaction.ReactionType == ReactionType.Like;
@@ -368,6 +369,21 @@
                                     }
                                 </button>
                             </form>
+
+                            @if (userReaction != null)
+                            {
+                                <span class="text-xs text-gray-500 font-bold ml-1">
+                                    Tu reacción: @(userReaction.ReactionType == ReactionType.Like ? "Me gusta" : "No me gusta")
+                                </span>
+                                <form asp-controller="Reaction" asp-action="Delete" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="postId" value="@post.Id" />
+                                    <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                    <button type="submit" class="text-[11px] text-gray-400 hover:text-red-500 underline font-semibold ml-1">
+                                        Eliminar reacción
+                                    </button>
+                                </form>
+                            }
                         </div>
 
                         <!-- Botón de Comentarios -->
@@ -418,6 +434,7 @@
                                                                     <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="font-extrabold text-xs text-gray-900 hover:text-brand-blue transition-colors">
                                                                         @comment.AuthorName
                                                                     </a>
+                                                                    <span class="text-[10px] text-gray-400 font-medium">&#64;@(comment.AuthorUserName ?? comment.AuthorName)</span>
                                                                     <i class="fas fa-check-circle text-brand-blue text-[10px]" title="Verificado"></i>
                                                                 }
                                                                 else
@@ -441,7 +458,7 @@
                                                             <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="text-gray-400 hover:text-brand-blue text-xs p-1 rounded hover:bg-white transition-colors" title="Editar">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
-                                                            <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro de eliminar este comentario?');" class="inline">
+                                                            <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro que desea eliminar este comentario?');" class="inline">
                                                                 @Html.AntiForgeryToken()
                                                                 <button type="submit" class="text-gray-400 hover:text-red-500 text-xs p-1 rounded hover:bg-white transition-colors" title="Eliminar">
                                                                     <i class="fas fa-trash-alt"></i>

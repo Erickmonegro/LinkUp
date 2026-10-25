@@ -21,26 +21,26 @@ namespace LinkUpPro.Core.Application.Helpers.Validations
 
             if (file.Length > MaxFileSize)
             {
-                errorMessage = "El archivo excede el tamaño máximo permitido de 5 MB.";
+                errorMessage = "La imagen seleccionada no puede superar los 5 MB.";
                 return false;
             }
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(extension))
             {
-                errorMessage = "Formato de archivo no válido. Solo se permiten imágenes .jpg, .jpeg, .png o .webp.";
+                errorMessage = "El archivo seleccionado no tiene un formato de imagen válido.";
                 return false;
             }
 
             if (!AllowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
             {
-                errorMessage = "El tipo de contenido (MIME) del archivo no es válido para una imagen.";
+                errorMessage = "El archivo seleccionado no tiene un formato de imagen válido.";
                 return false;
             }
 
             if (!ValidateMagicBytes(file))
             {
-                errorMessage = "El contenido del archivo está dañado o no corresponde a una imagen válida.";
+                errorMessage = "El archivo seleccionado no tiene un formato de imagen válido.";
                 return false;
             }
 
@@ -52,27 +52,37 @@ namespace LinkUpPro.Core.Application.Helpers.Validations
             try
             {
                 using var stream = file.OpenReadStream();
-                if (stream.Length < 12) return false;
+                using var reader = new BinaryReader(stream);
 
-                byte[] buffer = new byte[12];
-                stream.ReadExactly(buffer, 0, 12);
+                if (stream.Length < 12)
+                {
+                    return false;
+                }
+
+                byte[] header = reader.ReadBytes(12);
 
                 // JPEG: FF D8 FF
-                if (buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF)
+                if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
                 {
                     return true;
                 }
 
                 // PNG: 89 50 4E 47 0D 0A 1A 0A
-                if (buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47 &&
-                    buffer[4] == 0x0D && buffer[5] == 0x0A && buffer[6] == 0x1A && buffer[7] == 0x0A)
+                if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47 &&
+                    header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A)
                 {
                     return true;
                 }
 
-                // WEBP: RIFF....WEBP
-                if (buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46 &&
-                    buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50)
+                // GIF: 47 49 46 38 (GIF87a or GIF89a)
+                if (header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x38)
+                {
+                    return true;
+                }
+
+                // WebP: RIFF .... WEBP
+                if (header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
+                    header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50)
                 {
                     return true;
                 }

@@ -41,20 +41,19 @@ namespace LinkUpPro.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-           
             var existingReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
             var isNew = existingReaction == null;
             var isChanged = existingReaction != null && 
                             ((isLike && existingReaction.ReactionType == ReactionType.Dislike) ||
                              (!isLike && existingReaction.ReactionType == ReactionType.Like));
 
-            
             await _reactionService.ToggleReactionAsync(postId, userId, isLike);
 
+            // Generar notificación solo ante nueva reacción o cambio de reacción sobre contenido de otros
             if ((isNew || isChanged) && post.AuthorId != userId)
             {
                 var currentUser = await _userService.GetUserById(userId);
-                var triggerName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "Un usuario";
+                var triggerName = currentUser?.UserName ?? "Un usuario";
                 var reactionText = isLike ? "Me gusta" : "No me gusta";
 
                 var notification = new NotificationDTO
@@ -72,6 +71,36 @@ namespace LinkUpPro.Controllers
 
                 await _notificationService.AddAsync(notification);
             }
+
+            var redirectUrl = returnUrl;
+            if (string.IsNullOrEmpty(redirectUrl))
+            {
+                redirectUrl = Request.Headers["Referer"].ToString();
+            }
+
+            if (!string.IsNullOrEmpty(redirectUrl))
+            {
+                var fragmentIdx = redirectUrl.IndexOf('#');
+                if (fragmentIdx >= 0)
+                {
+                    redirectUrl = redirectUrl.Substring(0, fragmentIdx);
+                }
+                redirectUrl += $"#post-{postId}";
+                return Redirect(redirectUrl);
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int postId, string? returnUrl)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Login");
+
+            // Eliminar reacción no genera notificación
+            await _reactionService.DeleteReactionAsync(postId, userId);
 
             var redirectUrl = returnUrl;
             if (string.IsNullOrEmpty(redirectUrl))

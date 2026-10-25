@@ -268,8 +268,12 @@
                 string myName = effectiveMyId == Model.Player1Id ? (Model.Player1Name ?? "Jugador 1") : (Model.Player2Name ?? "Jugador 2");
                 string enemyName = effectiveMyId == Model.Player1Id ? (Model.Player2Name ?? "Jugador 2") : (Model.Player1Name ?? "Jugador 1");
 
+                string currentMode = ViewBag.Mode as string ?? "";
+                bool isPositioningMode = (currentMode == "positioning");
+
                 string viewUserId = ViewBag.ViewBoardUserId as string ?? effectiveMyId;
-                bool isViewingMyBoard = (viewUserId == effectiveMyId);
+                bool isViewingMyBoard = (viewUserId == effectiveMyId) && !isPositioningMode;
+                bool isViewingEnemyBoard = (viewUserId == effectiveEnemyId) && !isPositioningMode;
 
                 var myShipsList = ships.Where(s => s.UserId == effectiveMyId).ToList();
                 var enemyShipsList = ships.Where(s => s.UserId == effectiveEnemyId).ToList();
@@ -307,43 +311,41 @@
             }
 
             <div class="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 space-y-6 relative overflow-hidden animate-fade-in">
-                <!-- Header of Board section with Switch Button -->
+                <!-- Header of Board section with Switch Buttons -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
                     <div>
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl @(isViewingMyBoard ? "bg-blue-50 text-brand-blue border border-blue-100" : "bg-purple-50 text-purple-600 border border-purple-100") flex items-center justify-center text-2xl shadow-sm">
-                                <i class="fas @(isViewingMyBoard ? "fa-crosshairs" : "fa-radar")"></i>
+                            <div class="w-12 h-12 rounded-2xl @(isPositioningMode ? "bg-indigo-50 text-indigo-600 border border-indigo-100" : isViewingMyBoard ? "bg-blue-50 text-brand-blue border border-blue-100" : "bg-purple-50 text-purple-600 border border-purple-100") flex items-center justify-center text-2xl shadow-sm">
+                                <i class="fas @(isPositioningMode ? "fa-ship" : isViewingMyBoard ? "fa-crosshairs" : "fa-radar")"></i>
                             </div>
                             <div>
-                                <span class="text-xs font-black uppercase tracking-wider @(isViewingMyBoard ? "text-brand-blue" : "text-purple-600")">
-                                    @(isViewingMyBoard ? "Tu Desempeño en Batalla" : "Desempeño del Rival")
+                                <span class="text-xs font-black uppercase tracking-wider @(isPositioningMode ? "text-indigo-600" : isViewingMyBoard ? "text-brand-blue" : "text-purple-600")">
+                                    @(isPositioningMode ? "Tu Flota Naval" : isViewingMyBoard ? "Tu Desempeño en Batalla" : "Desempeño del Rival")
                                 </span>
                                 <h3 class="text-2xl font-black text-gray-900 tracking-tight">
-                                    Tablero de Ataque de @activeAttackerName
+                                    @(isPositioningMode ? "Mi Tablero de Posicionamiento" : $"Tablero de Ataque de {activeAttackerName}")
                                 </h3>
                             </div>
                         </div>
                         <p class="text-sm text-gray-500 mt-1">
-                            Ataques realizados por <span class="font-bold text-gray-700">@activeAttackerName</span> hacia la flota de <span class="font-bold text-gray-700">@activeDefenderName</span> al finalizar la partida.
+                            @(isPositioningMode ? "Ubicación de sus 5 barcos al inicio de la partida y ataques recibidos del rival." : $"Ataques realizados por {activeAttackerName} hacia la flota de {activeDefenderName} al finalizar la partida.")
                         </p>
                     </div>
 
-                    <!-- Switch Button -->
-                    <div class="flex items-center gap-3 self-start md:self-auto">
-                        @if (isViewingMyBoard)
-                        {
-                            <a asp-action="Details" asp-route-id="@Model.Id" asp-route-viewBoardUserId="@effectiveEnemyId" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2.5 cursor-pointer">
-                                <i class="fas fa-exchange-alt text-lg"></i>
-                                <span>Ver tablero del otro jugador</span>
-                            </a>
-                        }
-                        else
-                        {
-                            <a asp-action="Details" asp-route-id="@Model.Id" asp-route-viewBoardUserId="@effectiveMyId" class="bg-gradient-to-r from-brand-blue to-blue-700 hover:from-blue-800 hover:to-blue-900 text-white font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2.5 cursor-pointer">
-                                <i class="fas fa-arrow-left text-lg"></i>
-                                <span>Ver mi tablero de ataque</span>
-                            </a>
-                        }
+                    <!-- Botones de Navegación de Tableros según pliego -->
+                    <div class="flex items-center gap-2 self-start md:self-auto flex-wrap">
+                        <a asp-action="Details" asp-route-id="@Model.Id" asp-route-viewBoardUserId="@effectiveMyId"
+                           class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 @(isViewingMyBoard ? "bg-brand-blue text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+                            <i class="fas fa-crosshairs"></i> Ver mi tablero de ataque
+                        </a>
+                        <a asp-action="Details" asp-route-id="@Model.Id" asp-route-viewBoardUserId="@effectiveEnemyId"
+                           class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 @(isViewingEnemyBoard ? "bg-purple-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+                            <i class="fas fa-radar"></i> Ver tablero del otro jugador
+                        </a>
+                        <a asp-action="Details" asp-route-id="@Model.Id" asp-route-mode="positioning"
+                           class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 @(isPositioningMode ? "bg-indigo-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+                            <i class="fas fa-ship"></i> Ver tablero de posicionamiento
+                        </a>
                     </div>
                 </div>
 
@@ -351,19 +353,19 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-200/60 text-center">
                     <div class="p-2">
                         <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Disparos</span>
-                        <span class="text-xl font-black text-gray-800">@activeAttacksDict.Count</span>
+                        <span class="text-xl font-black text-gray-800">@(isPositioningMode ? enemyAttacksDict.Count : activeAttacksDict.Count)</span>
                     </div>
                     <div class="p-2 border-l border-gray-200/60">
                         <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Impactos Acertados</span>
-                        <span class="text-xl font-black text-red-600">@activeAttacksDict.Values.Count(a => a.IsHit)</span>
+                        <span class="text-xl font-black text-red-600">@(isPositioningMode ? enemyAttacksDict.Values.Count(a => a.IsHit) : activeAttacksDict.Values.Count(a => a.IsHit))</span>
                     </div>
                     <div class="p-2 border-l border-gray-200/60">
                         <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Disparos Fallidos</span>
-                        <span class="text-xl font-black text-sky-600">@activeAttacksDict.Values.Count(a => !a.IsHit)</span>
+                        <span class="text-xl font-black text-emerald-600">@(isPositioningMode ? enemyAttacksDict.Values.Count(a => !a.IsHit) : activeAttacksDict.Values.Count(a => !a.IsHit))</span>
                     </div>
                     <div class="p-2 border-l border-gray-200/60">
                         <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Barcos Hundidos</span>
-                        <span class="text-xl font-black text-amber-600">@activeDefenderShips.Count(s => s.IsSunk)/5</span>
+                        <span class="text-xl font-black text-amber-600">@(isPositioningMode ? myShipsList.Count(s => s.IsSunk) : activeDefenderShips.Count(s => s.IsSunk))/5</span>
                     </div>
                 </div>
 
@@ -373,24 +375,58 @@
                         @for (int row = 0; row < 12; row++) {
                             for (int col = 0; col < 12; col++) {
                                 string key = $"{col},{row}";
-                                if (activeAttacksDict.TryGetValue(key, out var att)) {
-                                    if (att.IsHit) {
-                                        <div class="bg-red-600 text-white rounded-xl flex items-center justify-center border-2 border-red-500 shadow-lg animate-bounce title='Impacto en @((char)('A' + col))@(row + 1)'">
-                                            <i class="fas fa-fire text-sm sm:text-base md:text-lg"></i>
-                                        </div>
-                                    } else {
-                                        <div class="bg-sky-900/70 text-sky-400 rounded-xl flex items-center justify-center border border-sky-800/60 title='Agua / Fallo en @((char)('A' + col))@(row + 1)'">
-                                            <i class="fas fa-water text-sm sm:text-base md:text-lg opacity-70"></i>
+                                if (isPositioningMode)
+                                {
+                                    if (myShipCells.TryGetValue(key, out var myShip))
+                                    {
+                                        bool isHit = enemyAttacksDict.ContainsKey(key);
+                                        if (isHit)
+                                        {
+                                            <div class="bg-red-600 text-white rounded-xl flex items-center justify-center border-2 border-red-500 shadow-lg title='Barco impactado en @((char)('A' + col))@(row + 1)'">
+                                                <i class="fas fa-skull-crossbones text-sm sm:text-base md:text-lg"></i>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-brand-blue text-white rounded-xl flex items-center justify-center border-2 border-blue-400 shadow-md title='Tu barco en @((char)('A' + col))@(row + 1)'">
+                                                <i class="fas fa-ship text-sm sm:text-base md:text-lg"></i>
+                                            </div>
+                                        }
+                                    }
+                                    else if (enemyAttacksDict.ContainsKey(key))
+                                    {
+                                        <div class="bg-emerald-600 text-white rounded-xl flex items-center justify-center border border-emerald-500 shadow-sm title='Disparo fallido del rival en @((char)('A' + col))@(row + 1)'">
+                                            <i class="fas fa-tint text-sm sm:text-base md:text-lg"></i>
                                         </div>
                                     }
-                                } else if (activeDefenderShipCells.TryGetValue(key, out var defShip)) {
-                                    <div class="bg-indigo-900/90 text-indigo-300 rounded-xl flex items-center justify-center border border-indigo-700 shadow-md title='Barco de @activeDefenderName en @((char)('A' + col))@(row + 1)'">
-                                        <i class="fas fa-ship text-sm sm:text-base md:text-lg opacity-90"></i>
-                                    </div>
-                                } else {
-                                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl flex items-center justify-center text-slate-700 title='Agua en @((char)('A' + col))@(row + 1)'">
-                                        <i class="fas fa-water text-xs sm:text-sm opacity-20"></i>
-                                    </div>
+                                    else
+                                    {
+                                        <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl flex items-center justify-center text-slate-700 title='Agua en @((char)('A' + col))@(row + 1)'">
+                                            <i class="fas fa-water text-xs sm:text-sm opacity-20"></i>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    if (activeAttacksDict.TryGetValue(key, out var att)) {
+                                        if (att.IsHit) {
+                                            <div class="bg-red-600 text-white rounded-xl flex items-center justify-center border-2 border-red-500 shadow-lg animate-bounce title='Impacto en @((char)('A' + col))@(row + 1)'">
+                                                <i class="fas fa-fire text-sm sm:text-base md:text-lg"></i>
+                                            </div>
+                                        } else {
+                                            <div class="bg-emerald-600 text-white rounded-xl flex items-center justify-center border border-emerald-500 shadow-sm title='Agua / Fallo en @((char)('A' + col))@(row + 1)'">
+                                                <i class="fas fa-tint text-sm sm:text-base md:text-lg"></i>
+                                            </div>
+                                        }
+                                    } else if (activeDefenderShipCells.TryGetValue(key, out var defShip)) {
+                                        <div class="bg-indigo-900/90 text-indigo-300 rounded-xl flex items-center justify-center border border-indigo-700 shadow-md title='Barco de @activeDefenderName en @((char)('A' + col))@(row + 1)'">
+                                            <i class="fas fa-ship text-sm sm:text-base md:text-lg opacity-90"></i>
+                                        </div>
+                                    } else {
+                                        <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl flex items-center justify-center text-slate-700 title='Agua en @((char)('A' + col))@(row + 1)'">
+                                            <i class="fas fa-water text-xs sm:text-sm opacity-20"></i>
+                                        </div>
+                                    }
                                 }
                             }
                         }
@@ -401,15 +437,15 @@
                 <div class="flex items-center justify-center gap-6 text-xs sm:text-sm font-bold text-gray-700 pt-3 flex-wrap">
                     <div class="flex items-center gap-2 bg-red-50 px-3 py-1.5 rounded-xl border border-red-100">
                         <span class="w-5 h-5 rounded-lg bg-red-600 text-white flex items-center justify-center shadow-xs"><i class="fas fa-fire text-xs"></i></span>
-                        <span>¡Impacto Acertado!</span>
+                        <span>¡Impacto Acertado! (Rojo)</span>
                     </div>
-                    <div class="flex items-center gap-2 bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-100">
-                        <span class="w-5 h-5 rounded-lg bg-sky-900 text-sky-400 flex items-center justify-center shadow-xs"><i class="fas fa-water text-xs"></i></span>
-                        <span>Disparo Fallido / Agua</span>
+                    <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
+                        <span class="w-5 h-5 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs"><i class="fas fa-tint text-xs"></i></span>
+                        <span>Disparo Fallido / Agua (Verde)</span>
                     </div>
                     <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100">
                         <span class="w-5 h-5 rounded-lg bg-indigo-900 text-indigo-300 flex items-center justify-center shadow-xs"><i class="fas fa-ship text-xs"></i></span>
-                        <span>Posición de Barco (@activeDefenderName)</span>
+                        <span>Posición de Barco</span>
                     </div>
                 </div>
             </div>
@@ -526,7 +562,7 @@
 
         <div>
             <a asp-action="Index" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors flex items-center gap-2">
-                <i class="fas fa-arrow-left"></i> Volver al Listado
+                <i class="fas fa-arrow-left"></i> Volver atrás
             </a>
         </div>
     </div>

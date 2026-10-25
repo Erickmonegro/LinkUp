@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LinkUpPro.Core.Application.DTOs.NotificationDTO;
 using LinkUpPro.Core.Application.Interfaces;
 using LinkUpPro.Core.Application.ViewModels.Battleship;
@@ -107,7 +107,7 @@ namespace LinkUpPro.Controllers
             }
         }
 
-        public async Task<IActionResult> Details(int id, string? viewBoardUserId = null)
+        public async Task<IActionResult> Details(int id, string? viewBoardUserId = null, string? mode = null)
         {
             try
             {
@@ -128,6 +128,7 @@ namespace LinkUpPro.Controllers
                     ViewBag.Ships = await shipPositionService.GetByMatchAsync(id);
                     ViewBag.Attacks = await attackService.GetByMatchAsync(id);
                     ViewBag.ViewBoardUserId = viewBoardUserId;
+                    ViewBag.Mode = mode;
                 }
 
                 return View(vm);
@@ -140,6 +141,7 @@ namespace LinkUpPro.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateMatch(CreateMatchViewModel vm)
         {
             try
@@ -156,7 +158,7 @@ namespace LinkUpPro.Controllers
                 var availableFriends = await GetAvailableFriendsForMatchAsync(player1Id);
                 if (!availableFriends.Any(f => f.FriendId == vm.Player2Id))
                 {
-                    throw new Exception("Ya tienes una partida activa o un desafío pendiente con este amigo.");
+                    throw new Exception("Ya tienes una partida activa con este amigo.");
                 }
 
                 var createdMatch = await matchService.CreateMatchAsync(player1Id, vm.Player2Id);
@@ -171,15 +173,14 @@ namespace LinkUpPro.Controllers
                     TriggerUserName = triggerName,
                     TriggerUserPhotoUrl = currentUser?.PhotoUrl,
                     ActivityType = NotificationType.BattleChallenge,
-                    Description = $"{triggerName} te ha desafiado a una partida de Batalla Naval.",
+                    Description = $"{triggerName} ha iniciado una partida de Batalla Naval contigo.",
                     RelatedEntityId = createdMatch.Id,
                     Status = NotificationStatus.Unread
                 };
                 await notificationService.AddAsync(notification);
 
-                TempData["Success"] = "¡Desafío enviado correctamente! Esperando a que el contrincante acepte la batalla.";
-
-                return RedirectToAction(nameof(Index));
+                TempData["Success"] = "¡Partida iniciada! Ahora posicione sus barcos en el tablero.";
+                return RedirectToAction("PlaceShip", "ShipPosition", new { matchId = createdMatch.Id });
             }
             catch (Exception ex)
             {
@@ -194,6 +195,7 @@ namespace LinkUpPro.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> StartMatch(int id)
         {
             try
@@ -210,6 +212,7 @@ namespace LinkUpPro.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Surrender(int id, string? playerId)
         {
             try

@@ -40,19 +40,16 @@ namespace LinkUpPro.Core.Application.Services
             {
                 if (existingReaction.ReactionType == reactionType)
                 {
-                    
                     await _repository.DeleteAsync(existingReaction.Id);
                 }
                 else
                 {
-                   
                     existingReaction.ReactionType = reactionType;
                     await _repository.UpdateAsync(existingReaction.Id, existingReaction);
                 }
             }
             else
             {
-                
                 var newReaction = new Reaction
                 {
                     Id = 0,
@@ -64,6 +61,17 @@ namespace LinkUpPro.Core.Application.Services
             }
 
             return true;
+        }
+
+        public async Task<bool> DeleteReactionAsync(int postId, string userId)
+        {
+            var existingReaction = await _repository.GetReactionByUserAndPostAsync(userId, postId);
+            if (existingReaction != null)
+            {
+                await _repository.DeleteAsync(existingReaction.Id);
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -31,7 +31,7 @@ namespace LinkUpPro.Core.Application.ViewModels.User
         [DataType(DataType.Password)]
         public required string Password { get; set; }
 
-        [Compare(nameof(Password), ErrorMessage = "La contraseña y su confirmación no coinciden")]
+        [Compare(nameof(Password), ErrorMessage = "La contraseña y su confirmación no coinciden.")]
         [Required(ErrorMessage = "Debe confirmar su contraseña")]
         [Display(Name = "Confirmar Contraseña")]
         [DataType(DataType.Password)]

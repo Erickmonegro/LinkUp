@@ -263,11 +263,12 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-50/80 border-b border-gray-200 text-gray-400 text-[11px] uppercase tracking-wider font-extrabold">
-                                <th class="py-4 px-6">Partida ID</th>
-                                <th class="py-4 px-6">Enfrentamiento / Amigo</th>
+                                <th class="py-4 px-6">Amigo con quien se jugó</th>
+                                <th class="py-4 px-6">Fecha de inicio</th>
+                                <th class="py-4 px-6">Fecha de finalización</th>
+                                <th class="py-4 px-6">Duración total en horas</th>
                                 <th class="py-4 px-6">Resultado</th>
                                 <th class="py-4 px-6">Ganador</th>
-                                <th class="py-4 px-6">Fecha Finalización</th>
                                 <th class="py-4 px-6 text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -277,37 +278,47 @@
                                 var isWinner = item.WinnerId == currentUserId;
                                 var isRejected = item.Status == MatchStatus.Rejected;
                                 var opponentName = item.Player1Id == currentUserId ? (item.Player2Name ?? item.Player2Id) : (item.Player1Name ?? item.Player1Id);
+                                var durationHours = Math.Max(0, Math.Round(((item.EndDate ?? DateTime.UtcNow) - item.CreatedAt).TotalHours, 1));
                                 
                                 <tr class="hover:bg-gray-50/60 transition-colors">
-                                    <td class="py-4 px-6 font-bold text-gray-900">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 text-xs">
-                                            #@item.Id
-                                        </span>
+                                    <td class="py-4 px-6 font-bold text-gray-800">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center font-bold text-xs">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <span>@opponentName</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-gray-600 font-bold text-xs">
+                                        <i class="far fa-calendar-alt text-gray-400 mr-1"></i>
+                                        @item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td class="py-4 px-6 text-gray-600 font-bold text-xs">
+                                        <i class="far fa-calendar-check text-gray-400 mr-1"></i>
+                                        @(item.EndDate.HasValue ? item.EndDate.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "-")
                                     </td>
                                     <td class="py-4 px-6">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-gray-800">@(item.Player1Name ?? item.Player1Id)</span>
-                                            <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-black">VS</span>
-                                            <span class="font-bold text-gray-800">@(item.Player2Name ?? item.Player2Id)</span>
-                                        </div>
+                                        <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-800 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                            <i class="far fa-clock text-brand-blue"></i> @durationHours horas
+                                        </span>
                                     </td>
                                     <td class="py-4 px-6">
                                         @if (isRejected)
                                         {
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
-                                                <i class="fas fa-ban text-gray-400"></i> Desafío Rechazado
+                                                <i class="fas fa-ban text-gray-400"></i> Rechazada
                                             </span>
                                         }
                                         else if (isWinner)
                                         {
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                                <i class="fas fa-trophy text-amber-500"></i> Victoria
+                                                <i class="fas fa-trophy text-amber-500"></i> Ganada
                                             </span>
                                         }
                                         else if (!string.IsNullOrEmpty(item.WinnerId))
                                         {
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                                                <i class="fas fa-times text-red-500"></i> Derrota
+                                                <i class="fas fa-times text-red-500"></i> Perdida
                                             </span>
                                         }
                                         else
@@ -318,10 +329,16 @@
                                         }
                                     </td>
                                     <td class="py-4 px-6">
-                                        @if (!string.IsNullOrEmpty(item.WinnerName))
+                                        @if (isWinner)
+                                        {
+                                            <span class="text-amber-600 font-black inline-flex items-center gap-1.5">
+                                                <i class="fas fa-trophy text-amber-500"></i> Yo
+                                            </span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(item.WinnerId))
                                         {
                                             <span class="text-gray-900 font-bold inline-flex items-center gap-1.5">
-                                                <i class="fas fa-award text-amber-500"></i> @item.WinnerName
+                                                <i class="fas fa-award text-gray-400"></i> @opponentName
                                             </span>
                                         }
                                         else
@@ -329,12 +346,9 @@
                                             <span class="text-gray-400">-</span>
                                         }
                                     </td>
-                                    <td class="py-4 px-6 text-gray-500 text-xs font-bold">
-                                        @((item.EndDate ?? item.CreatedAt).ToLocalTime().ToString("dd/MM/yyyy HH:mm"))
-                                    </td>
                                     <td class="py-4 px-6 text-right">
                                         <a asp-action="Details" asp-route-id="@item.Id" class="px-3.5 py-2 bg-brand-blue/10 text-brand-blue rounded-xl text-xs font-bold hover:bg-brand-blue hover:text-white transition-all inline-flex items-center gap-1.5 shadow-2xs">
-                                            <i class="fas fa-chart-bar"></i> @(isRejected ? "Ver Detalles" : "Ver Resultados")
+                                            <i class="fas fa-chart-bar"></i> Ver resultado
                                         </a>
                                     </td>
                                 </tr>

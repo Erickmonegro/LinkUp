@@ -70,7 +70,7 @@ namespace LinkUpPro.Core.Application.Services
             foreach (var existing in ships)
             {
                 if (ShipHelper.Overlap(ship, existing))
-                    throw new Exception("El barco se superpone con otro.");
+                    throw new Exception("Debe cambiar la celda seleccionada o la dirección, ya que con la combinación actual el barco quedaría posicionado encima de otro barco.");
             }
 
             ship = await repo.AddAsync(ship);

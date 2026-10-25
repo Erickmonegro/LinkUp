@@ -6,7 +6,7 @@ using LinkUpPro.Core.Application.ViewModels.Comment;
 using LinkUpPro.Core.Domain.Common.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -42,13 +42,13 @@ namespace LinkUpPro.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Login");
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(vm.Content))
             {
                 return RedirectToAction("Index", "Home");
             }
 
             var post = await _postService.GetByIdAsync(vm.PostId);
-            if (post == null || post.CommentStatus == CommentStatus.NotAllowed)
+            if (post == null || !post.IsActive || post.CommentStatus == CommentStatus.NotAllowed)
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -59,7 +59,7 @@ namespace LinkUpPro.Controllers
             commentDto.AuthorId = userId;
             commentDto.AuthorName = "";
 
-            CommentDTO savedComment;
+            CommentDTO? savedComment;
             if (vm.ParentCommentId.HasValue)
             {
                 savedComment = await _commentService.ReplyToCommentAsync(vm.ParentCommentId.Value, commentDto);
@@ -68,7 +68,7 @@ namespace LinkUpPro.Controllers
                 if (parentComment != null && parentComment.AuthorId != userId)
                 {
                     var currentUser = await _userService.GetUserById(userId);
-                    var triggerName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "Un usuario";
+                    var triggerName = currentUser?.UserName ?? "Un usuario";
 
                     var notification = new NotificationDTO
                     {
@@ -92,7 +92,7 @@ namespace LinkUpPro.Controllers
                 if (post.AuthorId != userId)
                 {
                     var currentUser = await _userService.GetUserById(userId);
-                    var triggerName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "Un usuario";
+                    var triggerName = currentUser?.UserName ?? "Un usuario";
 
                     var notification = new NotificationDTO
                     {
@@ -133,7 +133,18 @@ namespace LinkUpPro.Controllers
             if (userId == null) return RedirectToAction("Login", "Login");
 
             var comment = await _commentService.GetByIdAsync(id);
-            if (comment == null || comment.AuthorId != userId || string.IsNullOrWhiteSpace(content) || content.Length > 500)
+            if (comment == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (comment.AuthorId != userId)
+            {
+                TempData["ErrorMessage"] = "No posee permisos para editar este contenido.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (string.IsNullOrWhiteSpace(content) || content.Length > 500)
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -164,8 +175,14 @@ namespace LinkUpPro.Controllers
             if (userId == null) return RedirectToAction("Login", "Login");
 
             var comment = await _commentService.GetByIdAsync(id);
-            if (comment == null || comment.AuthorId != userId)
+            if (comment == null)
             {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (comment.AuthorId != userId)
+            {
+                TempData["ErrorMessage"] = "No posee permisos para eliminar este contenido.";
                 return RedirectToAction("Index", "Home");
             }
 
@@ -173,7 +190,8 @@ namespace LinkUpPro.Controllers
             var hasReplies = (comment.Replies != null && comment.Replies.Any()) || await _commentService.HasRepliesAsync(id);
             if (hasReplies)
             {
-                comment.Content = "comentario eliminado";
+                // Reemplazo textual exacto según pliego funcional (Pág. 27)
+                comment.Content = "Este comentario fue eliminado.";
                 await _commentService.UpdateAsync(comment, id);
             }
             else

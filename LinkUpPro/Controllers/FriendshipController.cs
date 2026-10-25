@@ -38,7 +38,8 @@ namespace LinkUpPro.Controllers
             int? contentTypeFilter,
             DateTime? dateFrom,
             DateTime? dateTo,
-            int? editionStatusFilter)
+            int? editionStatusFilter,
+            string? friendSearch)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Login");
@@ -59,11 +60,19 @@ namespace LinkUpPro.Controllers
 
             var friendViewModels = _mapper.Map<List<FriendViewModel>>(friends);
 
-        
             foreach (var fvm in friendViewModels)
             {
                 var u = await _userService.GetUserById(fvm.UserId);
                 if (u != null) fvm.UserName = u.UserName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(friendSearch))
+            {
+                var cleanSearch = friendSearch.Trim().ToLower();
+                friendViewModels = friendViewModels
+                    .Where(f => (f.FullName != null && f.FullName.ToLower().Contains(cleanSearch)) || 
+                                (f.UserName != null && f.UserName.ToLower().Contains(cleanSearch)))
+                    .ToList();
             }
 
             var vm = new FriendListViewModel
@@ -74,13 +83,13 @@ namespace LinkUpPro.Controllers
                 Posts = posts
             };
 
-           
             ViewBag.TextFilter = textFilter;
             ViewBag.FriendIdFilter = friendIdFilter;
             ViewBag.ContentTypeFilter = contentTypeFilter ?? (int)ContentType.All;
             ViewBag.DateFrom = dateFrom?.ToString("yyyy-MM-dd");
             ViewBag.DateTo = dateTo?.ToString("yyyy-MM-dd");
             ViewBag.EditionStatusFilter = editionStatusFilter ?? (int)EditionStatus.All;
+            ViewBag.FriendSearch = friendSearch;
 
             return View(vm);
         }
@@ -93,14 +102,14 @@ namespace LinkUpPro.Controllers
             var friend = await _friendshipService.GetFriendProfileAsync(userId, id);
             if (friend == null)
             {
-                return RedirectToAction("AccessDenied", "Login");
+                TempData["ErrorMessage"] = "No posee permisos para visualizar el perfil de este usuario.";
+                return RedirectToAction(nameof(Index));
             }
 
             var friends = await _friendshipService.GetFriendsAsync(userId);
             var friendship = friends.FirstOrDefault(f => f.FriendId == id);
             var friendshipId = friendship?.Id ?? 0;
 
-            
             var allFriendPosts = await _postService.GetUserPostsFilteredAsync(
                 id,
                 null,
@@ -146,7 +155,7 @@ namespace LinkUpPro.Controllers
             }
             else
             {
-                TempData["ErrorMessage"] = "No se pudo eliminar la amistad.";
+                TempData["ErrorMessage"] = "La amistad seleccionada ya no se encuentra disponible.";
             }
 
             return RedirectToAction("Index");

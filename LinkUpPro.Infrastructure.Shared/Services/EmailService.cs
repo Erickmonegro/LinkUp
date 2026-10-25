@@ -56,7 +56,11 @@ namespace LinkUpPro.Infrastructure.Shared.Services
                 email.Body = builder.ToMessageBody();
 
                 using var smtp = new SmtpClient();
-                await smtp.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
+                var socketOption = _emailSettings.SmtpPort == 465
+                    ? SecureSocketOptions.SslOnConnect
+                    : SecureSocketOptions.StartTls;
+
+                await smtp.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, socketOption);
                 await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);

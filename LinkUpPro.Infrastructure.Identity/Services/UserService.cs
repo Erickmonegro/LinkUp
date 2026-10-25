@@ -43,7 +43,8 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add($"No existe una cuenta registrada con este usuario o correo: {loginDto.UserName}");
+                // Mensaje genérico unificado para evitar enumeración de usuarios
+                response.Errors.Add("El nombre de usuario o la contraseña son incorrectos.");
                 return response;
             }
 
@@ -137,8 +138,16 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 await _emailService.SendAsync(new EmailRequestDTO()
                 {
                     To = saveDto.Email,
-                    HtmlBody = $"Please confirm your account visiting this URL {verificationUri}",
-                    Subject = "Confirm registration"
+                    Subject = "Activación de cuenta - LinkUp Pro",
+                    HtmlBody = $@"<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'>
+                        <h2 style='color: #060396;'>¡Bienvenido a LinkUp Pro!</h2>
+                        <p>Hola <strong>{saveDto.FirstName}</strong>,</p>
+                        <p>Su cuenta fue creada correctamente. Para activarla e iniciar sesión, haga clic en el siguiente enlace:</p>
+                        <p style='text-align: center; margin: 30px 0;'>
+                            <a href='{verificationUri}' style='background-color: #060396; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Activar mi cuenta</a>
+                        </p>
+                        <p style='color: #64748b; font-size: 13px;'>Si no puede hacer clic en el botón, copie y pegue este enlace en su navegador:<br><a href='{verificationUri}'>{verificationUri}</a></p>
+                    </div>"
                 });
 
                 response.Id = user.Id;
@@ -203,7 +212,10 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             user.CoverPhoto = string.IsNullOrWhiteSpace(saveDto.CoverPhotoUrl) ? user.CoverPhoto : saveDto.CoverPhotoUrl;
             user.EmailConfirmed = user.EmailConfirmed && user.Email == saveDto.Email;
             user.Email = saveDto.Email;
-            user.PhoneNumber = saveDto.PhoneNumber ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(saveDto.PhoneNumber))
+            {
+                user.PhoneNumber = saveDto.PhoneNumber;
+            }
 
             if (!string.IsNullOrWhiteSpace(saveDto.Password) && isNotcreated)
             {
@@ -233,8 +245,15 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                     await _emailService.SendAsync(new EmailRequestDTO()
                     {
                         To = saveDto.Email,
-                        HtmlBody = $"Please confirm your account visiting this URL {verificationUri}",
-                        Subject = "Confirm registration"
+                        Subject = "Activación de cuenta - LinkUp Pro",
+                        HtmlBody = $@"<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'>
+                            <h2 style='color: #060396;'>Activación de cuenta</h2>
+                            <p>Hola <strong>{saveDto.FirstName}</strong>,</p>
+                            <p>Para activar tu cuenta, haz clic en el siguiente botón:</p>
+                            <p style='text-align: center; margin: 30px 0;'>
+                                <a href='{verificationUri}' style='background-color: #060396; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Activar mi cuenta</a>
+                            </p>
+                        </div>"
                     });
                 }
 
@@ -264,7 +283,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
 
             if (user == null)
             {
-               
+                // No revelar si existe o no
                 return response;
             }
 
@@ -273,7 +292,15 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             await _emailService.SendAsync(new EmailRequestDTO()
             {
                 To = user.Email!,
-                HtmlBody = $"Hemos recibido una solicitud para restablecer la contraseña de su cuenta. Visite el siguiente enlace para crear una nueva contraseña: {resetUri}",
+                HtmlBody = $@"<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'>
+                    <h2 style='color: #060396;'>Recuperación de Contraseña</h2>
+                    <p>Hola <strong>{user.Name}</strong>,</p>
+                    <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta. Visite el siguiente enlace para crear una nueva contraseña:</p>
+                    <p style='text-align: center; margin: 30px 0;'>
+                        <a href='{resetUri}' style='background-color: #060396; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Restablecer mi contraseña</a>
+                    </p>
+                    <p style='color: #64748b; font-size: 13px;'>Este enlace tiene una vigencia máxima de una hora. Si usted no solicitó este cambio, puede ignorar este mensaje.</p>
+                </div>",
                 Subject = "Restablecer contraseña - LinkUp Pro"
             });
 
@@ -289,7 +316,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add("No existe una cuenta registrada para este usuario.");
+                response.Errors.Add("El enlace para restablecer la contraseña no es válido o ya fue utilizado.");
                 return response;
             }
 
@@ -302,10 +329,10 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 return response;
             }
 
-            user.EmailConfirmed = true;
-            await _userManager.UpdateAsync(user);
+            // REGLA CRÍTICA: NO cambiar EmailConfirmed (preservar el estado de activación)
             await _userManager.ResetAccessFailedCountAsync(user);
             await _userManager.SetLockoutEndDateAsync(user, null);
+            await _userManager.UpdateSecurityStampAsync(user); // Invalida todas las sesiones previas
 
             return response;
         }
@@ -323,7 +350,6 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             }
 
             await _userManager.DeleteAsync(user);
-
             return response;
         }
 
@@ -462,11 +488,12 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
+                await _userManager.UpdateSecurityStampAsync(user);
                 return $"Cuenta confirmada para {user.Email}. Ya puedes iniciar sesión.";
             }
             else
             {
-                return $"Ocurrió un error al confirmar el correo {user.Email}.";
+                return "El enlace de activación no es válido o ya fue utilizado.";
             }
         }
 
@@ -484,6 +511,7 @@ namespace LinkUpPro.Infrastructure.Identity.Services
                 return new UserResponseDto { HasError = true, Errors = FormatErrors(result.Errors) };
             }
 
+            await _userManager.UpdateSecurityStampAsync(user);
             return new UserResponseDto { HasError = false, Errors = new List<string>() };
         }
 
@@ -502,21 +530,33 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             }
 
             _activationCooldowns[cacheKey] = DateTime.UtcNow;
-            var user = await GetUserByUserName(userName.Trim());
-            if (user != null && !user.IsVerified)
+
+            var appUser = await _userManager.FindByNameAsync(userName.Trim()) 
+                          ?? await _userManager.FindByEmailAsync(userName.Trim());
+
+            // Solo reenviar si existe y no ha sido activada aún
+            if (appUser != null && !appUser.EmailConfirmed)
             {
-                var saveDto = new SaveUserDto
+                // Invalidar tokens de activación anteriores regenerando SecurityStamp
+                await _userManager.UpdateSecurityStampAsync(appUser);
+
+                string verificationUri = await GetVerificationEmailUri(appUser, origin);
+                await _emailService.SendAsync(new EmailRequestDTO
                 {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    UserName = user.UserName,
-                    Password = "",
-                    Role = user.Role
-                };
-                await EditUser(saveDto, origin, false);
+                    To = appUser.Email!,
+                    Subject = "Activación de cuenta - LinkUp Pro",
+                    HtmlBody = $@"<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'>
+                        <h2 style='color: #060396;'>Enlace de Activación de Cuenta</h2>
+                        <p>Hola <strong>{appUser.Name}</strong>,</p>
+                        <p>Ha solicitado el reenvío del enlace de activación para su cuenta en LinkUp Pro. Para activarla, haga clic en el siguiente enlace:</p>
+                        <p style='text-align: center; margin: 30px 0;'>
+                            <a href='{verificationUri}' style='background-color: #060396; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Activar mi cuenta</a>
+                        </p>
+                        <p style='color: #64748b; font-size: 13px;'>Este enlace tiene una vigencia máxima de 24 horas.<br><a href='{verificationUri}'>{verificationUri}</a></p>
+                    </div>"
+                });
             }
+
             return response;
         }
 
@@ -526,9 +566,17 @@ namespace LinkUpPro.Infrastructure.Identity.Services
             foreach (var err in errors)
             {
                 if (err.Description.Contains("alphanumeric", StringComparison.OrdinalIgnoreCase))
-                    list.Add("La contraseña debe tener al menos un carácter no alfanumérico.");
+                    list.Add("La contraseña debe tener al menos un carácter especial.");
                 else if (err.Description.Contains("uppercase", StringComparison.OrdinalIgnoreCase))
-                    list.Add("La contraseña debe tener al menos una letra mayúscula ('A'-'Z').");
+                    list.Add("La contraseña debe tener al menos una letra mayúscula.");
+                else if (err.Description.Contains("lowercase", StringComparison.OrdinalIgnoreCase))
+                    list.Add("La contraseña debe tener al menos una letra minúscula.");
+                else if (err.Description.Contains("digit", StringComparison.OrdinalIgnoreCase))
+                    list.Add("La contraseña debe tener al menos un número.");
+                else if (err.Description.Contains("PasswordTooShort", StringComparison.OrdinalIgnoreCase) || err.Description.Contains("length", StringComparison.OrdinalIgnoreCase))
+                    list.Add("La contraseña debe tener al menos ocho caracteres.");
+                else if (err.Code == "PasswordMismatch")
+                    list.Add("La contraseña actual es incorrecta.");
                 else
                     list.Add(err.Description);
             }

@@ -15,6 +15,7 @@ namespace LinkUpPro.Core.Application.DTOs.PostDTO
 
         public required string AuthorId { get; set; }
         public required string AuthorName { get; set; }
+        public string? AuthorUserName { get; set; }
         public string? AuthorPhotoUrl { get; set; }
 
         public int CommentsCount { get; set; }

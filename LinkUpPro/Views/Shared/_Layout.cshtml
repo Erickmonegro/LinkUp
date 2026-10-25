@@ -1,23 +1,22 @@
 @using System.Security.Claims
-@using Microsoft.AspNetCore.Identity
-@using LinkUpPro.Infrastructure.Identity.Entities
+@using LinkUpPro.Core.Application.DTOs.UserDTO
 @inject LinkUpPro.Core.Application.Interfaces.IFriendRequestService FriendRequestService
 @inject LinkUpPro.Core.Application.Interfaces.INotificationService NotificationService
 @inject LinkUpPro.Core.Application.Interfaces.IFriendshipService FriendshipService
-@inject UserManager<AppUser> UserManager
+@inject LinkUpPro.Core.Application.Interfaces.IUserService UserService
 
 @{
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     int pendingRequestsCount = 0;
     int unreadNotificationsCount = 0;
     int friendsCount = 0;
-    AppUser? currentUser = null;
+    UserDTO? currentUser = null;
 
     if (userId != null)
     {
         pendingRequestsCount = await FriendRequestService.GetPendingCountAsync(userId);
         unreadNotificationsCount = await NotificationService.GetUnreadCountAsync(userId);
-        currentUser = await UserManager.FindByIdAsync(userId);
+        currentUser = await UserService.GetUserById(userId);
         friendsCount = await FriendshipService.GetActiveFriendsCountAsync(userId);
     }
 
@@ -229,9 +228,9 @@
 
                             <a asp-controller="Profile" asp-action="Index" 
                                class="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-gray-100 transition-all border border-gray-200/80 shadow-2xs group" title="Ver mi muro de perfil">
-                                @if (currentUser != null && !string.IsNullOrEmpty(currentUser.ProfilePhoto))
+                                @if (currentUser != null && !string.IsNullOrEmpty(currentUser.PhotoUrl))
                                 {
-                                    <img src="@currentUser.ProfilePhoto" alt="Foto" class="w-8 h-8 rounded-full object-cover border border-brand-blue/30 group-hover:scale-105 transition-transform" />
+                                    <img src="@currentUser.PhotoUrl" alt="Foto" class="w-8 h-8 rounded-full object-cover border border-brand-blue/30 group-hover:scale-105 transition-transform" />
                                 }
                                 else
                                 {
@@ -240,7 +239,7 @@
                                     </div>
                                 }
                                 <span class="font-bold text-xs text-gray-800 hidden sm:inline group-hover:text-brand-blue transition-colors max-w-[100px] truncate">
-                                    @(currentUser?.Name ?? "Mi Muro")
+                                    @(currentUser?.FirstName ?? "Mi Muro")
                                 </span>
                             </a>
 
@@ -317,9 +316,9 @@
                             <!-- Foto y Datos -->
                             <div class="px-4 pb-5 pt-0 relative flex flex-col items-center text-center">
                                 <div class="-mt-10 mb-2 relative">
-                                    @if (!string.IsNullOrEmpty(currentUser.ProfilePhoto))
+                                    @if (!string.IsNullOrEmpty(currentUser.PhotoUrl))
                                     {
-                                        <img src="@currentUser.ProfilePhoto" alt="Foto de perfil"
+                                        <img src="@currentUser.PhotoUrl" alt="Foto de perfil"
                                              class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md bg-white" />
                                     }
                                     else
@@ -333,7 +332,7 @@
 
                                 <div class="flex items-center justify-center gap-1">
                                     <h3 class="font-extrabold text-gray-900 text-base leading-tight truncate max-w-[170px]">
-                                        @currentUser.Name @currentUser.LastName
+                                        @currentUser.FirstName @currentUser.LastName
                                     </h3>
                                     <i class="fas fa-check-circle text-brand-blue text-xs" title="Cuenta Verificada en LinkUp Pro"></i>
                                 </div>

@@ -8,6 +8,7 @@ namespace LinkUpPro.Core.Application.DTOs.FriendshipDTO
         public required string UserId2 { get; set; }
         public required string FriendId { get; set; }
         public required string FriendName { get; set; }
+        public string? FriendUserName { get; set; }
         public string? FriendPhotoUrl { get; set; }
         
         public int MutualFriendsCount { get; set; }

@@ -134,6 +134,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (users.TryGetValue(post.AuthorId, out var user))
                 {
                     post.AuthorName = $"{user.FirstName} {user.LastName}";
+                    post.AuthorUserName = user.UserName;
                     post.AuthorPhotoUrl = user.PhotoUrl;
                 }
                 
@@ -184,6 +185,7 @@ namespace LinkUpPro.Core.Application.Services
                 if (users.TryGetValue(comment.AuthorId, out var user))
                 {
                     comment.AuthorName = $"{user.FirstName} {user.LastName}";
+                    comment.AuthorUserName = user.UserName;
                     comment.AuthorPhotoUrl = user.PhotoUrl;
                 }
 

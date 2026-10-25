@@ -26,7 +26,7 @@
     @if (ViewBag.DateFrom != null && ViewBag.DateTo != null && DateTime.Parse(ViewBag.DateFrom.ToString()) > DateTime.Parse(ViewBag.DateTo.ToString()))
     {
         <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
-            <i class="fas fa-exclamation-circle mr-1"></i> La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).
+            <i class="fas fa-exclamation-circle mr-1"></i> <span class="font-bold">La fecha inicial no puede ser posterior a la fecha final.</span>
         </div>
     }
 
@@ -67,9 +67,21 @@
                     </a>
                 </div>
 
+                <!-- Buscador de amigos -->
+                <form asp-action="Index" method="get" class="flex gap-2">
+                    <input type="text" name="friendSearch" value="@ViewBag.FriendSearch" placeholder="Buscar por nombre o usuario..." class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs outline-none focus:ring-1 focus:ring-brand-blue" />
+                    <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg text-xs font-bold"><i class="fas fa-search"></i></button>
+                    @if (!string.IsNullOrEmpty(ViewBag.FriendSearch))
+                    {
+                        <a asp-action="Index" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">✕</a>
+                    }
+                </form>
+
                 @if (Model.Friends == null || !Model.Friends.Any())
                 {
-                    <p class="text-sm text-gray-500 text-center py-4">No tienes amigos agregados aún.</p>
+                    <p class="text-sm text-gray-500 text-center py-4">
+                        @(!string.IsNullOrEmpty(ViewBag.FriendSearch) ? "No se encontraron amigos que coincidan con el criterio ingresado." : "Todavía no tiene amigos agregados.")
+                    </p>
                 }
                 else
                 {
@@ -99,7 +111,7 @@
                                     </div>
                                 </div>
 
-                                <form asp-controller="Friendship" asp-action="Delete" method="post" onsubmit="return confirm('¿Está seguro de eliminar esta amistad? Ambas partes dejarán de ver sus publicaciones.');" class="inline">
+                                <form asp-controller="Friendship" asp-action="Delete" method="post" onsubmit="return confirm('¿Está seguro que desea eliminar de sus amigos al usuario @friend.UserName?');" class="inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="friendshipId" value="@friend.Id" />
                                     <button type="submit" class="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Eliminar Amigo">
@@ -137,9 +149,12 @@
                             <select name="friendIdFilter"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-sm transition-all">
                                 <option value="">Todos los amigos</option>
-                                @foreach (var friend in Model.Friends)
+                                @if (Model.Friends != null)
                                 {
-                                    <option value="@friend.UserId" selected="@(ViewBag.FriendIdFilter == friend.UserId)">@friend.FullName</option>
+                                    @foreach (var friend in Model.Friends)
+                                    {
+                                        <option value="@friend.UserId" selected="@(ViewBag.FriendIdFilter == friend.UserId)">@friend.FullName</option>
+                                    }
                                 }
                             </select>
                         </div>
@@ -183,7 +198,7 @@
 
                     <div class="flex justify-end gap-2">
                         <a asp-controller="Friendship" asp-action="Index" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors text-sm">
-                            Limpiar
+                            Limpiar filtros
                         </a>
                         <button type="submit" class="bg-brand-blue text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-sm text-sm">
                             <i class="fas fa-search"></i> Buscar
@@ -198,7 +213,11 @@
                 {
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
                         <i class="far fa-folder-open text-gray-400 text-4xl mb-3"></i>
-                        <p class="text-gray-500 font-medium">@(!string.IsNullOrEmpty(ViewBag.TextFilter) || !string.IsNullOrEmpty(ViewBag.FriendIdFilter) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentTypeFilter != null && ViewBag.ContentTypeFilter != 1) || (ViewBag.EditionStatusFilter != null && ViewBag.EditionStatusFilter != 1) ? "No se encontraron publicaciones que coincidan con los criterios seleccionados." : "No se encontraron publicaciones de amigos.")</p>
+                        <p class="text-gray-500 font-medium">
+                            @(!string.IsNullOrEmpty(ViewBag.TextFilter) || !string.IsNullOrEmpty(ViewBag.FriendIdFilter) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentTypeFilter != null && ViewBag.ContentTypeFilter != 1) || (ViewBag.EditionStatusFilter != null && ViewBag.EditionStatusFilter != 1) 
+                                ? "No se encontraron publicaciones que coincidan con los criterios seleccionados." 
+                                : (Model.ActiveFriendsCount == 0 ? "Todavía no tiene amigos agregados." : "Sus amigos todavía no han realizado publicaciones disponibles para usted."))
+                        </p>
                     </div>
                 }
                 else
@@ -221,7 +240,10 @@
                                     </div>
                                 }
                                 <div>
-                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="font-bold text-gray-900 leading-tight hover:text-brand-blue transition-colors">@post.AuthorName</a>
+                                    <div class="flex items-center gap-1.5">
+                                        <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="font-bold text-gray-900 leading-tight hover:text-brand-blue transition-colors">@post.AuthorName</a>
+                                        <span class="text-xs text-gray-400 font-medium">&#64;@(post.AuthorUserName ?? post.AuthorName)</span>
+                                    </div>
                                     <div class="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
                                         <span>@post.Created.ToLocalTime().ToString("g")</span>
                                         @if (post.EditionStatus == EditionStatus.Edited)
@@ -255,7 +277,7 @@
 
                             <!-- Reactions and counts -->
                             <div class="flex items-center justify-between text-sm text-gray-500 font-medium">
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-3 flex-wrap">
                                     @{
                                         var userReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
                                         var hasLike = userReaction != null && userReaction.ReactionType == ReactionType.Like;
@@ -288,9 +310,17 @@
                                     
                                     @if (userReaction != null)
                                     {
-                                        <span class="text-xs text-gray-400">
+                                        <span class="text-xs text-gray-500 font-bold ml-1">
                                             Tu reacción: @(userReaction.ReactionType == ReactionType.Like ? "Me gusta" : "No me gusta")
                                         </span>
+                                        <form asp-controller="Reaction" asp-action="Delete" method="post" class="inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="postId" value="@post.Id" />
+                                            <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                            <button type="submit" class="text-[11px] text-gray-400 hover:text-red-500 underline font-semibold ml-1">
+                                                Eliminar reacción
+                                            </button>
+                                        </form>
                                     }
                                 </div>
 
@@ -313,15 +343,23 @@
                                                 {
                                                     var isMyComment = comment.AuthorId == userId;
                                                     var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado." || comment.Content == "comentario eliminado" || comment.Content == "Comentario eliminado";
+                                                    var isCommentAuthorFriend = (Model.Friends != null && Model.Friends.Any(f => f.UserId == comment.AuthorId)) || comment.AuthorId == userId;
                                                     
                                                     <div class="bg-gray-50/70 p-3 rounded-xl border border-gray-100 relative @(depth > 0 ? "ml-8 border-l-2 border-brand-blue/20" : "")">
                                                         <div class="flex justify-between items-start">
                                                             <div class="flex items-center gap-2">
                                                                 @if (!isDeletedPlaceholder && !string.IsNullOrEmpty(comment.AuthorPhotoUrl))
                                                                 {
-                                                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="flex-shrink-0">
-                                                                        <img src="@comment.AuthorPhotoUrl" alt="" class="w-6 h-6 rounded-full object-cover hover:ring-2 hover:ring-brand-blue transition-all" />
-                                                                    </a>
+                                                                    if (isCommentAuthorFriend)
+                                                                    {
+                                                                        <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="flex-shrink-0">
+                                                                            <img src="@comment.AuthorPhotoUrl" alt="" class="w-6 h-6 rounded-full object-cover hover:ring-2 hover:ring-brand-blue transition-all" />
+                                                                        </a>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <img src="@comment.AuthorPhotoUrl" alt="" class="w-6 h-6 rounded-full object-cover" />
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
@@ -331,9 +369,18 @@
                                                                 }
                                                                 @if (!isDeletedPlaceholder)
                                                                 {
-                                                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="font-bold text-xs text-gray-800 hover:text-brand-blue transition-colors">
-                                                                        @comment.AuthorName
-                                                                    </a>
+                                                                    if (isCommentAuthorFriend)
+                                                                    {
+                                                                        <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="font-bold text-xs text-gray-800 hover:text-brand-blue transition-colors">
+                                                                            @comment.AuthorName
+                                                                        </a>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="font-bold text-xs text-gray-800">
+                                                                            @comment.AuthorName
+                                                                        </span>
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
@@ -354,7 +401,7 @@
                                                                     <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="text-gray-400 hover:text-brand-blue text-xs p-1">
                                                                         <i class="fas fa-edit"></i>
                                                                     </button>
-                                                                    <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro de eliminar este comentario?');" class="inline">
+                                                                    <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro que desea eliminar este comentario?');" class="inline">
                                                                         @Html.AntiForgeryToken()
                                                                         <button type="submit" class="text-gray-400 hover:text-red-500 text-xs p-1">
                                                                             <i class="fas fa-trash-alt"></i>

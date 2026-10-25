@@ -37,6 +37,16 @@ namespace LinkUpPro.Controllers
 
             vm.AuthorId = userId;
 
+            if (string.IsNullOrWhiteSpace(vm.TextContent))
+            {
+                ModelState.AddModelError("TextContent", "Debe ingresar el contenido de la publicación.");
+            }
+
+            if (vm.ContentType == ContentType.Image && vm.ImageFile == null)
+            {
+                ModelState.AddModelError("ImageFile", "Debe seleccionar una imagen para crear la publicación.");
+            }
+
             if (!ModelState.IsValid)
             {
                 TempData["CreatePostError"] = string.Join("<br/>", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -66,8 +76,15 @@ namespace LinkUpPro.Controllers
             if (userId == null) return RedirectToAction("Login", "Login");
 
             var post = await _postService.GetByIdAsync(id);
-            if (post == null || post.AuthorId != userId)
+            if (post == null || !post.IsActive)
             {
+                TempData["ErrorMessage"] = "Esta publicación ya no se encuentra disponible.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (post.AuthorId != userId)
+            {
+                TempData["ErrorMessage"] = "No posee permisos para editar esta publicación.";
                 return RedirectToAction("AccessDenied", "Login");
             }
 
@@ -89,14 +106,31 @@ namespace LinkUpPro.Controllers
             if (userId == null) return RedirectToAction("Login", "Login");
 
             var existingPost = await _postService.GetByIdAsync(vm.Id);
-            if (existingPost == null || existingPost.AuthorId != userId)
+            if (existingPost == null || !existingPost.IsActive)
             {
+                TempData["ErrorMessage"] = "Esta publicación ya no se encuentra disponible.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (existingPost.AuthorId != userId)
+            {
+                TempData["ErrorMessage"] = "No posee permisos para editar esta publicación.";
                 return RedirectToAction("AccessDenied", "Login");
+            }
+
+            if (string.IsNullOrWhiteSpace(vm.TextContent))
+            {
+                ModelState.AddModelError("TextContent", "Debe ingresar el contenido de la publicación.");
             }
 
             if (vm.ContentType == ContentType.Image && vm.ImageFile == null && existingPost.ContentType == ContentType.Image)
             {
                 vm.MediaUrl = existingPost.MediaUrl;
+            }
+
+            if (vm.ContentType == ContentType.Image && vm.ImageFile == null && existingPost.ContentType != ContentType.Image)
+            {
+                ModelState.AddModelError("ImageFile", "Debe seleccionar una imagen para crear la publicación.");
             }
 
             if (!ModelState.IsValid)
@@ -124,11 +158,14 @@ namespace LinkUpPro.Controllers
             }
 
             var postDto = _mapper.Map<PostDTO>(vm);
+            postDto.Created = existingPost.Created;
+            postDto.Updated = DateTime.UtcNow;
             postDto.TextContent = vm.TextContent.Trim();
             postDto.MediaUrl = finalMediaUrl;
             postDto.EditionStatus = EditionStatus.Edited;
             postDto.AuthorId = userId;
-            postDto.AuthorName = "";
+            postDto.AuthorName = existingPost.AuthorName;
+            postDto.IsActive = true;
 
             await _postService.UpdateAsync(postDto, vm.Id);
             TempData["SuccessMessage"] = "La publicación fue actualizada correctamente.";
@@ -141,8 +178,15 @@ namespace LinkUpPro.Controllers
             if (userId == null) return RedirectToAction("Login", "Login");
 
             var post = await _postService.GetByIdAsync(id);
-            if (post == null || post.AuthorId != userId)
+            if (post == null || !post.IsActive)
             {
+                TempData["ErrorMessage"] = "Esta publicación ya no se encuentra disponible.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (post.AuthorId != userId)
+            {
+                TempData["ErrorMessage"] = "No posee permisos para eliminar esta publicación.";
                 return RedirectToAction("AccessDenied", "Login");
             }
 
@@ -158,12 +202,18 @@ namespace LinkUpPro.Controllers
             if (userId == null) return RedirectToAction("Login", "Login");
 
             var post = await _postService.GetByIdAsync(id);
-            if (post == null || post.AuthorId != userId)
+            if (post == null || !post.IsActive)
             {
+                TempData["ErrorMessage"] = "Esta publicación ya no se encuentra disponible.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (post.AuthorId != userId)
+            {
+                TempData["ErrorMessage"] = "No posee permisos para eliminar esta publicación.";
                 return RedirectToAction("AccessDenied", "Login");
             }
 
-   
             post.IsActive = false; 
 
             await _postService.UpdateAsync(post, post.Id);
@@ -171,7 +221,5 @@ namespace LinkUpPro.Controllers
             TempData["SuccessMessage"] = "La publicación fue eliminada correctamente.";
             return RedirectToAction("Index", "Home");
         }
-
-
     }
 }

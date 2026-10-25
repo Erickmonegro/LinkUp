@@ -60,6 +60,9 @@ namespace LinkUpPro.Controllers
             if (user == null) return RedirectToAction("Login", "Login");
 
             var vm = _mapper.Map<UpdateUserViewModel>(user);
+            vm.CurrentPassword = null;
+            vm.Password = null;
+            vm.ConfirmPassword = null;
 
             return View("Edit", vm);
         }
@@ -73,12 +76,14 @@ namespace LinkUpPro.Controllers
 
             if (vm.Id != userId)
             {
-                return RedirectToAction("AccessDenied", "Login");
+                TempData["ErrorMessage"] = "No posee permisos para modificar este perfil.";
+                return RedirectToAction("Index", "Home");
             }
 
             var currentUser = await _userService.GetUserById(userId);
             if (currentUser == null) return RedirectToAction("Login", "Login");
 
+            // Blindar datos que no deben modificarse
             vm.UserName = currentUser.UserName;
             vm.Email = currentUser.Email;
 
@@ -89,57 +94,33 @@ namespace LinkUpPro.Controllers
                 return View("Edit", vm);
             }
 
-            
+            // Subir nueva foto de perfil si se proporcionó
             if (vm.ProfileImageFile != null && vm.ProfileImageFile.Length > 0)
             {
                 vm.PhotoUrl = await _imageStorageService.UploadImageAsync(vm.ProfileImageFile, userId, "Users", true, currentUser.PhotoUrl);
-            }
-            else if (!string.IsNullOrWhiteSpace(vm.PhotoUrl) && (vm.PhotoUrl.StartsWith("http://") || vm.PhotoUrl.StartsWith("https://")))
-            {
-                
             }
             else
             {
                 vm.PhotoUrl = currentUser.PhotoUrl;
             }
 
-            
+            // Subir portada si aplica
             if (vm.CoverImageFile != null && vm.CoverImageFile.Length > 0)
             {
                 vm.CoverPhotoUrl = await _imageStorageService.UploadImageAsync(vm.CoverImageFile, userId, "Covers", true, currentUser.CoverPhotoUrl);
-            }
-            else if (!string.IsNullOrWhiteSpace(vm.CoverPhotoUrl) && (vm.CoverPhotoUrl.StartsWith("http://") || vm.CoverPhotoUrl.StartsWith("https://")))
-            {
-                
             }
             else
             {
                 vm.CoverPhotoUrl = currentUser.CoverPhotoUrl;
             }
 
-            bool isChangingPassword = !string.IsNullOrEmpty(vm.Password);
-
-            if (isChangingPassword)
-            {
-                var passResponse = await _userService.ChangePasswordAsync(userId, vm.CurrentPassword!, vm.Password!);
-                if (passResponse.HasError)
-                {
-                    ViewBag.HasError = true;
-                    ViewBag.Errors = passResponse.Errors;
-                    return View("Edit", vm);
-                }
-
-                await _userService.SignOutAsync();
-                HttpContext.Session.Clear();
-                TempData["SuccessMessage"] = "Su contraseña fue restablecida correctamente. Ya puede iniciar sesión.";
-                return RedirectToAction("Login", "Login");
-            }
-
+            // Actualizar información personal
             var origin = $"{Request.Scheme}://{Request.Host}";
             var saveDto = _mapper.Map<SaveUserDto>(vm);
             saveDto.Id = userId;
             saveDto.FirstName = vm.FirstName.Trim();
             saveDto.LastName = vm.LastName.Trim();
+            saveDto.PhoneNumber = vm.PhoneNumber?.Trim() ?? string.Empty;
             saveDto.Password = "";
             saveDto.Role = currentUser.Role;
             saveDto.PhotoUrl = vm.PhotoUrl;
@@ -154,10 +135,27 @@ namespace LinkUpPro.Controllers
                 return View("Edit", vm);
             }
 
+            // Si se solicitó cambio de contraseña
+            bool isChangingPassword = !string.IsNullOrWhiteSpace(vm.Password) && !string.IsNullOrWhiteSpace(vm.CurrentPassword);
+            if (isChangingPassword)
+            {
+                var passResponse = await _userService.ChangePasswordAsync(userId, vm.CurrentPassword!, vm.Password!);
+                if (passResponse.HasError)
+                {
+                    ViewBag.HasError = true;
+                    ViewBag.Errors = passResponse.Errors;
+                    return View("Edit", vm);
+                }
+
+                // Cerrar sesión e invalidar sesiones activas
+                await _userService.SignOutAsync();
+                HttpContext.Session.Clear();
+                TempData["SuccessMessage"] = "Su perfil y contraseña fueron actualizados correctamente. Inicie sesión nuevamente.";
+                return RedirectToAction("Login", "Login");
+            }
+
             TempData["SuccessMessage"] = "Su perfil fue actualizado correctamente.";
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Home");
         }
-
-
     }
 }

@@ -18,7 +18,7 @@ namespace LinkUpPro.Core.Application.Mappings.EntitiesAndDtos
                 .ForMember(dest => dest.ReactionsCount, opt => opt.MapFrom(src => src.Reactions != null ? src.Reactions.Count : 0))
                 .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Reactions != null ? src.Reactions.Count(r => r.ReactionType == LinkUpPro.Core.Domain.Common.Enums.ReactionType.Like) : 0))
                 .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Reactions != null ? src.Reactions.Count(r => r.ReactionType == LinkUpPro.Core.Domain.Common.Enums.ReactionType.Dislike) : 0))
-                .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments != null ? src.Comments.Where(c => c.ParentCommentId == null || c.ParentCommentId == 0).ToList() : null))
+                .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments != null ? src.Comments.Where(c => c.ParentCommentId == null || c.ParentCommentId == 0).OrderBy(c => c.CreatedAt).ToList() : null))
                 .ForMember(dest => dest.Reactions, opt => opt.MapFrom(src => src.Reactions))
                 .ReverseMap()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Created))

@@ -6,7 +6,7 @@
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="feed-shell max-w-4xl mx-auto space-y-5 sm:space-y-6">
 
     <!-- Alertas y Notificaciones Flash -->
     @if (TempData["SuccessMessage"] != null)
@@ -48,30 +48,57 @@
         </div>
     }
 
+    <section class="feed-intro">
+        <div class="feed-intro-copy">
+            <span class="feed-eyebrow"><i class="fas fa-sparkles"></i> Espacio social</span>
+            <h1 class="mt-2 text-2xl font-black tracking-tight text-gray-900 sm:text-3xl">El pulso de tu comunidad.</h1>
+            <p class="mt-1 text-sm font-medium text-gray-500">Historias, ideas y momentos de las personas que te importan.</p>
+        </div>
+        <div class="feed-intro-actions">
+            <a href="#create-post" class="feed-create-link"><i class="fas fa-pen"></i> Crear publicación</a>
+            <a asp-controller="Profile" asp-action="Index" class="feed-profile-link">
+                <i class="fas fa-arrow-up-right-from-square"></i> Mi perfil
+            </a>
+        </div>
+    </section>
+
+    <!-- Acceso al juego destacado, reubicado desde la columna lateral. -->
+    <section class="game-spotlight bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="absolute -right-8 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative flex-1">
+            <span class="inline-flex px-2.5 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-[10px] font-black uppercase tracking-wider text-blue-300">Juego en vivo</span>
+            <h2 class="text-lg font-black mt-2 leading-tight">Batalla Naval 12x12</h2>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Organiza tu flota y desafía a tus amigos en tiempo real.</p>
+        </div>
+        <a asp-controller="Battleship" asp-action="Index"
+           class="relative shrink-0 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+            <i class="fas fa-play"></i> Entrar a las salas
+        </a>
+    </section>
+
     <!-- 1. COMPOSITOR DE PUBLICACIONES (Estilo Twitter / Facebook) -->
-    <div class="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-gray-200/80 p-6 overflow-hidden relative group">
-        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
-                <h2 class="text-base font-black text-gray-900 tracking-tight flex items-center gap-1.5">
-                    <span>Crear Nueva Publicación</span>
-                </h2>
+    <div id="create-post" class="app-surface composer-card bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-gray-200/80 p-5 sm:p-6 overflow-hidden relative group">
+        <div class="composer-heading">
+            <div class="composer-mark"><i class="fas fa-feather-pointed"></i></div>
+            <div>
+                <h2 class="text-base font-black text-gray-900 tracking-tight">Comparte algo con tu comunidad</h2>
+                <p class="text-xs font-medium text-gray-500">Una idea, una foto o un video para tus amigos.</p>
             </div>
-            <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Muro Público</span>
+            <span class="composer-audience"><i class="fas fa-user-group"></i> Amigos</span>
         </div>
 
         <form asp-controller="Post" asp-action="Create" method="post" enctype="multipart/form-data" class="space-y-4">
             @Html.AntiForgeryToken()
 
             <!-- Text Area con foco interactivo -->
-            <div class="relative">
+            <div class="composer-editor relative">
                 <textarea name="TextContent" rows="3" maxlength="1000" required
                     class="w-full px-4 py-3.5 bg-gray-50/50 hover:bg-gray-50 focus:bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand-blue/15 focus:border-brand-blue outline-none transition-all resize-none placeholder-gray-400 text-gray-800 text-sm font-medium"
                     placeholder="¿Qué estás pensando hoy? ¡Comparte una idea, foto o video con tu red..."></textarea>
             </div>
 
             <!-- Panel multimedia dinámico -->
-            <div id="imageFieldGroup" class="bg-blue-50/50 p-4 rounded-2xl border-2 border-dashed border-blue-200 transition-all">
+            <div id="imageFieldGroup" class="composer-media-panel bg-blue-50/50 p-4 rounded-2xl border-2 border-dashed border-blue-200 transition-all">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-xs font-black text-brand-blue uppercase tracking-wider flex items-center gap-1.5">
                         <i class="fas fa-image"></i> Adjuntar Imagen o Fotografía
@@ -82,7 +109,7 @@
                     class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-brand-blue file:text-white hover:file:bg-blue-800 file:cursor-pointer file:transition-colors bg-white rounded-xl border border-gray-200 p-1" />
             </div>
 
-            <div id="videoFieldGroup" class="bg-red-50/50 p-4 rounded-2xl border-2 border-dashed border-red-200 hidden transition-all">
+            <div id="videoFieldGroup" class="composer-media-panel bg-red-50/50 p-4 rounded-2xl border-2 border-dashed border-red-200 hidden transition-all">
                 <label class="block text-xs font-black text-red-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                     <i class="fab fa-youtube text-sm"></i> Enlace de Video de YouTube
                 </label>
@@ -95,15 +122,15 @@
             </div>
 
             <!-- Controles y Botones Inferiores (Estilo Pills Interactivos) -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+            <div class="composer-actions flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
                 <div class="flex flex-wrap items-center gap-2">
                     
                     <!-- Tipo de multimedia selector -->
                     <div class="relative inline-block">
                         <select name="ContentType" id="createContentType" onchange="toggleMediaFields()"
                             class="appearance-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs px-3.5 py-2 pr-8 rounded-xl border border-gray-200/80 focus:ring-2 focus:ring-brand-blue outline-none transition-all cursor-pointer">
-                            <option value="@((int)ContentType.Image)">🖼️ Imagen</option>
-                            <option value="@((int)ContentType.YouTubeVideo)">▶️ Video YouTube</option>
+                            <option value="@((int)ContentType.Image)">Imagen</option>
+                            <option value="@((int)ContentType.YouTubeVideo)">Video YouTube</option>
                         </select>
                         <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none"></i>
                     </div>
@@ -112,8 +139,8 @@
                     <div class="relative inline-block">
                         <select name="PrivacyMode"
                             class="appearance-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs px-3.5 py-2 pr-8 rounded-xl border border-gray-200/80 focus:ring-2 focus:ring-brand-blue outline-none transition-all cursor-pointer">
-                            <option value="@((int)PrivacyMode.FriendsOnly)">👥 Solo Amigos</option>
-                            <option value="@((int)PrivacyMode.OnlyMe)">🔒 Solo Yo</option>
+                            <option value="@((int)PrivacyMode.FriendsOnly)">Solo amigos</option>
+                            <option value="@((int)PrivacyMode.OnlyMe)">Solo yo</option>
                         </select>
                         <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none"></i>
                     </div>
@@ -123,7 +150,7 @@
                         <input type="checkbox" name="CommentStatus" value="@((int)CommentStatus.Allowed)" checked
                             class="w-3.5 h-3.5 text-brand-blue border-gray-300 rounded focus:ring-brand-blue" />
                         <input type="hidden" name="CommentStatus" value="@((int)CommentStatus.NotAllowed)" />
-                        <span class="text-xs font-extrabold text-gray-700">💬 Comentarios</span>
+                        <span class="text-xs font-extrabold text-gray-700">Comentarios</span>
                     </label>
                 </div>
 
@@ -138,11 +165,12 @@
     </div>
 
     <!-- 2. BARRA DE FILTROS Y BÚSQUEDA INTERACTIVA (Estilo Tabs Twitter / Instagram) -->
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 space-y-4">
+    <div class="app-surface feed-controls bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 space-y-4">
         
         <!-- Tabs Rápidos -->
-        <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-gray-100">
+        <div class="feed-controls-top flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
             <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="feed-filter-label">Explorar</span>
                 <a asp-controller="Home" asp-action="Index" asp-route-contentType="@((int)ContentType.All)"
                    class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.ContentType == ContentType.All && string.IsNullOrEmpty(ViewBag.TextFilter) ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
                     <i class="fas fa-stream mr-1"></i> Todos
@@ -214,11 +242,11 @@
     </div>
 
     <!-- 3. LISTADO DE PUBLICACIONES (Estilo Feed Twitter / Instagram / Facebook) -->
-    <div class="space-y-6">
+    <div class="feed-timeline space-y-5 sm:space-y-6">
         @if (Model == null || !Model.Any())
         {
             bool hasActiveFilters = !string.IsNullOrEmpty(ViewBag.TextFilter?.ToString()) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentType != null && ViewBag.ContentType != ContentType.All) || (ViewBag.EditionStatus != null && ViewBag.EditionStatus != EditionStatus.All);
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-12 text-center space-y-3">
+            <div class="app-surface bg-white rounded-3xl shadow-sm border border-gray-200/80 p-12 text-center space-y-3">
                 <div class="w-16 h-16 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto text-2xl shadow-inner">
                     <i class="fas fa-inbox"></i>
                 </div>
@@ -238,7 +266,7 @@
         {
             foreach (var post in Model)
             {
-                <article id="post-@post.Id" class="bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/80 p-6 space-y-4 overflow-hidden relative group post-anchor-target">
+                <article id="post-@post.Id" class="app-surface post-card bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/80 p-5 sm:p-6 space-y-4 overflow-hidden relative group post-anchor-target">
                     
                     <!-- Post Header -->
                     <div class="flex items-center justify-between">

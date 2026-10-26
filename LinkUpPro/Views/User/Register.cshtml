@@ -1,188 +1,65 @@
 @model LinkUpPro.Core.Application.ViewModels.User.RegisterUserViewModel
 @{
-    ViewData["Title"] = "Registro";
+    ViewData["Title"] = "Crear cuenta";
     ViewData["HideNav"] = true;
 }
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
-    <div class="w-full max-w-lg">
-        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-            <!-- Logo -->
-            <div class="text-center mb-6">
-                <i class="fas fa-infinity text-brand-blue text-3xl mb-2"></i>
-                <h1 class="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
-                <p class="text-gray-500 text-sm mt-1">Complete el formulario para registrarse</p>
-            </div>
+<div class="auth-page auth-register-page">
+    <div class="auth-orbit auth-orbit-one"></div>
+    <div class="auth-orbit auth-orbit-two"></div>
+    <main class="auth-frame auth-register-frame">
+        <section class="auth-story auth-register-story" aria-label="Crear una cuenta en LinkUp Pro">
+            <a asp-controller="Home" asp-action="Index" class="auth-brand"><span class="auth-brand-mark"><i class="fas fa-infinity"></i></span><span>LinkUp <strong>Pro</strong></span></a>
+            <div class="auth-story-copy"><span class="auth-kicker">Tu siguiente conexión</span><h1>Haz espacio para nuevas historias.</h1><p>En unos minutos tendrás un perfil, una comunidad y una nueva forma de compartir.</p></div>
+            <ol class="auth-register-steps"><li><span>01</span> Crea tu identidad</li><li><span>02</span> Personaliza tu perfil</li><li><span>03</span> Conecta y compite</li></ol>
+            <a asp-controller="Login" asp-action="Login" class="auth-story-login"><i class="fas fa-arrow-left"></i> Ya tengo una cuenta</a>
+        </section>
 
-            <!-- Validation errors -->
-            <div asp-validation-summary="ModelOnly" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+        <section class="auth-panel auth-register-panel">
+            <div class="auth-panel-top"><span class="auth-step">Registro</span><h2>Construye tu perfil.</h2><p>Completa tu información para entrar a la comunidad.</p></div>
+            <div asp-validation-summary="ModelOnly" class="auth-alert auth-alert-error" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "flex" : "none")"></div>
             @if (ViewBag.HasError == true && ViewBag.Errors != null)
             {
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-                    @foreach (var err in ViewBag.Errors)
-                    {
-                        <p>@err</p>
-                    }
-                </div>
+                <div class="auth-alert auth-alert-error"><i class="fas fa-circle-exclamation"></i><div>@foreach (var err in ViewBag.Errors) { <p>@err</p> }</div></div>
             }
 
-            <form asp-action="Register" asp-controller="User" method="post" enctype="multipart/form-data" autocomplete="off">
+            <form asp-action="Register" asp-controller="User" method="post" enctype="multipart/form-data" autocomplete="off" class="auth-form auth-register-form">
                 @Html.AntiForgeryToken()
-
-                <!-- Hack anti-autofill para navegadores -->
-                <input type="text" style="display:none" autocomplete="username" />
-                <input type="password" style="display:none" autocomplete="current-password" />
-
-                <!-- Name + LastName row -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                        <input asp-for="FirstName" autocomplete="off" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="Juan" />
-                        <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1"></span>
-                    </div>
-                    <div>
-                        <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                        <input asp-for="LastName" autocomplete="off" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="Pérez" />
-                        <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1"></span>
-                    </div>
+                <input type="text" class="hidden" autocomplete="username" />
+                <input type="password" class="hidden" autocomplete="current-password" />
+                <div class="auth-form-grid">
+                    <div class="auth-field"><label asp-for="FirstName"></label><div class="auth-input-wrap"><i class="far fa-id-badge"></i><input asp-for="FirstName" autocomplete="off" placeholder="Nombre" /></div><span asp-validation-for="FirstName"></span></div>
+                    <div class="auth-field"><label asp-for="LastName"></label><div class="auth-input-wrap"><i class="far fa-id-badge"></i><input asp-for="LastName" autocomplete="off" placeholder="Apellido" /></div><span asp-validation-for="LastName"></span></div>
                 </div>
-
-                <!-- Email -->
-                <div class="mb-4">
-                    <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-envelope"></i></span>
-                        <input asp-for="Email" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="correo@ejemplo.com" />
-                    </div>
-                    <span asp-validation-for="Email" class="text-red-500 text-xs mt-1"></span>
+                <div class="auth-field"><label asp-for="Email"></label><div class="auth-input-wrap"><i class="far fa-envelope"></i><input asp-for="Email" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="correo@ejemplo.com" /></div><span asp-validation-for="Email"></span></div>
+                <div class="auth-field"><label asp-for="UserName"></label><div class="auth-input-wrap"><i class="fas fa-at"></i><input asp-for="UserName" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="usuario" /></div><span asp-validation-for="UserName"></span></div>
+                <div class="auth-field"><label asp-for="PhoneNumber"></label><div class="auth-input-wrap"><i class="fas fa-phone"></i><input asp-for="PhoneNumber" autocomplete="off" placeholder="809-555-1234" /></div><span asp-validation-for="PhoneNumber"></span></div>
+                <div class="auth-form-grid">
+                    <div class="auth-field"><label asp-for="Password"></label><div class="auth-input-wrap"><i class="fas fa-lock"></i><input asp-for="Password" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" id="passwordField" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this.value)" /><button type="button" onclick="togglePassword('passwordField', 'toggleIcon1')" aria-label="Mostrar u ocultar contraseña"><i id="toggleIcon1" class="far fa-eye"></i></button></div><span asp-validation-for="Password"></span></div>
+                    <div class="auth-field"><label asp-for="ConfirmPassword"></label><div class="auth-input-wrap"><i class="fas fa-lock"></i><input asp-for="ConfirmPassword" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" id="confirmPasswordField" placeholder="Confirma tu contraseña" /><button type="button" onclick="togglePassword('confirmPasswordField', 'toggleIcon2')" aria-label="Mostrar u ocultar contraseña"><i id="toggleIcon2" class="far fa-eye"></i></button></div><span asp-validation-for="ConfirmPassword"></span></div>
                 </div>
-
-                <!-- Username -->
-                <div class="mb-4">
-                    <label asp-for="UserName" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-at"></i></span>
-                        <input asp-for="UserName" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="mi_usuario" />
-                    </div>
-                    <span asp-validation-for="UserName" class="text-red-500 text-xs mt-1"></span>
-                </div>
-
-                <!-- Phone -->
-                <div class="mb-4">
-                    <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-phone"></i></span>
-                        <input asp-for="PhoneNumber" autocomplete="off" class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="809-555-1234" />
-                    </div>
-                    <span asp-validation-for="PhoneNumber" class="text-red-500 text-xs mt-1"></span>
-                </div>
-
-                <!-- Password -->
-                <div class="mb-4">
-                    <label asp-for="Password" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
-                        <input asp-for="Password" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" id="passwordField" class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this.value)" />
-                        <button type="button" onclick="togglePassword('passwordField', 'toggleIcon1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                            <i id="toggleIcon1" class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <span asp-validation-for="Password" class="text-red-500 text-xs mt-1"></span>
-                    <!-- Strength indicator -->
-                    <div id="strengthBar" class="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden" style="display:none;">
-                        <div id="strengthFill" class="h-full rounded-full transition-all duration-300" style="width:0%"></div>
-                    </div>
-                    <p id="strengthText" class="text-xs mt-1" style="display:none;"></p>
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="mb-4">
-                    <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
-                        <input asp-for="ConfirmPassword" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" id="confirmPasswordField" class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="Repita su contraseña" />
-                        <button type="button" onclick="togglePassword('confirmPasswordField', 'toggleIcon2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                            <i id="toggleIcon2" class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <span asp-validation-for="ConfirmPassword" class="text-red-500 text-xs mt-1"></span>
-                </div>
-
-                <!-- Profile Photo -->
-                <div class="mb-6">
-                    <label asp-for="ProfileImageFile" class="block text-sm font-medium text-gray-700 mb-1"></label>
-                    <input asp-for="ProfileImageFile" type="file" accept=".jpg,.jpeg,.png,.webp" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-brand-blue file:text-white hover:file:bg-blue-800 file:cursor-pointer" />
-                    <span asp-validation-for="ProfileImageFile" class="text-red-500 text-xs mt-1"></span>
-                    <p class="text-xs text-gray-400 mt-1">Formatos: .jpg, .jpeg, .png, .webp — Máximo 5 MB</p>
-                </div>
-
-                <!-- Buttons -->
-                <div class="flex gap-3">
-                    <a asp-action="Login" asp-controller="Login" class="flex-1 text-center py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                        <i class="fas fa-arrow-left mr-1"></i>Volver atrás
-                    </a>
-                    <button type="submit" class="flex-1 bg-brand-blue text-white py-2.5 rounded-lg font-semibold hover:bg-blue-800 transition-colors shadow-md">
-                        <i class="fas fa-user-plus mr-1"></i>Registrarse
-                    </button>
-                </div>
+                <div class="auth-strength" id="strengthBar" style="display:none;"><div id="strengthFill"></div></div><p id="strengthText" class="auth-strength-label" style="display:none;"></p>
+                <div class="auth-upload"><div><i class="far fa-image"></i><strong>Foto de perfil</strong><small>Opcional · JPG, PNG o WEBP · Máximo 5 MB</small></div><input asp-for="ProfileImageFile" type="file" accept=".jpg,.jpeg,.png,.webp" /><span asp-validation-for="ProfileImageFile"></span></div>
+                <button type="submit" class="auth-submit">Crear mi cuenta <i class="fas fa-sparkles"></i></button>
             </form>
-        </div>
-    </div>
+        </section>
+    </main>
 </div>
 
 @section Scripts {
     <script>
         function togglePassword(fieldId, iconId) {
-            const field = document.getElementById(fieldId);
-            const icon = document.getElementById(iconId);
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                field.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
+            const field = document.getElementById(fieldId); const icon = document.getElementById(iconId);
+            if (field.type === 'password') { field.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { field.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
         }
-
         function checkStrength(password) {
-            const bar = document.getElementById('strengthBar');
-            const fill = document.getElementById('strengthFill');
-            const text = document.getElementById('strengthText');
-
-            if (!password) {
-                bar.style.display = 'none';
-                text.style.display = 'none';
-                return;
-            }
-
-            bar.style.display = 'block';
-            text.style.display = 'block';
-
+            const bar = document.getElementById('strengthBar'); const fill = document.getElementById('strengthFill'); const text = document.getElementById('strengthText');
+            if (!password) { bar.style.display = 'none'; text.style.display = 'none'; return; }
             let score = 0;
-            if (password.length >= 8) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[a-z]/.test(password)) score++;
-            if (/[0-9]/.test(password)) score++;
-            if (/[^A-Za-z0-9]/.test(password)) score++;
-
-            if (score <= 2) {
-                fill.style.width = '33%';
-                fill.className = 'h-full rounded-full transition-all duration-300 bg-red-500';
-                text.textContent = 'Débil';
-                text.className = 'text-xs mt-1 text-red-500 font-medium';
-            } else if (score <= 4) {
-                fill.style.width = '66%';
-                fill.className = 'h-full rounded-full transition-all duration-300 bg-yellow-500';
-                text.textContent = 'Media';
-                text.className = 'text-xs mt-1 text-yellow-500 font-medium';
-            } else {
-                fill.style.width = '100%';
-                fill.className = 'h-full rounded-full transition-all duration-300 bg-green-500';
-                text.textContent = 'Fuerte';
-                text.className = 'text-xs mt-1 text-green-500 font-medium';
-            }
+            if (password.length >= 8) score++; if (/[A-Z]/.test(password)) score++; if (/[a-z]/.test(password)) score++; if (/[0-9]/.test(password)) score++; if (/[^A-Za-z0-9]/.test(password)) score++;
+            const styles = score <= 2 ? ['33%', '#f43f5e', 'Seguridad básica'] : score <= 4 ? ['66%', '#f59e0b', 'Seguridad media'] : ['100%', '#10b981', 'Contraseña sólida'];
+            bar.style.display = 'block'; text.style.display = 'block'; fill.style.width = styles[0]; fill.style.background = styles[1]; text.textContent = styles[2]; text.style.color = styles[1];
         }
     </script>
 }

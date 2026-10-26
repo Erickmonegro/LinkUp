@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseBlazorWebAssembly>false</UseBlazorWebAssembly>
+    <UserSecretsId>28b5114f-7314-45aa-b742-e2fbfe47fd07</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

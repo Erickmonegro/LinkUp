@@ -36,6 +36,11 @@ namespace LinkUpPro.Infrastructure.Shared.Services
                     Subject = emailRequestDto.Subject
                 };
 
+                email.From.Add(new MailboxAddress(
+                    _emailSettings.DisplayName ?? "LinkUp Pro",
+                    _emailSettings.EmailFrom!
+                ));
+
                 if (!string.IsNullOrWhiteSpace(emailRequestDto.To))
                 {
                     email.To.Add(MailboxAddress.Parse(emailRequestDto.To));

@@ -1,9 +1,10 @@
 @model List<LinkUpPro.Core.Application.ViewModels.Notification.NotificationViewModel>
 @{
     ViewData["Title"] = "Notificaciones";
+    var unreadCount = Model?.Count(n => !n.IsRead) ?? 0;
 }
 
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="notifications-page max-w-4xl mx-auto space-y-6">
 
     <!-- Messages -->
     @if (TempData["SuccessMessage"] != null)
@@ -21,11 +22,20 @@
         </div>
     }
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
-        <div class="flex justify-between items-center pb-4 border-b border-gray-100">
-            <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <i class="fas fa-bell text-brand-blue"></i> Notificaciones
-            </h1>
+    <div class="notification-hero">
+        <div>
+            <span class="notification-kicker"><i class="fas fa-bell"></i> Actividad</span>
+            <h1>Todo lo que pasó mientras estabas fuera.</h1>
+            <p>@(unreadCount == 1 ? "Tienes 1 actualización pendiente." : $"Tienes {unreadCount} actualizaciones pendientes.")</p>
+        </div>
+        <div class="notification-orb"><span>@unreadCount</span><small>nuevas</small></div>
+    </div>
+
+    <div class="activity-panel app-surface bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+        <div class="activity-panel-header flex justify-between items-center pb-4 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-inbox text-brand-blue"></i> Bandeja de actividad
+            </h2>
 
             @if (Model != null && Model.Any(n => !n.IsRead))
             {
@@ -47,13 +57,13 @@
         }
         else
         {
-            <div class="divide-y divide-gray-100">
+            <div class="notification-list divide-y divide-gray-100">
                 @foreach (var notification in Model)
                 {
                     var triggerName = ViewData[$"Name-{notification.Id}"] as string ?? "Un usuario";
                     var triggerPhoto = ViewData[$"Photo-{notification.Id}"] as string;
 
-                    <div class="flex items-center justify-between py-4 gap-4 @(notification.IsRead ? "opacity-75" : "bg-blue-50/30 -mx-6 px-6")">
+                    <div class="notification-item flex items-center justify-between py-4 gap-4 @(notification.IsRead ? "opacity-75" : "is-unread bg-blue-50/30 -mx-6 px-6")">
                         <div class="flex items-center gap-3">
                             @if (!string.IsNullOrEmpty(triggerPhoto))
                             {

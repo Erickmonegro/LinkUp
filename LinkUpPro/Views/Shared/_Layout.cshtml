@@ -23,7 +23,6 @@
     string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 
-    bool isHomeFeed = currentController == "Home" && currentAction == "Index";
     bool isGame = currentController == "Battleship" || currentController == "ShipPosition" || currentController == "Attack";
 }
 
@@ -36,6 +35,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <script>
         tailwind.config = {
@@ -124,17 +124,17 @@
         }
     </script>
 </head>
-<body class="flex flex-col min-h-screen bg-bg-soft text-gray-800 antialiased selection:bg-brand-blue selection:text-white transition-colors duration-200">
+<body class="app-shell flex flex-col min-h-screen bg-bg-soft text-gray-800 antialiased selection:bg-brand-blue selection:text-white transition-colors duration-200">
 
     @if (ViewData["HideNav"] is not true)
     {
       
-        <header class="backdrop-blur-md bg-white/90 border-b border-gray-200/80 shadow-sm sticky top-0 z-50 transition-all">
-            <nav class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
+        <header class="app-header backdrop-blur-md bg-white/90 border-b border-gray-200/80 shadow-sm sticky top-0 z-50 transition-all">
+            <nav class="app-topbar max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-[4.75rem]">
                     
                     <!-- Logo & Brand -->
-                    <div class="flex items-center gap-3">
+                    <div class="app-brand flex items-center gap-3">
                         <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2.5 group">
                             <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-blue via-indigo-600 to-sky-400 flex items-center justify-center text-white text-xl shadow-md group-hover:scale-105 group-hover:rotate-6 transition-all duration-300">
                                 <i class="fas fa-infinity"></i>
@@ -146,7 +146,7 @@
                     </div>
 
                     <!-- Top Navigation Bar (Mobile / Compact links) -->
-                    <div class="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+                    <div class="app-global-nav flex items-center space-x-1 sm:space-x-2 md:space-x-3">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <!-- Home -->
@@ -284,7 +284,7 @@
     }
 
     <!-- CONTENEDOR PRINCIPAL SUPER AMPLIO (max-w-[1600px]) PARA APROVECHAR TODA LA PANTALLA -->
-    <main class="flex-grow @(ViewData["HideNav"] is true ? "flex flex-col" : "max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8")">
+    <main class="app-main flex-grow @(ViewData["HideNav"] is true ? "flex flex-col" : "max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8")">
 
         @if (ViewData["HideNav"] is not true
              && User.Identity != null
@@ -301,20 +301,20 @@
             else
             {
                 <!-- GRID DINÁMICO DE RED SOCIAL -->
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 xl:gap-8 items-start">
+                <div class="app-layout-grid grid grid-cols-1 md:grid-cols-12 gap-6 xl:gap-8 items-start">
 
                     <!-- COLUMNA IZQUIERDA: Panel de Usuario & Navegación (3 col o 2 col en xl) -->
-                    <aside class="hidden md:flex md:col-span-3 xl:col-span-2 flex-col space-y-4 sticky top-20">
+                    <aside class="app-sidebar hidden md:flex md:col-span-3 xl:col-span-2 flex-col space-y-4 sticky top-20">
                         
                         <!-- Tarjeta de Perfil Elegante con Banner Gráfica -->
-                        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="app-surface app-profile-card bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                             <!-- Banner Gráfico -->
                             <div class="h-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
                                 <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
                             </div>
 
                             <!-- Foto y Datos -->
-                            <div class="px-4 pb-5 pt-0 relative flex flex-col items-center text-center">
+                            <div class="app-profile-body px-4 pb-5 pt-0 relative flex flex-col items-center text-center">
                                 <div class="-mt-10 mb-2 relative">
                                     @if (!string.IsNullOrEmpty(currentUser.PhotoUrl))
                                     {
@@ -368,7 +368,7 @@
                         </div>
 
                         <!-- Menú Lateral Social (Estilo Twitter / X) -->
-                        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-3 space-y-1">
+                        <div class="app-surface app-nav-card bg-white rounded-3xl shadow-sm border border-gray-200 p-3 space-y-1">
                             <p class="text-[11px] font-black uppercase tracking-wider text-gray-400 px-3 py-1">Navegación</p>
 
                             <a asp-controller="Home" asp-action="Index" 
@@ -430,68 +430,10 @@
                         </div>
                     </aside>
 
-                    <!-- COLUMNA CENTRAL: SE EXPANDE A 10 COLUMNAS EN PERFIL/AMIGOS Y 7 EN INICIO -->
-                    <div class="@(isHomeFeed ? "md:col-span-9 lg:col-span-6 xl:col-span-7" : "md:col-span-9 xl:col-span-10") min-w-0">
+                    <!-- COLUMNA CENTRAL: el feed usa el espacio liberado por los widgets retirados -->
+                    <div class="app-content md:col-span-9 xl:col-span-10 min-w-0">
                         @RenderBody()
                     </div>
-
-                    @if (isHomeFeed)
-                    {
-                        <!-- COLUMNA DERECHA (SOLO EN EL INICIO / FEED): Widgets de Tendencia & Acceso Rápido -->
-                        <aside class="hidden lg:flex lg:col-span-3 xl:col-span-3 flex-col space-y-4 sticky top-20">
-                            
-                            <!-- Widget de Juego Destacado: Battleship -->
-                            <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden group">
-                                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-                                <span class="px-2.5 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-[10px] font-black uppercase tracking-wider text-blue-300">Juego En Vivo</span>
-                                <h4 class="text-lg font-black mt-2 leading-tight">Batalla Naval 12x12</h4>
-                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">Despliega estratégicamente tu flota naval en el mapa interactivo y desafía a tus amigos en combate en tiempo real.</p>
-                                <a asp-controller="Battleship" asp-action="Index" 
-                                   class="mt-4 w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
-                                    <i class="fas fa-play"></i> Entrar a las Salas de Juego
-                                </a>
-                            </div>
-
-                            <!-- Widget de Novedades y Tendencias (Estilo Twitter Trending) -->
-                            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-5 space-y-4">
-                                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-                                    <h4 class="font-black text-gray-900 text-sm flex items-center gap-2">
-                                        <i class="fas fa-bolt text-amber-500"></i> Tendencias en LinkUp
-                                    </h4>
-                                    <span class="text-[10px] font-bold text-brand-blue bg-blue-50 px-2 py-0.5 rounded-full">Hoy</span>
-                                </div>
-
-                                <div class="space-y-3">
-                                    <div class="p-2.5 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Tecnología • Trending</p>
-                                        <p class="font-bold text-xs text-gray-800 group-hover:text-brand-blue transition-colors">#LinkUpPro2026</p>
-                                        <p class="text-[10px] text-gray-500 mt-0.5">1,420 publicaciones interactivas</p>
-                                    </div>
-
-                                    <div class="p-2.5 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Gaming • En Directo</p>
-                                        <p class="font-bold text-xs text-gray-800 group-hover:text-brand-blue transition-colors">Torneo Naval Marítimo</p>
-                                        <p class="text-[10px] text-gray-500 mt-0.5">Tableros de combate 12x12</p>
-                                    </div>
-
-                                    <div class="p-2.5 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase">Comunidad • Amigos</p>
-                                        <p class="font-bold text-xs text-gray-800 group-hover:text-brand-blue transition-colors">Conecta con tu Red</p>
-                                        <p class="text-[10px] text-gray-500 mt-0.5">Comparte videos de YouTube y fotos</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Widget de Consejos -->
-                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-3xl p-5 border border-blue-100/80 text-blue-900 space-y-2">
-                                <div class="flex items-center gap-2 font-bold text-xs text-brand-blue">
-                                    <i class="fas fa-shield-alt text-base"></i> Privacidad Protegida
-                                </div>
-                                <p class="text-xs text-gray-600 leading-relaxed">Puedes elegir en cada publicación si deseas que sea visible para <strong>Solo Amigos</strong> o <strong>Solo Yo</strong>.</p>
-                            </div>
-
-                        </aside>
-                    }
 
                 </div>
             }
@@ -505,7 +447,7 @@
 
     @if (ViewData["HideNav"] is not true)
     {
-        <footer class="bg-white border-t border-gray-200 mt-auto transition-colors">
+        <footer class="app-footer bg-white border-t border-gray-200 mt-auto transition-colors">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-500">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded-lg bg-brand-blue text-white flex items-center justify-center text-xs font-bold">

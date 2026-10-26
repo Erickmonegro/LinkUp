@@ -8,7 +8,7 @@
     var posts = ViewBag.Posts as List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO> ?? new List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO>();
 }
 
-<div class="w-full space-y-8 animate-fade-in pb-12">
+<div class="profile-page w-full space-y-8 animate-fade-in pb-12">
 
     <!-- Alertas Flash -->
     @if (TempData["SuccessMessage"] != null)
@@ -20,10 +20,10 @@
     }
 
     <!-- 1. CABECERA GIGANTE DEL MURO DE PERFIL (Estilo Facebook Desktop / Twitter X) -->
-    <div class="bg-white rounded-3xl shadow-md border border-gray-200/80 overflow-hidden relative">
+    <div class="profile-hero app-surface bg-white rounded-3xl shadow-md border border-gray-200/80 overflow-hidden relative">
         
         <!-- Banner Gráfica Amplia -->
-        <div class="h-64 sm:h-72 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 relative overflow-hidden">
+        <div class="profile-cover h-64 sm:h-72 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 relative overflow-hidden">
             @if (!string.IsNullOrEmpty(Model.CoverPhotoUrl))
             {
                 <img src="@Model.CoverPhotoUrl" alt="Portada" class="w-full h-full object-cover absolute inset-0" />
@@ -44,7 +44,7 @@
         </div>
 
         <!-- Foto de Perfil & Datos en Disposición Amplia -->
-        <div class="px-8 sm:px-12 pb-8 pt-0 relative flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+        <div class="profile-identity px-8 sm:px-12 pb-8 pt-0 relative flex flex-col xl:flex-row xl:items-end justify-between gap-8">
             
             <div class="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-8 -mt-20 sm:-mt-24 relative z-10">
                 <div class="relative group mx-auto sm:mx-0 flex-shrink-0">
@@ -89,7 +89,7 @@
         </div>
 
         <!-- Barra de Estadísticas Amplia en el Muro -->
-        <div class="grid grid-cols-3 border-t border-gray-100 bg-gray-50/70 p-5 text-center">
+        <div class="profile-metrics grid grid-cols-3 border-t border-gray-100 bg-gray-50/70 p-5 text-center">
             <div class="border-r border-gray-200">
                 <p class="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Total de Amigos</p>
                 <p class="text-2xl sm:text-3xl font-black text-gray-900 mt-1">@friendsCount</p>
@@ -108,11 +108,11 @@
     </div>
 
     <!-- 2. CUERPO DEL PERFIL EN 2 COLUMNAS (Estilo Facebook Desktop / LinkedIn) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div class="profile-dashboard grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         <!-- COLUMNA IZQUIERDA: DETALLES Y ACERCA DE MÍ (4 Columnas) -->
-        <div class="lg:col-span-4 space-y-6">
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 space-y-5">
+        <div class="profile-info-rail lg:col-span-4 space-y-6">
+            <div class="profile-details app-surface bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 space-y-5">
                 <h3 class="font-black text-gray-900 text-base flex items-center gap-2.5 border-b border-gray-100 pb-3">
                     <i class="fas fa-info-circle text-brand-blue text-lg"></i> Detalles de Mi Cuenta
                 </h3>
@@ -159,7 +159,7 @@
             </div>
 
             <!-- Caja de Privacidad -->
-            <div class="bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 rounded-3xl p-6 border border-blue-100/80 text-blue-900 space-y-3">
+            <div class="profile-privacy bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 rounded-3xl p-6 border border-blue-100/80 text-blue-900 space-y-3">
                 <div class="flex items-center gap-2.5 font-black text-sm text-brand-blue">
                     <i class="fas fa-lock text-lg"></i> Control de Privacidad
                 </div>
@@ -170,8 +170,8 @@
         </div>
 
         <!-- COLUMNA DERECHA: FEED DE MIS PUBLICACIONES (8 Columnas) -->
-        <div class="lg:col-span-8 space-y-6">
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="profile-journal lg:col-span-8 space-y-6">
+            <div class="profile-journal-header app-surface bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-black text-gray-900 flex items-center gap-3">
                         <i class="fas fa-newspaper text-brand-blue text-2xl"></i> Mis Publicaciones
@@ -202,7 +202,7 @@
             {
                 foreach (var post in posts)
                 {
-                    <article id="post-@post.Id" class="bg-white rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200/80 p-7 space-y-5 post-anchor-target">
+                    <article id="post-@post.Id" class="profile-post app-surface bg-white rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200/80 p-7 space-y-5 post-anchor-target">
                         <!-- Post Header -->
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-4">

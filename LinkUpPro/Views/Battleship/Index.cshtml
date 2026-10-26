@@ -20,9 +20,9 @@
     var totalLost = finishedOnly.Count(m => !string.IsNullOrEmpty(m.WinnerId) && m.WinnerId != currentUserId);
 }
 
-<div class="max-w-6xl mx-auto space-y-10 py-4">
+<div class="battle-command-page max-w-6xl mx-auto space-y-10 py-4">
     <!-- Header General -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+    <div class="battle-command-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue text-2xl shadow-sm">
                 <i class="fas fa-water"></i>
@@ -59,8 +59,8 @@
     }
 
     <!-- 1. LISTADO DE PARTIDAS ACTIVAS -->
-    <div class="space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-900 via-brand-blue to-indigo-800 text-white p-5 rounded-3xl shadow-lg">
+    <div class="battle-live-section space-y-4">
+        <div class="battle-live-banner flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-900 via-brand-blue to-indigo-800 text-white p-5 rounded-3xl shadow-lg">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl backdrop-blur-xs">
                     <i class="fas fa-play-circle text-amber-400"></i>
@@ -75,7 +75,7 @@
             </a>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="battle-table app-surface bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
             @if (!activeMatches.Any())
             {
                 <div class="p-12 text-center space-y-3">
@@ -201,7 +201,7 @@
     </div>
 
     <!-- 2. LISTADO Y RESUMEN DEL HISTORIAL DE PARTIDAS -->
-    <div class="space-y-6 pt-6 border-t border-gray-200">
+    <div class="battle-history space-y-6 pt-6 border-t border-gray-200">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shadow-2xs">
                 <i class="fas fa-history"></i>
@@ -213,7 +213,7 @@
         </div>
 
         <!-- Resumen de estadísticas del historial -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="battle-stats grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-100 rounded-3xl p-6 flex items-center justify-between shadow-2xs">
                 <div>
                     <p class="text-xs uppercase font-extrabold text-blue-600 tracking-wider">Total Partidas Jugadas</p>
@@ -246,7 +246,7 @@
         </div>
 
         <!-- Tabla del historial -->
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="battle-table battle-history-table app-surface bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
             @if (!historyMatches.Any())
             {
                 <div class="p-12 text-center space-y-2">

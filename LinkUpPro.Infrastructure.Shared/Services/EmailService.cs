@@ -24,7 +24,7 @@ namespace LinkUpPro.Infrastructure.Shared.Services
         {
             try
             {
-                if (string.IsNullOrEmpty(_emailSettings.SmtpHost) || string.IsNullOrEmpty(_emailSettings.SmtpUser) || string.IsNullOrEmpty(_emailSettings.SmtpPass) || string.IsNullOrEmpty(_emailSettings.EmailFrom))
+                if (string.IsNullOrEmpty(_emailSettings.SmtpHost) || string.IsNullOrEmpty(_emailSettings.EmailFrom))
                 {
                     _logger.LogWarning("Email server is not fully configured. Email was not sent.");
                     return;
@@ -61,12 +61,18 @@ namespace LinkUpPro.Infrastructure.Shared.Services
                 email.Body = builder.ToMessageBody();
 
                 using var smtp = new SmtpClient();
-                var socketOption = _emailSettings.SmtpPort == 465
-                    ? SecureSocketOptions.SslOnConnect
-                    : SecureSocketOptions.StartTls;
+                var socketOption = _emailSettings.SmtpPort switch
+                {
+                    465 => SecureSocketOptions.SslOnConnect,
+                    1025 => SecureSocketOptions.None,
+                    _ => SecureSocketOptions.StartTls
+                };
 
                 await smtp.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, socketOption);
-                await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
+                if (!string.IsNullOrWhiteSpace(_emailSettings.SmtpUser) && !string.IsNullOrWhiteSpace(_emailSettings.SmtpPass))
+                {
+                    await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
+                }
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);
             }

@@ -1,0 +1,620 @@
+@using LinkUpPro.Core.Domain.Common.Enums
+@using System.Security.Claims
+@model List<LinkUpPro.Core.Application.DTOs.PostDTO.PostDTO>
+@{
+    ViewData["Title"] = "Muro Social";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+<div class="feed-shell max-w-4xl mx-auto space-y-5 sm:space-y-6">
+
+    <!-- Alertas y Notificaciones Flash -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm animate-fade-in">
+            <i class="fas fa-check-circle text-green-500 text-lg"></i>
+            <span class="font-bold">@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm animate-fade-in mb-4">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span class="font-bold">@TempData["ErrorMessage"]</span>
+        </div>
+    }
+    @if (ViewBag.DateFrom != null && ViewBag.DateTo != null && DateTime.Parse(ViewBag.DateFrom.ToString()) > DateTime.Parse(ViewBag.DateTo.ToString()))
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm animate-fade-in mb-4">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span class="font-bold">La fecha inicial no puede ser posterior a la fecha final.</span>
+        </div>
+    }
+    
+    @if (TempData["CreatePostError"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm flex items-center gap-3 shadow-sm">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span>@Html.Raw(TempData["CreatePostError"])</span>
+        </div>
+    }
+
+    @if (TempData["CommentError"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl text-sm mb-4 flex items-center gap-3 shadow-sm">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span>@TempData["CommentError"]</span>
+        </div>
+    }
+
+    <section class="feed-intro">
+        <div class="feed-intro-copy">
+            <span class="feed-eyebrow"><i class="fas fa-sparkles"></i> Espacio social</span>
+            <h1 class="mt-2 text-2xl font-black tracking-tight text-gray-900 sm:text-3xl">El pulso de tu comunidad.</h1>
+            <p class="mt-1 text-sm font-medium text-gray-500">Historias, ideas y momentos de las personas que te importan.</p>
+        </div>
+        <div class="feed-intro-actions">
+            <a href="#create-post" class="feed-create-link"><i class="fas fa-pen"></i> Crear publicación</a>
+            <a asp-controller="Profile" asp-action="Index" class="feed-profile-link">
+                <i class="fas fa-arrow-up-right-from-square"></i> Mi perfil
+            </a>
+        </div>
+    </section>
+
+    <!-- Acceso al juego destacado, reubicado desde la columna lateral. -->
+    <section class="game-spotlight bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="absolute -right-8 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative flex-1">
+            <span class="inline-flex px-2.5 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-[10px] font-black uppercase tracking-wider text-blue-300">Juego en vivo</span>
+            <h2 class="text-lg font-black mt-2 leading-tight">Batalla Naval 12x12</h2>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Organiza tu flota y desafía a tus amigos en tiempo real.</p>
+        </div>
+        <a asp-controller="Battleship" asp-action="Index"
+           class="relative shrink-0 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+            <i class="fas fa-play"></i> Entrar a las salas
+        </a>
+    </section>
+
+    <!-- 1. COMPOSITOR DE PUBLICACIONES (Estilo Twitter / Facebook) -->
+    <div id="create-post" class="app-surface composer-card bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-gray-200/80 p-5 sm:p-6 overflow-hidden relative group">
+        <div class="composer-heading">
+            <div class="composer-mark"><i class="fas fa-feather-pointed"></i></div>
+            <div>
+                <h2 class="text-base font-black text-gray-900 tracking-tight">Comparte algo con tu comunidad</h2>
+                <p class="text-xs font-medium text-gray-500">Una idea, una foto o un video para tus amigos.</p>
+            </div>
+            <span class="composer-audience"><i class="fas fa-user-group"></i> Amigos</span>
+        </div>
+
+        <form asp-controller="Post" asp-action="Create" method="post" enctype="multipart/form-data" class="space-y-4">
+            @Html.AntiForgeryToken()
+
+            <!-- Text Area con foco interactivo -->
+            <div class="composer-editor relative">
+                <textarea name="TextContent" rows="3" maxlength="1000" required
+                    class="w-full px-4 py-3.5 bg-gray-50/50 hover:bg-gray-50 focus:bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand-blue/15 focus:border-brand-blue outline-none transition-all resize-none placeholder-gray-400 text-gray-800 text-sm font-medium"
+                    placeholder="¿Qué estás pensando hoy? ¡Comparte una idea, foto o video con tu red..."></textarea>
+            </div>
+
+            <!-- Panel multimedia dinámico -->
+            <div id="imageFieldGroup" class="composer-media-panel bg-blue-50/50 p-4 rounded-2xl border-2 border-dashed border-blue-200 transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-black text-brand-blue uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fas fa-image"></i> Adjuntar Imagen o Fotografía
+                    </label>
+                    <span class="text-[11px] font-bold text-gray-400">JPG, PNG, WEBP (Máx 5MB)</span>
+                </div>
+                <input type="file" name="ImageFile" accept=".jpg,.jpeg,.png,.webp" id="imageInput"
+                    class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-brand-blue file:text-white hover:file:bg-blue-800 file:cursor-pointer file:transition-colors bg-white rounded-xl border border-gray-200 p-1" />
+            </div>
+
+            <div id="videoFieldGroup" class="composer-media-panel bg-red-50/50 p-4 rounded-2xl border-2 border-dashed border-red-200 hidden transition-all">
+                <label class="block text-xs font-black text-red-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <i class="fab fa-youtube text-sm"></i> Enlace de Video de YouTube
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-red-400"><i class="fas fa-link"></i></span>
+                    <input type="url" name="MediaUrl" id="videoUrlInput"
+                        class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-xs font-medium placeholder-gray-400"
+                        placeholder="https://www.youtube.com/watch?v=..." />
+                </div>
+            </div>
+
+            <!-- Controles y Botones Inferiores (Estilo Pills Interactivos) -->
+            <div class="composer-actions flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    
+                    <!-- Tipo de multimedia selector -->
+                    <div class="relative inline-block">
+                        <select name="ContentType" id="createContentType" onchange="toggleMediaFields()"
+                            class="appearance-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs px-3.5 py-2 pr-8 rounded-xl border border-gray-200/80 focus:ring-2 focus:ring-brand-blue outline-none transition-all cursor-pointer">
+                            <option value="@((int)ContentType.Image)">Imagen</option>
+                            <option value="@((int)ContentType.YouTubeVideo)">Video YouTube</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none"></i>
+                    </div>
+
+                    <!-- Privacidad -->
+                    <div class="relative inline-block">
+                        <select name="PrivacyMode"
+                            class="appearance-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs px-3.5 py-2 pr-8 rounded-xl border border-gray-200/80 focus:ring-2 focus:ring-brand-blue outline-none transition-all cursor-pointer">
+                            <option value="@((int)PrivacyMode.FriendsOnly)">Solo amigos</option>
+                            <option value="@((int)PrivacyMode.OnlyMe)">Solo yo</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none"></i>
+                    </div>
+
+                    <!-- Comentarios -->
+                    <label class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl border border-gray-200/80 cursor-pointer transition-all">
+                        <input type="checkbox" name="CommentStatus" value="@((int)CommentStatus.Allowed)" checked
+                            class="w-3.5 h-3.5 text-brand-blue border-gray-300 rounded focus:ring-brand-blue" />
+                        <input type="hidden" name="CommentStatus" value="@((int)CommentStatus.NotAllowed)" />
+                        <span class="text-xs font-extrabold text-gray-700">Comentarios</span>
+                    </label>
+                </div>
+
+                <!-- Botón Publicar -->
+                <button type="submit" 
+                        class="bg-gradient-to-r from-brand-blue to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg hover:scale-105 flex items-center gap-2 active:scale-95">
+                    <span>Publicar</span>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. BARRA DE FILTROS Y BÚSQUEDA INTERACTIVA (Estilo Tabs Twitter / Instagram) -->
+    <div class="app-surface feed-controls bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 space-y-4">
+        
+        <!-- Tabs Rápidos -->
+        <div class="feed-controls-top flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="feed-filter-label">Explorar</span>
+                <a asp-controller="Home" asp-action="Index" asp-route-contentType="@((int)ContentType.All)"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.ContentType == ContentType.All && string.IsNullOrEmpty(ViewBag.TextFilter) ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <i class="fas fa-stream mr-1"></i> Todos
+                </a>
+                <a asp-controller="Home" asp-action="Index" asp-route-contentType="@((int)ContentType.Image)"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.ContentType == ContentType.Image ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <i class="fas fa-image mr-1"></i> Fotos
+                </a>
+                <a asp-controller="Home" asp-action="Index" asp-route-contentType="@((int)ContentType.YouTubeVideo)"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.ContentType == ContentType.YouTubeVideo ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <i class="fab fa-youtube mr-1"></i> Videos
+                </a>
+                <a asp-controller="Home" asp-action="Index" asp-route-editionStatus="@((int)EditionStatus.Edited)"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.EditionStatus == EditionStatus.Edited ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <i class="fas fa-pen mr-1"></i> Editadas
+                </a>
+                <a asp-controller="Home" asp-action="Index" asp-route-editionStatus="@((int)EditionStatus.NotEdited)"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all @(ViewBag.EditionStatus == EditionStatus.NotEdited ? "bg-brand-blue text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200")">
+                    <i class="fas fa-check mr-1"></i> Sin editar
+                </a>
+            </div>
+
+            <!-- Botón desplegar filtros avanzados -->
+            <button type="button" onclick="document.getElementById('advancedFilterBox').classList.toggle('hidden');"
+                    class="text-xs font-extrabold text-brand-blue hover:text-indigo-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-blue-50 transition-colors">
+                <i class="fas fa-filter"></i> <span>Búsqueda Avanzada</span>
+            </button>
+        </div>
+
+        <!-- Caja Desplegable de Búsqueda Avanzada -->
+        <div id="advancedFilterBox" class="@(string.IsNullOrEmpty(ViewBag.TextFilter) && ViewBag.DateFrom == null && ViewBag.DateTo == null && (ViewBag.EditionStatus == null || ViewBag.EditionStatus == EditionStatus.All) ? "hidden" : "") pt-2 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/60">
+            <form asp-controller="Home" asp-action="Index" method="get" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Palabra Clave</label>
+                        <input type="text" name="textFilter" value="@ViewBag.TextFilter"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none font-medium placeholder-gray-400"
+                            placeholder="Buscar en el contenido..." />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Estado</label>
+                        <select name="editionStatus" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none font-medium">
+                            <option value="@((int)EditionStatus.All)" selected="@(ViewBag.EditionStatus == null || ViewBag.EditionStatus == EditionStatus.All)">Todas</option>
+                            <option value="@((int)EditionStatus.Edited)" selected="@(ViewBag.EditionStatus == EditionStatus.Edited)">Editadas</option>
+                            <option value="@((int)EditionStatus.NotEdited)" selected="@(ViewBag.EditionStatus == EditionStatus.NotEdited)">Sin editar</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Desde Fecha</label>
+                        <input type="date" name="dateFrom" value="@ViewBag.DateFrom"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none font-medium" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Hasta Fecha</label>
+                        <input type="date" name="dateTo" value="@ViewBag.DateTo"
+                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none font-medium" />
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-1">
+                    <a asp-controller="Home" asp-action="Index" class="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded-xl transition-colors">
+                        Limpiar filtros
+                    </a>
+                    <button type="submit" class="px-5 py-1.5 bg-brand-blue hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center gap-1.5">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. LISTADO DE PUBLICACIONES (Estilo Feed Twitter / Instagram / Facebook) -->
+    <div class="feed-timeline space-y-5 sm:space-y-6">
+        @if (Model == null || !Model.Any())
+        {
+            bool hasActiveFilters = !string.IsNullOrEmpty(ViewBag.TextFilter?.ToString()) || ViewBag.DateFrom != null || ViewBag.DateTo != null || (ViewBag.ContentType != null && ViewBag.ContentType != ContentType.All) || (ViewBag.EditionStatus != null && ViewBag.EditionStatus != EditionStatus.All);
+            <div class="app-surface bg-white rounded-3xl shadow-sm border border-gray-200/80 p-12 text-center space-y-3">
+                <div class="w-16 h-16 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto text-2xl shadow-inner">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h3 class="font-black text-gray-900 text-base">No hay publicaciones para mostrar</h3>
+                <p class="text-gray-500 text-xs font-medium max-w-sm mx-auto">
+                    @(hasActiveFilters ? "No se encontraron publicaciones que coincidan con los criterios seleccionados." : "Todavía no ha realizado ninguna publicación.")
+                </p>
+                @if (hasActiveFilters)
+                {
+                    <a asp-controller="Home" asp-action="Index" class="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors mt-2">
+                        Ver todas las publicaciones
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            foreach (var post in Model)
+            {
+                <article id="post-@post.Id" class="app-surface post-card bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/80 p-5 sm:p-6 space-y-4 overflow-hidden relative group post-anchor-target">
+                    
+                    <!-- Post Header -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3.5">
+                            <div class="relative">
+                                @if (!string.IsNullOrEmpty(post.AuthorPhotoUrl))
+                                {
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="block">
+                                        <img src="@post.AuthorPhotoUrl" alt="Foto de @post.AuthorName" class="w-11 h-11 rounded-full object-cover border-2 border-brand-blue/20 shadow-sm hover:ring-2 hover:ring-brand-blue transition-all" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center text-gray-400 border border-gray-200 shadow-sm">
+                                        <i class="fas fa-user text-lg"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@post.AuthorId" class="font-extrabold text-gray-900 text-sm leading-tight hover:text-brand-blue transition-colors">@post.AuthorName</a>
+                                    <span class="text-xs text-gray-400 font-medium">&#64;@(post.AuthorUserName ?? post.AuthorName)</span>
+                                    <i class="fas fa-check-circle text-brand-blue text-xs" title="Usuario Verificado"></i>
+                                </div>
+                                <div class="flex items-center gap-2 text-[11px] text-gray-400 font-medium mt-0.5">
+                                    <span>@post.Created.ToLocalTime().ToString("g")</span>
+                                    <span>•</span>
+                                    <span class="flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+                                        @if (post.PrivacyMode == PrivacyMode.FriendsOnly)
+                                        {
+                                            <i class="fas fa-user-group text-brand-blue" title="Solo amigos"></i>
+                                            <span>Amigos</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-lock text-amber-600" title="Solo yo"></i>
+                                            <span>Privado</span>
+                                        }
+                                    </span>
+                                    @if (post.EditionStatus == EditionStatus.Edited)
+                                    {
+                                        <span class="bg-blue-50 text-brand-blue px-2 py-0.5 rounded-full text-[10px] font-extrabold border border-blue-100">Editada</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Opciones y Acciones de la Publicación -->
+                        <div class="flex items-center gap-1">
+                            <!-- Bookmark visual -->
+                            <button type="button" onclick="this.classList.toggle('text-amber-500'); this.classList.toggle('text-gray-300');" 
+                                    class="text-gray-300 hover:text-amber-500 p-2 rounded-xl hover:bg-amber-50 transition-all" title="Guardar publicación">
+                                <i class="fas fa-bookmark text-sm"></i>
+                            </button>
+
+                            @if (post.AuthorId == userId)
+                            {
+                                <a asp-controller="Post" asp-action="Edit" asp-route-id="@post.Id" 
+                                   class="text-gray-400 hover:text-brand-blue p-2 rounded-xl hover:bg-blue-50 transition-colors" title="Editar">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </a>
+                                <a asp-controller="Post" asp-action="Delete" asp-route-id="@post.Id" 
+                                   class="text-gray-400 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition-colors" title="Eliminar">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Post Body (Texto) -->
+                    <p class="text-gray-800 text-sm md:text-base leading-relaxed whitespace-pre-line font-normal px-1">@post.TextContent</p>
+
+                    <!-- Post Body (Multimedia Gráfica) -->
+                    @if (post.ContentType == ContentType.Image && !string.IsNullOrEmpty(post.MediaUrl))
+                    {
+                        <div class="rounded-2xl overflow-hidden border border-gray-100 max-h-[500px] bg-gray-900 shadow-sm group-hover:shadow-md transition-shadow">
+                            <img src="@post.MediaUrl" alt="Contenido multimedia" class="w-full h-full object-cover hover:scale-[1.01] transition-transform duration-500" />
+                        </div>
+                    }
+                    else if (post.ContentType == ContentType.YouTubeVideo && !string.IsNullOrEmpty(post.MediaUrl))
+                    {
+                        <div class="aspect-video rounded-2xl overflow-hidden border border-gray-100 bg-black shadow-sm group-hover:shadow-md transition-shadow">
+                            <iframe src="@post.MediaUrl" class="w-full h-full" frameborder="0" allowfullscreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                        </div>
+                    }
+
+                    <hr class="border-gray-100/80 my-3" />
+
+                    <!-- BARRA DE REACCIONES E INTERACCIÓN SOCIAL (Estilo Twitter / X / Instagram) -->
+                    <div class="flex items-center justify-between flex-wrap gap-2 text-xs font-extrabold">
+                        
+                        <!-- Likes y Dislikes -->
+                        <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
+                            @{
+                                var userReaction = post.Reactions?.FirstOrDefault(r => r.UserId == userId);
+                                var hasLike = userReaction != null && userReaction.ReactionType == ReactionType.Like;
+                                var hasDislike = userReaction != null && userReaction.ReactionType == ReactionType.Dislike;
+                            }
+                            
+                            <!-- Botón Like -->
+                            <form asp-controller="Reaction" asp-action="Toggle" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="isLike" value="true" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                <button type="submit" 
+                                        class="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 @(hasLike ? "bg-brand-blue/10 text-brand-blue shadow-2xs scale-105" : "bg-gray-50 hover:bg-blue-50/80 text-gray-600 hover:text-brand-blue")"
+                                        title="Me gusta">
+                                    <i class="@(hasLike ? "fas text-brand-blue animate-bounce" : "far") fa-thumbs-up text-sm"></i>
+                                    <span>@post.LikesCount</span>
+                                </button>
+                            </form>
+
+                            <!-- Botón Dislike -->
+                            <form asp-controller="Reaction" asp-action="Toggle" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="isLike" value="false" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                <button type="submit" 
+                                        class="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 @(hasDislike ? "bg-red-100 text-red-600 scale-105" : "bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-500")"
+                                        title="No me gusta">
+                                    <i class="@(hasDislike ? "fas" : "far") fa-thumbs-down text-xs"></i>
+                                    @if (post.DislikesCount > 0)
+                                    {
+                                        <span class="text-[11px]">@post.DislikesCount</span>
+                                    }
+                                </button>
+                            </form>
+
+                            @if (userReaction != null)
+                            {
+                                <span class="text-xs text-gray-500 font-bold ml-1">
+                                    Tu reacción: @(userReaction.ReactionType == ReactionType.Like ? "Me gusta" : "No me gusta")
+                                </span>
+                                <form asp-controller="Reaction" asp-action="Delete" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="postId" value="@post.Id" />
+                                    <input type="hidden" name="returnUrl" value="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString(), ViewContext.RouteData.Values["controller"]?.ToString())" />
+                                    <button type="submit" class="text-[11px] text-gray-400 hover:text-red-500 underline font-semibold ml-1">
+                                        Eliminar reacción
+                                    </button>
+                                </form>
+                            }
+                        </div>
+
+                        <!-- Botón de Comentarios -->
+                        <div class="flex items-center gap-2">
+                            <!-- Indicador y botón de comentarios -->
+                            <button type="button" onclick="document.getElementById('commentsSection-@post.Id').classList.toggle('hidden');"
+                                    class="flex items-center gap-1.5 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 px-3.5 py-2 rounded-full transition-colors"
+                                    title="Ver comentarios">
+                                <i class="far fa-comment-dots text-sm"></i>
+                                <span>@post.CommentsCount</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. SECCIÓN DE COMENTARIOS (Estilo Burbujas de Chat / Instagram) -->
+                    <div id="commentsSection-@post.Id" class="pt-4 border-t border-gray-100 space-y-4">
+                        @if (post.Comments != null && post.Comments.Any())
+                        {
+                            <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                                @{
+                                    async Task RenderCommentsAsync(IEnumerable<LinkUpPro.Core.Application.DTOs.CommentDTO.CommentDTO> comments, int depth = 0)
+                                    {
+                                        var commentsToRender = depth == 0 ? comments.Where(c => c.ParentCommentId == null || c.ParentCommentId == 0) : comments;
+                                        foreach (var comment in commentsToRender)
+                                        {
+                                            var isMyComment = comment.AuthorId == userId;
+                                            var isDeletedPlaceholder = comment.Content == "Este comentario fue eliminado." || comment.Content == "comentario eliminado" || comment.Content == "Comentario eliminado";
+                                            
+                                            <div class="bg-gray-50/80 hover:bg-gray-100/60 p-3.5 rounded-2xl border border-gray-200/60 transition-all relative @(depth > 0 ? "ml-6 sm:ml-10 border-l-4 border-l-brand-blue/30 bg-blue-50/20" : "")">
+                                                <div class="flex justify-between items-start gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        @if (!isDeletedPlaceholder && !string.IsNullOrEmpty(comment.AuthorPhotoUrl))
+                                                        {
+                                                            <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="flex-shrink-0">
+                                                                <img src="@comment.AuthorPhotoUrl" alt="" class="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-2xs hover:ring-2 hover:ring-brand-blue transition-all" />
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border border-gray-200">
+                                                                <i class="fas fa-user text-xs"></i>
+                                                            </div>
+                                                        }
+                                                        <div>
+                                                            <div class="flex items-center gap-1">
+                                                                @if (!isDeletedPlaceholder)
+                                                                {
+                                                                    <a asp-controller="Friendship" asp-action="Profile" asp-route-id="@comment.AuthorId" class="font-extrabold text-xs text-gray-900 hover:text-brand-blue transition-colors">
+                                                                        @comment.AuthorName
+                                                                    </a>
+                                                                    <span class="text-[10px] text-gray-400 font-medium">&#64;@(comment.AuthorUserName ?? comment.AuthorName)</span>
+                                                                    <i class="fas fa-check-circle text-brand-blue text-[10px]" title="Verificado"></i>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="font-extrabold text-xs text-gray-900">[Eliminado]</span>
+                                                                }
+                                                            </div>
+                                                            <span class="text-[10px] text-gray-400 font-medium">
+                                                                @comment.Created.ToLocalTime().ToString("g")
+                                                                @if (comment.IsEdited && !isDeletedPlaceholder)
+                                                                {
+                                                                    <span class="bg-blue-50 text-brand-blue px-1.5 py-0.5 rounded text-[9px] font-extrabold border border-blue-100 ml-1">Editado</span>
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    @if (isMyComment && !isDeletedPlaceholder)
+                                                    {
+                                                        <div class="flex items-center gap-1">
+                                                            <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="text-gray-400 hover:text-brand-blue text-xs p-1 rounded hover:bg-white transition-colors" title="Editar">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.Id" method="post" onsubmit="return confirm('¿Está seguro que desea eliminar este comentario?');" class="inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="text-gray-400 hover:text-red-500 text-xs p-1 rounded hover:bg-white transition-colors" title="Eliminar">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                <!-- Contenido del comentario -->
+                                                <div class="mt-2 text-xs sm:text-sm text-gray-800 font-normal pl-9">
+                                                    <p id="commentContent-@comment.Id" class="leading-relaxed">
+                                                        @comment.Content
+                                                        @if (comment.IsEdited)
+                                                        {
+                                                            <span class="text-[11px] text-gray-400 font-normal italic ml-1">(editado)</span>
+                                                        }
+                                                    </p>
+                                                    
+                                                    <!-- Formulario inline para editar -->
+                                                    <form id="commentEditForm-@comment.Id" asp-controller="Comment" asp-action="Edit" asp-route-id="@comment.Id" method="post" class="hidden mt-2 space-y-2">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="text" name="content" value="@comment.Content" required class="w-full px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none" />
+                                                        <div class="flex justify-end gap-1.5">
+                                                            <button type="button" onclick="toggleCommentEditForm(@comment.Id)" class="px-3 py-1 text-[10px] font-bold bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300">Cancelar</button>
+                                                            <button type="submit" class="px-3 py-1 text-[10px] font-bold bg-brand-blue text-white rounded-lg hover:bg-blue-800 shadow-2xs">Guardar Cambios</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                                <!-- Botón Responder -->
+                                                @if (post.CommentStatus == CommentStatus.Allowed && !isDeletedPlaceholder)
+                                                {
+                                                    <div class="mt-2 pl-9 flex justify-start">
+                                                        <button type="button" onclick="toggleReplyForm(@comment.Id)" class="text-[11px] text-brand-blue hover:text-indigo-600 font-extrabold flex items-center gap-1 transition-colors">
+                                                            <i class="fas fa-reply text-[10px]"></i> Responder
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Formulario de respuesta -->
+                                                    <form id="replyForm-@comment.Id" asp-controller="Comment" asp-action="Create" method="post" class="hidden mt-2 pl-9 space-y-2">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="PostId" value="@post.Id" />
+                                                        <input type="hidden" name="ParentCommentId" value="@comment.Id" />
+                                                        <div class="flex gap-2">
+                                                            <input type="text" name="Content" required maxlength="500" placeholder="Escribe una respuesta para @comment.AuthorName..."
+                                                                   class="flex-grow px-3 py-1.5 bg-white border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none" />
+                                                            <button type="submit" class="bg-brand-blue text-white px-3.5 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-800 shadow-2xs">Enviar</button>
+                                                            <button type="button" onclick="toggleReplyForm(@comment.Id)" class="px-2.5 py-1.5 bg-gray-200 text-gray-600 rounded-xl text-xs font-bold">✕</button>
+                                                        </div>
+                                                    </form>
+                                                }
+                                            </div>
+
+                                            if (comment.Replies != null && comment.Replies.Any())
+                                            {
+                                                await RenderCommentsAsync(comment.Replies, depth + 1);
+                                            }
+                                        }
+                                    }
+
+                                    await RenderCommentsAsync(post.Comments);
+                                }
+                            </div>
+                        }
+
+                        <!-- Formulario para agregar comentario nuevo -->
+                        @if (post.CommentStatus == CommentStatus.Allowed)
+                        {
+                            <form asp-controller="Comment" asp-action="Create" method="post" class="flex gap-2 pt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="PostId" value="@post.Id" />
+                                <div class="relative flex-grow">
+                                    <input type="text" name="Content" required maxlength="500" placeholder="Escribe un comentario en la publicación..."
+                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 hover:bg-gray-100/60 focus:bg-white border border-gray-200 rounded-2xl text-xs font-medium focus:ring-2 focus:ring-brand-blue outline-none transition-all placeholder-gray-400" />
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="far fa-smile"></i></span>
+                                </div>
+                                <button type="submit" class="bg-gradient-to-r from-brand-blue to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2 rounded-2xl text-xs font-black transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 active:scale-95">
+                                    <i class="fas fa-paper-plane"></i> <span class="hidden sm:inline">Comentar</span>
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="bg-gray-50 border border-gray-200 text-gray-500 rounded-2xl p-3 text-center text-xs font-bold flex items-center justify-center gap-2">
+                                <i class="fas fa-comment-slash text-red-400"></i> Los comentarios están desactivados para esta publicación.
+                            </div>
+                        }
+                    </div>
+
+                </article>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleMediaFields() {
+            const type = document.getElementById('createContentType').value;
+            const imageGroup = document.getElementById('imageFieldGroup');
+            const videoGroup = document.getElementById('videoFieldGroup');
+            const imageInput = document.getElementById('imageInput');
+            const videoInput = document.getElementById('videoUrlInput');
+
+            if (type == '@((int)ContentType.Image)') {
+                imageGroup.classList.remove('hidden');
+                videoGroup.classList.add('hidden');
+                videoInput.value = '';
+            } else {
+                imageGroup.classList.add('hidden');
+                videoGroup.classList.remove('hidden');
+                imageInput.value = '';
+            }
+        }
+
+        function toggleReplyForm(commentId) {
+            const form = document.getElementById('replyForm-' + commentId);
+            form.classList.toggle('hidden');
+        }
+
+        function toggleCommentEditForm(commentId) {
+            const text = document.getElementById('commentContent-' + commentId);
+            const form = document.getElementById('commentEditForm-' + commentId);
+            text.classList.toggle('hidden');
+            form.classList.toggle('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', toggleMediaFields);
+    </script>
+}

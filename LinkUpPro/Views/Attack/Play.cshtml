@@ -1,0 +1,337 @@
+@using LinkUpPro.Core.Application.ViewModels.Battleship
+@using LinkUpPro.Core.Domain.Common.Enums
+@model GameBoardViewModel
+
+@{
+    ViewData["Title"] = "Batalla Naval - En Combate";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    bool isMyTurn = Model.Match?.CurrentTurnUserId == currentUserId;
+    string myName = Model.Match?.Player1Id == currentUserId ? (Model.Match?.Player1Name ?? "Jugador 1") : (Model.Match?.Player2Name ?? "Jugador 2");
+    string enemyName = Model.Match?.Player1Id == currentUserId ? (Model.Match?.Player2Name ?? "Jugador 2") : (Model.Match?.Player1Name ?? "Jugador 1");
+    string enemyId = Model.Match?.Player1Id == currentUserId ? (Model.Match?.Player2Id ?? "") : (Model.Match?.Player1Id ?? "");
+
+    // Mis barcos
+    var myShips = Model.Ships.Where(s => s.UserId == currentUserId).ToList();
+    var enemyShips = Model.Ships.Where(s => s.UserId != currentUserId).ToList();
+    var myShipCells = new Dictionary<string, ShipPositionViewModel>();
+    foreach (var ship in myShips)
+    {
+        for (int i = 0; i < ship.ShipSize; i++)
+        {
+            int x = ship.StartX;
+            int y = ship.StartY;
+            if (ship.Direction == ShipDirection.Up) y -= i;
+            else if (ship.Direction == ShipDirection.Down) y += i;
+            else if (ship.Direction == ShipDirection.Left) x -= i;
+            else if (ship.Direction == ShipDirection.Right) x += i;
+            myShipCells[$"{x},{y}"] = ship;
+        }
+    }
+
+    // Mis ataques (hacia el enemigo)
+    var myAttacks = Model.Attacks.Where(a => a.AttackerId == currentUserId).ToDictionary(a => $"{a.X},{a.Y}", a => a);
+
+    // Ataques enemigos (hacia mí)
+    var enemyAttacks = Model.Attacks.Where(a => a.AttackerId != currentUserId).ToDictionary(a => $"{a.X},{a.Y}", a => a);
+}
+
+<div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Encabezado de Combate -->
+    <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl border border-slate-800 flex flex-wrap items-center justify-between gap-6 relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-64 h-64 bg-brand-blue/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex items-center gap-4 z-10">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-amber-600 flex items-center justify-center text-white text-3xl shadow-lg">
+                <i class="fas fa-crosshairs animate-spin-slow"></i>
+            </div>
+            <div>
+                <span class="px-3 py-1 bg-white/10 text-amber-400 rounded-full text-xs font-black uppercase tracking-wider">Sala de Batalla #@Model.Match?.Id</span>
+                <h2 class="text-3xl font-black tracking-tight mt-1">@myName <span class="text-slate-500 font-normal mx-2">VS</span> @enemyName</h2>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 z-10 flex-wrap">
+            @if (isMyTurn)
+            {
+                <div class="px-5 py-2.5 bg-green-500/20 border-2 border-green-500 rounded-2xl flex items-center gap-3 animate-pulse">
+                    <span class="w-3 h-3 rounded-full bg-green-400"></span>
+                    <div>
+                        <p class="text-[10px] font-bold text-green-300 uppercase">Estado del Turno</p>
+                        <p class="text-sm font-black text-white">¡Es tu turno de atacar!</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="px-5 py-2.5 bg-slate-800 border border-slate-700 rounded-2xl flex items-center gap-3">
+                    <span class="w-3 h-3 rounded-full bg-amber-500 animate-ping"></span>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Estado del Turno</p>
+                        <p class="text-sm font-black text-slate-200">Turno de @enemyName...</p>
+                    </div>
+                </div>
+            }
+
+            <a asp-controller="Battleship" asp-action="Index"
+               class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition-all border border-slate-700 flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Volver atrás
+            </a>
+
+            <a asp-action="Play"
+               asp-route-matchId="@Model.Match?.Id"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition-all flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i> Refrescar pantalla
+            </a>
+
+            <button type="button" onclick="openSurrenderModal()"
+                    class="bg-red-600/90 hover:bg-red-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition-all border border-red-500/50 flex items-center gap-2 cursor-pointer">
+                <i class="fas fa-flag"></i> Rendirse
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm">
+            <i class="fas fa-check-circle text-green-500 text-lg"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm">
+            <i class="fas fa-info-circle text-blue-500 text-lg"></i>
+            <span>@TempData["Info"]</span>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm">
+            <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <!-- Tableros de Combate 12x12 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        
+        <!-- TABLERO DE ATAQUE (RADAR HARRY ENEMIGO) -->
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-200 p-6 space-y-4 relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-radar text-red-500 text-xl animate-spin-slow"></i>
+                    <h3 class="text-xl font-black text-gray-900 tracking-tight">Radar de Ataque (Enemigo)</h3>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-black px-3 py-1.5 bg-red-500/10 text-red-600 rounded-xl border border-red-200">
+                        <i class="fas fa-crosshairs mr-1"></i> Ataques: @myAttacks.Count
+                    </span>
+                    <span class="text-xs font-black px-3 py-1.5 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-200">
+                        <i class="fas fa-ship mr-1"></i> Flota enemiga en pie: @enemyShips.Count(s => !s.IsSunk) de @(enemyShips.Count > 0 ? enemyShips.Count : 5)
+                    </span>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-2xl shadow-inner border-4 border-slate-900 max-w-lg mx-auto">
+                <div class="grid grid-cols-12 gap-1.5 aspect-square font-mono">
+                    @for (int row = 0; row < 12; row++)
+                    {
+                        for (int col = 0; col < 12; col++)
+                        {
+                            string coordKey = $"{col},{row}";
+                            if (myAttacks.TryGetValue(coordKey, out var attack))
+                            {
+                                if (attack.IsHit)
+                                {
+                                    <div class="bg-red-600 text-white rounded-lg flex items-center justify-center border border-red-500 shadow-lg animate-bounce" title="¡IMPACTO! en @((char)('A' + col))@(row + 1)">
+                                        <i class="fas fa-fire text-xs sm:text-sm md:text-base"></i>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="bg-emerald-600 text-white rounded-lg flex items-center justify-center border border-emerald-500 shadow-sm" title="Agua / Fallo en @((char)('A' + col))@(row + 1)">
+                                        <i class="fas fa-tint text-xs sm:text-sm md:text-base"></i>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                if (isMyTurn)
+                                {
+                                    <form asp-action="Attack" method="post" class="w-full h-full m-0 p-0 flex">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="MatchId" value="@Model.Match?.Id" />
+                                        <input type="hidden" name="AttackerId" value="@currentUserId" />
+                                        <input type="hidden" name="X" value="@col" />
+                                        <input type="hidden" name="Y" value="@row" />
+                                        <button type="submit" class="w-full h-full bg-slate-900 hover:bg-red-500/30 hover:border-red-500/80 border border-slate-800 rounded-lg transition-all flex items-center justify-center group cursor-pointer"
+                                                title="Disparar a @((char)('A' + col))@(row + 1)">
+                                            <i class="fas fa-crosshairs text-red-500/0 group-hover:text-red-500/80 text-xs sm:text-sm md:text-base transition-all scale-75 group-hover:scale-100"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center cursor-not-allowed opacity-60" title="Turno del enemigo...">
+                                        <i class="fas fa-lock text-slate-700 text-xs"></i>
+                                    </div>
+                                }
+                            }
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Indicador de Turno Literal según Pliego -->
+            @if (!isMyTurn)
+            {
+                <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center text-amber-300 font-bold text-xs sm:text-sm">
+                    Es turno del jugador @(Model.Match?.CurrentTurnUserName ?? enemyName) de atacar
+                </div>
+            }
+            else
+            {
+                <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center text-emerald-300 font-bold text-xs sm:text-sm">
+                    ¡Es tu turno de atacar! Selecciona una celda para disparar.
+                </div>
+            }
+
+            <div class="flex items-center justify-center gap-6 text-xs font-bold text-gray-600 pt-2">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-slate-900 border border-slate-800"></span>
+                    <span>Niebla de Guerra</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-red-600 text-white flex items-center justify-center shadow-xs"><i class="fas fa-fire text-[10px]"></i></span>
+                    <span>¡Impacto! (Rojo)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-emerald-600 text-white flex items-center justify-center shadow-xs"><i class="fas fa-tint text-[10px]"></i></span>
+                    <span>Agua / Fallo (Verde)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLERO DE DEFENSA (MI FLOTA) -->
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-200 p-6 space-y-4 relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-brand-blue text-xl"></i>
+                    <h3 class="text-xl font-black text-gray-900 tracking-tight">Mi Flota Naval (Defensa)</h3>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-black px-3 py-1.5 bg-purple-500/10 text-purple-600 rounded-xl border border-purple-200">
+                        <i class="fas fa-bullseye mr-1"></i> Ataques recibidos: @enemyAttacks.Count
+                    </span>
+                    <span class="text-xs font-black px-3 py-1.5 bg-blue-500/10 text-brand-blue rounded-xl border border-blue-200">
+                        <i class="fas fa-shield-alt mr-1"></i> Mis barcos en pie: @myShips.Count(s => !s.IsSunk) de @myShips.Count
+                    </span>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-2xl shadow-inner border-4 border-slate-900 max-w-lg mx-auto">
+                <div class="grid grid-cols-12 gap-1.5 aspect-square font-mono">
+                    @for (int row = 0; row < 12; row++)
+                    {
+                        for (int col = 0; col < 12; col++)
+                        {
+                            string coordKey = $"{col},{row}";
+                            if (myShipCells.TryGetValue(coordKey, out var ship))
+                            {
+                                bool wasAttacked = enemyAttacks.ContainsKey(coordKey);
+                                if (wasAttacked)
+                                {
+                                    <div class="bg-red-600 text-white rounded-lg flex items-center justify-center border border-red-500 shadow-lg animate-pulse" title="¡Tu barco fue alcanzado en @((char)('A' + col))@(row + 1)!">
+                                        <i class="fas fa-skull-crossbones text-xs sm:text-sm md:text-base"></i>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="bg-brand-blue text-white rounded-lg flex items-center justify-center border border-blue-400 shadow-md" title="Tu barco en @((char)('A' + col))@(row + 1)">
+                                        <i class="fas fa-ship text-xs sm:text-sm md:text-base"></i>
+                                    </div>
+                                }
+                            }
+                            else if (enemyAttacks.ContainsKey(coordKey))
+                            {
+                                <div class="bg-emerald-600/70 text-white rounded-lg flex items-center justify-center border border-emerald-500/60" title="Disparo enemigo fallido en @((char)('A' + col))@(row + 1)">
+                                    <i class="fas fa-tint text-xs sm:text-sm md:text-base"></i>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-700" title="Agua libre en @((char)('A' + col))@(row + 1)">
+                                    <i class="fas fa-water text-xs sm:text-sm md:text-base opacity-20"></i>
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center gap-6 text-xs font-bold text-gray-600 pt-2">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-brand-blue text-white flex items-center justify-center"><i class="fas fa-ship text-[10px]"></i></span>
+                    <span>Tu Navío</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-red-600 text-white flex items-center justify-center"><i class="fas fa-skull-crossbones text-[10px]"></i></span>
+                    <span>Impacto Recibido</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded bg-emerald-600 text-white flex items-center justify-center"><i class="fas fa-tint text-[10px]"></i></span>
+                    <span>Disparo Fallido del Rival</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal: Confirmar Rendición -->
+<div id="surrenderModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-5 animate-fade-in text-center">
+        <div class="w-16 h-16 rounded-full bg-red-50 text-red-500 mx-auto flex items-center justify-center text-3xl shadow-inner">
+            <i class="fas fa-flag"></i>
+        </div>
+        <div>
+            <h3 class="text-xl font-black text-gray-900">¿Está seguro que desea rendirse?</h3>
+            <p class="text-xs text-gray-500 mt-2">
+                Si acepta, la partida terminará de inmediato. El ganador será @enemyName y la partida quedará registrada como perdida en su historial.
+            </p>
+        </div>
+
+        <div class="flex items-center justify-center gap-3 pt-2">
+            <button type="button" onclick="closeSurrenderModal()"
+                    class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer">
+                Cancelar
+            </button>
+            <form asp-controller="Battleship" asp-action="Surrender" method="post" class="flex-1 m-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Match?.Id" />
+                <input type="hidden" name="playerId" value="@currentUserId" />
+                <button type="submit"
+                        class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer">
+                    Aceptar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openSurrenderModal() {
+        const modal = document.getElementById('surrenderModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function closeSurrenderModal() {
+        const modal = document.getElementById('surrenderModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+</script>

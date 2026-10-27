@@ -1,0 +1,54 @@
+@model LinkUpPro.Core.Application.ViewModels.User.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    ViewData["HideNav"] = true;
+}
+
+<div class="auth-page auth-login-page">
+    <div class="auth-orbit auth-orbit-one"></div>
+    <div class="auth-orbit auth-orbit-two"></div>
+    <main class="auth-frame">
+        <section class="auth-story" aria-label="Presentación de LinkUp Pro">
+            <a asp-controller="Home" asp-action="Index" class="auth-brand"><span class="auth-brand-mark"><i class="fas fa-infinity"></i></span><span>LinkUp <strong>Pro</strong></span></a>
+            <div class="auth-story-copy">
+                <span class="auth-kicker">La comunidad empieza aquí</span>
+                <h1>Un lugar para estar cerca, incluso a distancia.</h1>
+                <p>Conversaciones reales, personas que importan y retos que se recuerdan.</p>
+            </div>
+            <div class="auth-story-grid">
+                <div><i class="fas fa-user-group"></i><span>Conecta</span><small>Tu círculo, siempre presente.</small></div>
+                <div><i class="fas fa-comment-dots"></i><span>Comparte</span><small>Ideas que encuentran respuesta.</small></div>
+                <div><i class="fas fa-ship"></i><span>Compite</span><small>Desafíos con tus amigos.</small></div>
+            </div>
+            <div class="auth-live-note"><span class="auth-live-dot"></span>Comunidad activa ahora mismo</div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="auth-panel-top"><span class="auth-step">Acceso seguro</span><h2>Qué bueno verte.</h2><p>Ingresa tus datos para volver a tu espacio.</p></div>
+            @if (ViewBag.InactivityMessage != null) { <div class="auth-alert auth-alert-warning"><i class="fas fa-clock"></i> @ViewBag.InactivityMessage</div> }
+            @if (TempData["SuccessMessage"] != null) { <div class="auth-alert auth-alert-success"><i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]</div> }
+            @if (TempData["ErrorMessage"] != null) { <div class="auth-alert auth-alert-error"><i class="fas fa-circle-exclamation"></i> @TempData["ErrorMessage"]</div> }
+            <div asp-validation-summary="All" class="auth-alert auth-alert-error" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "flex" : "none")"></div>
+
+            <form asp-controller="Login" asp-action="Login" method="post" class="auth-form">
+                @Html.AntiForgeryToken()
+                <div class="auth-field"><label asp-for="UserName"></label><div class="auth-input-wrap"><i class="far fa-user"></i><input asp-for="UserName" placeholder="Tu nombre de usuario" required /></div><span asp-validation-for="UserName"></span></div>
+                <div class="auth-field"><label asp-for="Password"></label><div class="auth-input-wrap"><i class="fas fa-lock"></i><input asp-for="Password" id="passwordField" placeholder="Tu contraseña" required /><button type="button" onclick="togglePassword('passwordField', 'toggleIcon')" aria-label="Mostrar u ocultar contraseña"><i id="toggleIcon" class="far fa-eye"></i></button></div><span asp-validation-for="Password"></span></div>
+                <div class="auth-options"><label class="auth-check"><input asp-for="RememberMe" type="checkbox" /><span></span><em>Recordarme en este equipo</em></label><a asp-controller="Login" asp-action="ForgotPassword">¿Olvidaste tu contraseña?</a></div>
+                <button type="submit" class="auth-submit">Entrar a LinkUp <i class="fas fa-arrow-right"></i></button>
+            </form>
+            <div class="auth-panel-footer"><p>¿Primera vez aquí?</p><a asp-controller="User" asp-action="Register">Crear una cuenta <i class="fas fa-arrow-up-right-from-square"></i></a><a asp-controller="User" asp-action="ResendActivation" class="auth-muted-link">Reenviar activación</a></div>
+        </section>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword(fieldId, iconId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(iconId);
+            if (field.type === 'password') { field.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { field.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+        }
+    </script>
+}

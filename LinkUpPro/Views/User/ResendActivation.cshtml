@@ -1,0 +1,52 @@
+@model LinkUpPro.Core.Application.ViewModels.User.ResendActivationViewModel
+@{
+    ViewData["Title"] = "Reenviar Activación";
+    ViewData["HideNav"] = true;
+}
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-envelope text-brand-blue text-xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900">Reenviar Correo de Activación</h2>
+                <p class="text-gray-500 text-sm mt-1">Ingrese su nombre de usuario para recibir un nuevo enlace</p>
+            </div>
+
+            <div asp-validation-summary="All" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+            @if (ViewBag.HasError == true && ViewBag.Errors != null)
+            {
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+                    @foreach (var err in ViewBag.Errors)
+                    {
+                        <p>@err</p>
+                    }
+                </div>
+            }
+
+            <form asp-action="ResendActivation" asp-controller="User" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-6">
+                    <label asp-for="UserName" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-user"></i></span>
+                        <input asp-for="UserName" class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="Ingrese su nombre de usuario" />
+                    </div>
+                    <span asp-validation-for="UserName" class="text-red-500 text-xs mt-1"></span>
+                </div>
+
+                <div class="flex gap-3">
+                    <a asp-action="Login" asp-controller="Login" class="flex-1 text-center py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-arrow-left mr-1"></i>Volver atrás
+                    </a>
+                    <button type="submit" class="flex-1 bg-brand-blue text-white py-2.5 rounded-lg font-semibold hover:bg-blue-800 transition-colors shadow-md">
+                        <i class="fas fa-paper-plane mr-1"></i>Reenviar enlace
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

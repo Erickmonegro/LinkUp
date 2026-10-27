@@ -1,0 +1,46 @@
+@using LinkUpPro.Core.Application.ViewModels.Battleship
+@model BattleshipMatchViewModel
+
+@{
+    ViewData["Title"] = "Confirmar Rendición - Battleship";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var opponentName = Model.Player1Id == currentUserId ? (Model.Player2Name ?? Model.Player2Id) : (Model.Player1Name ?? Model.Player1Id);
+}
+
+<div class="max-w-md mx-auto my-12 bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center space-y-6">
+    <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner animate-bounce">
+        <i class="fas fa-flag"></i>
+    </div>
+
+    <div class="space-y-2">
+        <h2 class="text-2xl font-black text-gray-900 tracking-tight">¿Estás seguro que deseas rendirte?</h2>
+        <p class="text-sm text-gray-600 leading-relaxed">
+            Estás en curso de una batalla naval contra <span class="font-bold text-gray-900">@opponentName</span>. 
+            Si te rindes ahora, la partida terminará de inmediato y <span class="font-bold text-red-600">@opponentName será declarado el ganador</span>.
+        </p>
+    </div>
+
+    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200 text-left text-xs text-gray-500 space-y-1">
+        <div class="flex justify-between">
+            <span>Partida ID:</span>
+            <span class="font-bold text-gray-800">#@Model.Id</span>
+        </div>
+        <div class="flex justify-between">
+            <span>Fecha de Inicio:</span>
+            <span class="font-bold text-gray-800">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+    </div>
+
+    <form asp-action="Surrender" method="post" class="flex items-center gap-3 pt-2">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" name="playerId" value="@currentUserId" />
+
+        <a asp-action="Index" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-colors text-center block">
+            Cancelar
+        </a>
+        <button type="submit" class="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+            <i class="fas fa-flag"></i> Sí, rendirme
+        </button>
+    </form>
+</div>

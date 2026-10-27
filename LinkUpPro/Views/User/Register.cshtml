@@ -1,0 +1,65 @@
+@model LinkUpPro.Core.Application.ViewModels.User.RegisterUserViewModel
+@{
+    ViewData["Title"] = "Crear cuenta";
+    ViewData["HideNav"] = true;
+}
+
+<div class="auth-page auth-register-page">
+    <div class="auth-orbit auth-orbit-one"></div>
+    <div class="auth-orbit auth-orbit-two"></div>
+    <main class="auth-frame auth-register-frame">
+        <section class="auth-story auth-register-story" aria-label="Crear una cuenta en LinkUp Pro">
+            <a asp-controller="Home" asp-action="Index" class="auth-brand"><span class="auth-brand-mark"><i class="fas fa-infinity"></i></span><span>LinkUp <strong>Pro</strong></span></a>
+            <div class="auth-story-copy"><span class="auth-kicker">Tu siguiente conexión</span><h1>Haz espacio para nuevas historias.</h1><p>En unos minutos tendrás un perfil, una comunidad y una nueva forma de compartir.</p></div>
+            <ol class="auth-register-steps"><li><span>01</span> Crea tu identidad</li><li><span>02</span> Personaliza tu perfil</li><li><span>03</span> Conecta y compite</li></ol>
+            <a asp-controller="Login" asp-action="Login" class="auth-story-login"><i class="fas fa-arrow-left"></i> Ya tengo una cuenta</a>
+        </section>
+
+        <section class="auth-panel auth-register-panel">
+            <div class="auth-panel-top"><span class="auth-step">Registro</span><h2>Construye tu perfil.</h2><p>Completa tu información para entrar a la comunidad.</p></div>
+            <div asp-validation-summary="ModelOnly" class="auth-alert auth-alert-error" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "flex" : "none")"></div>
+            @if (ViewBag.HasError == true && ViewBag.Errors != null)
+            {
+                <div class="auth-alert auth-alert-error"><i class="fas fa-circle-exclamation"></i><div>@foreach (var err in ViewBag.Errors) { <p>@err</p> }</div></div>
+            }
+
+            <form asp-action="Register" asp-controller="User" method="post" enctype="multipart/form-data" autocomplete="off" class="auth-form auth-register-form">
+                @Html.AntiForgeryToken()
+                <input type="text" class="hidden" autocomplete="username" />
+                <input type="password" class="hidden" autocomplete="current-password" />
+                <div class="auth-form-grid">
+                    <div class="auth-field"><label asp-for="FirstName"></label><div class="auth-input-wrap"><i class="far fa-id-badge"></i><input asp-for="FirstName" autocomplete="off" placeholder="Nombre" /></div><span asp-validation-for="FirstName"></span></div>
+                    <div class="auth-field"><label asp-for="LastName"></label><div class="auth-input-wrap"><i class="far fa-id-badge"></i><input asp-for="LastName" autocomplete="off" placeholder="Apellido" /></div><span asp-validation-for="LastName"></span></div>
+                </div>
+                <div class="auth-field"><label asp-for="Email"></label><div class="auth-input-wrap"><i class="far fa-envelope"></i><input asp-for="Email" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="correo@ejemplo.com" /></div><span asp-validation-for="Email"></span></div>
+                <div class="auth-field"><label asp-for="UserName"></label><div class="auth-input-wrap"><i class="fas fa-at"></i><input asp-for="UserName" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="usuario" /></div><span asp-validation-for="UserName"></span></div>
+                <div class="auth-field"><label asp-for="PhoneNumber"></label><div class="auth-input-wrap"><i class="fas fa-phone"></i><input asp-for="PhoneNumber" autocomplete="off" placeholder="809-555-1234" /></div><span asp-validation-for="PhoneNumber"></span></div>
+                <div class="auth-form-grid">
+                    <div class="auth-field"><label asp-for="Password"></label><div class="auth-input-wrap"><i class="fas fa-lock"></i><input asp-for="Password" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" id="passwordField" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this.value)" /><button type="button" onclick="togglePassword('passwordField', 'toggleIcon1')" aria-label="Mostrar u ocultar contraseña"><i id="toggleIcon1" class="far fa-eye"></i></button></div><span asp-validation-for="Password"></span></div>
+                    <div class="auth-field"><label asp-for="ConfirmPassword"></label><div class="auth-input-wrap"><i class="fas fa-lock"></i><input asp-for="ConfirmPassword" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" id="confirmPasswordField" placeholder="Confirma tu contraseña" /><button type="button" onclick="togglePassword('confirmPasswordField', 'toggleIcon2')" aria-label="Mostrar u ocultar contraseña"><i id="toggleIcon2" class="far fa-eye"></i></button></div><span asp-validation-for="ConfirmPassword"></span></div>
+                </div>
+                <div class="auth-strength" id="strengthBar" style="display:none;"><div id="strengthFill"></div></div><p id="strengthText" class="auth-strength-label" style="display:none;"></p>
+                <div class="auth-upload"><div><i class="far fa-image"></i><strong>Foto de perfil</strong><small>Opcional · JPG, PNG o WEBP · Máximo 5 MB</small></div><input asp-for="ProfileImageFile" type="file" accept=".jpg,.jpeg,.png,.webp" /><span asp-validation-for="ProfileImageFile"></span></div>
+                <button type="submit" class="auth-submit">Crear mi cuenta <i class="fas fa-sparkles"></i></button>
+            </form>
+        </section>
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword(fieldId, iconId) {
+            const field = document.getElementById(fieldId); const icon = document.getElementById(iconId);
+            if (field.type === 'password') { field.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { field.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+        }
+        function checkStrength(password) {
+            const bar = document.getElementById('strengthBar'); const fill = document.getElementById('strengthFill'); const text = document.getElementById('strengthText');
+            if (!password) { bar.style.display = 'none'; text.style.display = 'none'; return; }
+            let score = 0;
+            if (password.length >= 8) score++; if (/[A-Z]/.test(password)) score++; if (/[a-z]/.test(password)) score++; if (/[0-9]/.test(password)) score++; if (/[^A-Za-z0-9]/.test(password)) score++;
+            const styles = score <= 2 ? ['33%', '#f43f5e', 'Débil'] : score <= 4 ? ['66%', '#f59e0b', 'Media'] : ['100%', '#10b981', 'Fuerte'];
+            bar.style.display = 'block'; text.style.display = 'block'; fill.style.width = styles[0]; fill.style.background = styles[1]; text.textContent = styles[2]; text.style.color = styles[1];
+        }
+    </script>
+}

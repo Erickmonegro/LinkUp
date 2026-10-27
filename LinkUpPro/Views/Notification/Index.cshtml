@@ -1,0 +1,114 @@
+@model List<LinkUpPro.Core.Application.ViewModels.Notification.NotificationViewModel>
+@{
+    ViewData["Title"] = "Notificaciones";
+    var unreadCount = Model?.Count(n => !n.IsRead) ?? 0;
+}
+
+<div class="notifications-page max-w-4xl mx-auto space-y-6">
+
+    <!-- Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fas fa-check-circle text-green-500"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            <i class="fas fa-exclamation-circle mr-1"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="notification-hero">
+        <div>
+            <span class="notification-kicker"><i class="fas fa-bell"></i> Actividad</span>
+            <h1>Todo lo que pasó mientras estabas fuera.</h1>
+            <p>@(unreadCount == 1 ? "Tienes 1 actualización pendiente." : $"Tienes {unreadCount} actualizaciones pendientes.")</p>
+        </div>
+        <div class="notification-orb"><span>@unreadCount</span><small>nuevas</small></div>
+    </div>
+
+    <div class="activity-panel app-surface bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+        <div class="activity-panel-header flex justify-between items-center pb-4 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-inbox text-brand-blue"></i> Bandeja de actividad
+            </h2>
+
+            @if (Model != null && Model.Any(n => !n.IsRead))
+            {
+                <form asp-action="MarkAllAsRead" method="post" class="inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="text-xs bg-brand-blue text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-sm">
+                        <i class="fas fa-check-double mr-1"></i> Marcar todas como leídas
+                    </button>
+                </form>
+            }
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-12 text-gray-500">
+                <i class="far fa-bell-slash text-4xl mb-2 text-gray-300"></i>
+                <p class="font-medium">No tienes notificaciones de interacción.</p>
+            </div>
+        }
+        else
+        {
+            <div class="notification-list divide-y divide-gray-100">
+                @foreach (var notification in Model)
+                {
+                    var triggerName = ViewData[$"Name-{notification.Id}"] as string ?? "Un usuario";
+                    var triggerPhoto = ViewData[$"Photo-{notification.Id}"] as string;
+
+                    <div class="notification-item flex items-center justify-between py-4 gap-4 @(notification.IsRead ? "opacity-75" : "is-unread bg-blue-50/30 -mx-6 px-6")">
+                        <div class="flex items-center gap-3">
+                            @if (!string.IsNullOrEmpty(triggerPhoto))
+                            {
+                                <img src="@triggerPhoto" alt="" class="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                            }
+                            else
+                            {
+                                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border border-gray-200">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            }
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-900 leading-tight">
+                                    @triggerName
+                                </h4>
+                                <p class="text-xs text-gray-700 mt-0.5">@notification.Content</p>
+                                <span class="text-[10px] text-gray-400 mt-1 block">
+                                    <i class="far fa-clock"></i> @notification.CreatedAt.ToLocalTime().ToString("g")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <!-- Enlace al contenido relacionado -->
+                            <form asp-action="MarkAsRead" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@notification.Id" />
+                                
+                                @if (!notification.IsRead)
+                                {
+                                    <button type="submit" class="bg-blue-50 text-brand-blue border border-blue-100 hover:bg-blue-100 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors">
+                                        <i class="fas fa-eye"></i> Ver y leer
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="text-gray-400 hover:text-brand-blue text-xs px-3 py-1.5 rounded-lg font-medium transition-colors">
+                                        Ver contenido
+                                    </button>
+                                }
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
